@@ -1,4 +1,7 @@
 ---
+/** Wordmark de texto: THE • DOOR • PR, con los separadores como puntos rojos
+ *  luminosos. Se usa en la nav y en el pie; el icono de la puerta vive en
+ *  DoorMark.astro. */
 interface Props {
   class?: string
 }
@@ -6,47 +9,31 @@ interface Props {
 const { class: className } = Astro.props
 ---
 
-{/*
-  LOGO — MARCADOR DE POSICIÓN
+<span class={`wordmark ${className ?? ''}`}>
+  THE<span class="wordmark__dot" aria-hidden="true"></span>DOOR<span
+    class="wordmark__dot"
+    aria-hidden="true"></span>PR
+</span>
 
-  ⚠️  Este NO es el logo de The Door.
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--c-fg);
+    white-space: nowrap;
+  }
 
-  El requisito es reutilizar el logo original. No se ha podido descargar porque
-  thedoor-pr.netlify.app está bloqueado por la política de egress de la sesión.
-
-  Al portar el original: sustituir el contenido de <svg> por el del activo real
-  (o cambiar por <img> si es un raster), ajustar el viewBox y mantener el
-  atributo `class` para que hereden los estilos de quien lo usa.
-*/}
-
-<svg
-  class={className}
-  viewBox="0 0 240 60"
-  role="img"
-  aria-label="The Door"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <rect
-    x="1"
-    y="1"
-    width="238"
-    height="58"
-    rx="2"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-dasharray="6 4"
-  />
-  <text
-    x="120"
-    y="37"
-    text-anchor="middle"
-    fill="currentColor"
-    font-family="var(--font-display)"
-    font-size="20"
-    font-weight="700"
-    letter-spacing="0.14em"
-  >
-    THE DOOR
-  </text>
-</svg>
+  .wordmark__dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-inline: 0.5em;
+    background: var(--c-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--c-accent);
+  }
+</style>

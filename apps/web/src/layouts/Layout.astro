@@ -14,7 +14,7 @@ interface Props {
 
 const {
   title,
-  description = 'The Door — agencia de comunicación y relaciones públicas.',
+  description = 'The Door PR — casa de relaciones públicas para hospitalidad, vida nocturna y la gente que llena las salas. Lima, Perú.',
   intro = false,
 } = Astro.props
 
@@ -30,6 +30,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Italiana&family=Cormorant+Garamond:ital,wght@1,300;1,400;1,500&family=Archivo:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />

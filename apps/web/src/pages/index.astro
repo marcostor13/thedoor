@@ -1,71 +1,759 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import ContactForm from '../components/ContactForm.astro'
+import DoorMark from '../components/DoorMark.astro'
+import Logo from '../components/Logo.astro'
 import { SITE } from '../data/navigation'
+
+const services = [
+  {
+    num: '01',
+    title: 'Venue Programming',
+    desc: 'Construimos el calendario — residencias, takeovers, noches temáticas. Desde el soft opening hasta el primer aniversario, tu sala no se apaga un martes.',
+    tag: 'Calendars, residencies, takeovers',
+    label: 'Ongoing',
+  },
+  {
+    num: '02',
+    title: 'Guest Curation',
+    desc: 'Una cartera filtrada de más de 4,000 — finanzas, moda, música, hospitalidad. Confirmamos a la gente que convierte un miércoles en sábado.',
+    tag: 'Vetted clientele, never sold',
+    label: 'Per night',
+  },
+  {
+    num: '03',
+    title: 'Private & VIP',
+    desc: 'Cumpleaños. Lanzamientos. Reservas corporativas discretas. Nosotros manejamos el manifiesto, el lugar, el momento — tú haces el brindis.',
+    tag: 'Birthdays, launches, buyouts',
+    label: 'One-off',
+  },
+  {
+    num: '04',
+    title: 'Press & Profile',
+    desc: 'Notas de fondo, listados, la mención correcta en el medio correcto en el momento correcto. Hacemos que se hable de tu sala con la gente que importa.',
+    tag: 'Editorial, listings, longform',
+    label: 'Retainer',
+  },
+]
+
+const stats = [
+  { num: '60+', desc: 'Venues represented in Lima since 2019.' },
+  { num: '4.2K', desc: 'Guests on the curated list. Vetted, never sold.' },
+  { num: '1:1', desc: 'Every venue gets a dedicated programmer. No interns.' },
+  { num: '00', desc: 'Walk-ins. Cover charges. Bottle minimums.' },
+]
+
+const rosterRowA = [
+  'Maison Noir',
+  'Carbón',
+  'Bar Once',
+  'Hotel B',
+  'Sable & Humo',
+  'La Bóveda',
+  'Lila Rooftop',
+  'Quince',
+  'Apertura',
+  'Foxglove',
+  'Le Petit Roi',
+  'Sundown',
+]
+
+const rosterRowB = [
+  'Malecón',
+  'Marlowe',
+  'Invernadero',
+  'Velvet Room',
+  'Hotel Embajada',
+  'Camille',
+  'Casa Aria',
+  'Calloway',
+  'Atelier',
+  'Margot',
+  'La Emperatriz',
+  'Onyx',
+]
+
+const contactRows = [
+  { label: 'Locales', value: 'venues@thedoor.pe', href: 'mailto:venues@thedoor.pe' },
+  { label: 'Lista', value: 'list@thedoor.pe', href: 'mailto:list@thedoor.pe' },
+  { label: 'Prensa', value: 'press@thedoor.pe', href: 'mailto:press@thedoor.pe' },
+  { label: 'Lima', value: 'Av. La Paz 1040, Miraflores' },
+  { label: 'Barranco', value: 'Bajada de Baños 393' },
+  { label: 'Citas', value: 'Solo con cita previa' },
+]
 ---
 
-{/*
-  PORTADA — ESTRUCTURA PROVISIONAL
+<Layout title={`${SITE.name} — PR for hospitality, nightlife & the people who fill the rooms`} intro>
+  <section id="top" class="hero">
+    <div class="container hero__inner">
+      <div class="hero__topbar">
+        <span>{SITE.city}</span>
+        <span class="hero__topbar-right">
+          <em>— Solo miembros —</em>
+          <span data-reveal>MMXXVI</span>
+        </span>
+      </div>
 
-  ⚠️  Los textos de esta página son de relleno. El contenido real de
-  thedoor-pr.netlify.app no se ha podido inventariar porque el dominio está
-  bloqueado por la política de egress. Esta página existe para validar el
-  layout, el sistema de tokens y el revelado por scroll de extremo a extremo.
-*/}
+      <div class="hero__stage" data-reveal>
+        <DoorMark class="hero__mark" id="hero" />
+        <Logo class="hero__wordmark" />
+        <span class="hero__rule" aria-hidden="true"></span>
+      </div>
 
-<Layout title={`${SITE.name} — ${SITE.tagline}`} intro>
-  <section class="hero">
+      <p class="hero__tagline" data-reveal>
+        Doors don’t open for everyone. Ours do — <em>for the right people, on the right
+        nights.</em>
+      </p>
+
+      <div class="hero__foot">
+        <p class="hero__eyebrow" data-reveal>{SITE.description.toUpperCase()}</p>
+        <p class="hero__scroll">After hours / 01 — 03 <span class="hero__scroll-cue"></span> Baja</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section question">
     <div class="container">
-      <h1 class="hero__title" data-reveal>{SITE.tagline}</h1>
-      <p class="hero__lead" data-reveal>
-        Contenido pendiente de migrar desde el sitio actual.
+      <p class="eyebrow" data-reveal>— The question</p>
+      <h2 class="question__title">
+        <span data-reveal>Are you in?</span>
+        <em data-reveal>Or are you out?</em>
+      </h2>
+      <p class="manifesto" data-reveal>
+        Anyone can fill a room. We fill it with the people who come back.
       </p>
     </div>
-  </section>
 
-  <section id="nosotros" class="section">
-    <div class="container container--narrow">
-      <h2 data-reveal>Nosotros</h2>
-      <p data-reveal>Contenido pendiente de migrar desde el sitio actual.</p>
+    <div class="container stat-grid">
+      {
+        stats.map((stat) => (
+          <div class="stat-grid__item" data-reveal>
+            <p class="stat-grid__num">{stat.num}</p>
+            <p class="stat-grid__desc">{stat.desc}</p>
+          </div>
+        ))
+      }
     </div>
   </section>
 
-  <section id="servicios" class="section">
+  <section id="services" class="section services">
+    <div class="container services__head">
+      <p class="eyebrow" data-reveal>— What we do</p>
+      <h2 class="services__title" data-reveal>
+        Four things, on repeat — for venues that take the door seriously.
+      </h2>
+    </div>
+
     <div class="container">
-      <h2 data-reveal>Servicios</h2>
-      <p data-reveal>Contenido pendiente de migrar desde el sitio actual.</p>
+      {
+        services.map((service) => (
+          <div class="service-row" data-reveal>
+            <span class="service-row__num">{service.num} /</span>
+            <h3 class="service-row__title">{service.title}</h3>
+            <p class="service-row__desc">{service.desc}</p>
+            <span class="service-row__tag">→ {service.tag}</span>
+            <span class="service-row__label">{service.label}</span>
+          </div>
+        ))
+      }
     </div>
   </section>
 
-  <section id="clientes" class="section">
-    <div class="container">
-      <h2 data-reveal>Clientes</h2>
-      <p data-reveal>Contenido pendiente de migrar desde el sitio actual.</p>
+  <section id="roster" class="section roster">
+    <div class="container roster__head">
+      <p class="eyebrow" data-reveal>— Selección de socios / NDA en el resto</p>
+      <h2 class="roster__title" data-reveal>Rooms we keep full.</h2>
+      <span class="roster__meta">2024 — 2026</span>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track marquee__track--a">
+        {
+          [...rosterRowA, ...rosterRowA].map((name) => (
+            <span class="marquee__item">
+              {name}
+              <span class="marquee__dot" />
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track marquee__track--b">
+        {
+          [...rosterRowB, ...rosterRowB].map((name) => (
+            <span class="marquee__item">
+              {name}
+              <span class="marquee__dot" />
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <p class="visually-hidden">
+      {[...rosterRowA, ...rosterRowB].join(', ')}
+    </p>
+
+    <div class="container roster__foot">
+      <span>— 60+ locales, una sola ciudad</span>
+      <a class="roster__cta" href="#contact">Pide la lista completa →</a>
     </div>
   </section>
 
-  <section id="contacto" class="section">
-    <div class="container container--narrow">
-      <h2 data-reveal>Contacto</h2>
-      <ContactForm />
+  <section id="apply" class="section apply">
+    <div class="apply__col" data-reveal>
+      <div>
+        <p class="eyebrow">— For venues</p>
+        <h3 class="apply__title">Put us on the door.</h3>
+        <p class="apply__desc">
+          Bares, hoteles, restaurantes. Tomamos una cartera reducida y la llenamos —
+          silenciosamente, consistentemente, con las caras correctas. Cuéntanos del local
+          y la noche que quieres correr.
+        </p>
+      </div>
+
+      <ul role="list" class="apply__bullets">
+        <li>Aceptamos 4 locales nuevos por trimestre</li>
+        <li>Compromiso mínimo de 6 meses</li>
+        <li>Referencias bajo pedido</li>
+      </ul>
+
+      <a class="apply__arrow" href="mailto:venues@thedoor.pe">Pitch your venue →</a>
+    </div>
+
+    <div class="apply__col apply__col--list" data-reveal>
+      <div>
+        <p class="eyebrow">— For the list</p>
+        <h3 class="apply__title">Get on the list.</h3>
+        <p class="apply__desc">
+          Mantenemos una cartera filtrada de invitados que reciben primer aviso de
+          residencias, aperturas y salones privados en nuestros locales. Sin app. Sin
+          cobro. Solo por referencia — pero puedes presentarte.
+        </p>
+      </div>
+
+      <ul role="list" class="apply__bullets">
+        <li>Por referencia, nunca vendida</li>
+        <li>De tres a cinco invitaciones por mes</li>
+        <li>Te das de baja cuando quieras</li>
+      </ul>
+
+      <a class="apply__arrow" href="mailto:list@thedoor.pe">Request an introduction →</a>
+    </div>
+  </section>
+
+  <section id="contact" class="section contact">
+    <div class="container contact__grid">
+      <div>
+        <p class="eyebrow" data-reveal>— Contact</p>
+        <h2 class="contact__title" data-reveal>
+          Knock once. <em>We’ll answer.</em>
+        </h2>
+        <ContactForm />
+      </div>
+
+      <dl class="contact__rows" data-reveal>
+        {
+          contactRows.map((row) => (
+            <div class="contact__row">
+              <dt>{row.label}</dt>
+              <dd>{row.href ? <a href={row.href}>{row.value}</a> : row.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
     </div>
   </section>
 </Layout>
 
 <style>
+  /* --- Hero ------------------------------------------------------------- */
   .hero {
     display: grid;
-    place-items: center;
-    min-height: min(92svh, 60rem);
-    padding-block: var(--sp-2xl);
+    align-content: space-between;
+    min-height: 100svh;
+    padding-block: var(--sp-lg);
+  }
+
+  .hero__inner {
+    display: grid;
+    align-content: space-between;
+    min-height: calc(100svh - 4.5rem);
+    gap: var(--sp-xl);
+  }
+
+  .hero__topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .hero__topbar-right {
+    display: flex;
+    gap: var(--sp-md);
+    color: var(--c-fg-muted);
+  }
+
+  .hero__topbar-right em {
+    font-style: normal;
+    color: var(--c-accent);
+  }
+
+  .hero__stage {
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-md);
     text-align: center;
   }
 
-  .hero__lead {
-    max-width: 42ch;
-    margin-block-start: var(--sp-md);
+  :global(.hero__mark) {
+    width: min(45vw, 15rem);
+    height: auto;
+  }
+
+  :global(.hero__wordmark) {
+    font-size: var(--fs-2xl);
+  }
+
+  .hero__rule {
+    width: 2.5rem;
+    height: 1px;
+    background: var(--c-accent);
+    box-shadow: var(--glow-accent);
+  }
+
+  .hero__tagline {
+    max-width: 44rem;
     margin-inline: auto;
-    font-size: var(--fs-lg);
+    font-family: var(--font-serif-body);
+    font-style: italic;
+    font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+    line-height: 1.3;
+    text-align: center;
+    color: var(--c-fg);
+  }
+
+  .hero__tagline em {
+    color: var(--c-accent);
+    font-style: italic;
+    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
+  }
+
+  .hero__foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-md);
+    align-items: flex-end;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
     color: var(--c-fg-muted);
+  }
+
+  .hero__eyebrow {
+    max-width: 22rem;
+  }
+
+  .hero__scroll {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2xs);
+  }
+
+  .hero__scroll-cue {
+    width: 1.5rem;
+    height: 1px;
+    background: var(--c-accent);
+  }
+
+  /* --- Question / stats --------------------------------------------------- */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--c-accent);
+    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
+  }
+
+  .question__title {
+    display: grid;
+    margin-block-start: var(--sp-md);
+    font-size: var(--fs-5xl);
+    line-height: 0.95;
+  }
+
+  .question__title em {
+    font-style: italic;
+    color: var(--c-accent);
+    text-shadow:
+      0 0 40px rgb(255 26 37 / 0.4),
+      0 0 80px rgb(255 26 37 / 0.2);
+  }
+
+  .manifesto {
+    max-width: 34rem;
+    margin-block-start: var(--sp-xl);
+    font-family: var(--font-serif-body);
+    font-style: italic;
+    font-size: var(--fs-xl);
+    color: var(--c-fg);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-lg);
+    margin-block-start: var(--sp-2xl);
+    padding-block-start: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .stat-grid__num {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    text-transform: uppercase;
+    color: var(--c-fg);
+  }
+
+  .stat-grid__desc {
+    margin-block-start: var(--sp-2xs);
+    font-size: var(--fs-sm);
+    color: var(--c-fg-muted);
+  }
+
+  /* --- Services ------------------------------------------------------------ */
+  .services__head {
+    display: grid;
+    gap: var(--sp-md);
+    margin-block-end: var(--sp-xl);
+  }
+
+  .services__title {
+    max-width: 46rem;
+    font-size: var(--fs-3xl);
+  }
+
+  .service-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'num title label' 'num desc label' 'num tag label';
+    column-gap: var(--sp-lg);
+    row-gap: var(--sp-2xs);
+    align-items: start;
+    padding-block: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .service-row:last-child {
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .service-row__num {
+    grid-area: num;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--c-accent);
+  }
+
+  .service-row__title {
+    grid-area: title;
+    font-size: var(--fs-3xl);
+  }
+
+  .service-row__desc {
+    grid-area: desc;
+    max-width: 34rem;
+    margin-block-start: var(--sp-2xs);
+    color: var(--c-fg-muted);
+  }
+
+  .service-row__tag {
+    grid-area: tag;
+    display: block;
+    margin-block-start: var(--sp-2xs);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .service-row__label {
+    grid-area: label;
+    align-self: start;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+    white-space: nowrap;
+  }
+
+  /* --- Roster / marquee ------------------------------------------------- */
+  .roster__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    margin-block-end: var(--sp-xl);
+  }
+
+  .roster__title {
+    font-size: var(--fs-3xl);
+  }
+
+  .roster__meta {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-fg-muted);
+  }
+
+  .marquee {
+    overflow: hidden;
+    padding-block: var(--sp-sm);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    animation: marquee-left 42s linear infinite;
+  }
+
+  .marquee__track--b {
+    animation-name: marquee-right;
+    animation-duration: 50s;
+  }
+
+  .marquee__item {
+    display: flex;
+    align-items: center;
+    padding-inline-end: var(--sp-lg);
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    text-transform: uppercase;
+    color: var(--c-fg);
+    white-space: nowrap;
+  }
+
+  .marquee__dot {
+    width: 5px;
+    height: 5px;
+    margin-inline-start: var(--sp-lg);
+    background: var(--c-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--c-accent);
+  }
+
+  @keyframes marquee-left {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes marquee-right {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .roster__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sp-sm);
+    margin-block-start: var(--sp-lg);
+    padding-block-start: var(--sp-md);
+    border-top: 1px solid var(--c-border);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .roster__cta {
+    color: var(--c-fg);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .roster__cta:hover {
+    color: var(--c-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__track {
+      animation: none;
+    }
+  }
+
+  /* --- Apply -------------------------------------------------------------- */
+  .apply {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-block: 0;
+  }
+
+  .apply__col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--sp-xl);
+    padding: var(--sp-2xl) var(--gutter);
+    background: var(--c-bg);
+    border-top: 1px solid var(--c-border);
+    transition: background var(--dur-base) var(--ease-out);
+  }
+
+  .apply__col:hover {
+    background: var(--c-bg-elevated);
+  }
+
+  .apply__col--list {
+    border-inline-start: 1px solid var(--c-border);
+  }
+
+  .apply__title {
+    margin-block-start: var(--sp-md);
+    font-size: clamp(2rem, 1.3rem + 3vw, 4rem);
+    text-wrap: balance;
+  }
+
+  .apply__desc {
+    max-width: 30rem;
+    margin-block-start: var(--sp-md);
+    color: var(--c-fg-muted);
+  }
+
+  .apply__bullets {
+    display: grid;
+    gap: var(--sp-2xs);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .apply__bullets li {
+    padding-block: var(--sp-sm);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .apply__bullets li::before {
+    content: '• ';
+    color: var(--c-accent);
+  }
+
+  .apply__arrow {
+    justify-self: start;
+    padding: var(--sp-sm) var(--sp-md);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--c-fg);
+    border: 1px solid var(--c-border-strong);
+    transition: 0.2s;
+  }
+
+  .apply__arrow:hover {
+    color: var(--c-ink);
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow: var(--glow-accent);
+  }
+
+  @media (max-width: 860px) {
+    .apply {
+      grid-template-columns: 1fr;
+    }
+
+    .apply__col--list {
+      border-inline-start: 0;
+    }
+  }
+
+  /* --- Contact -------------------------------------------------------------- */
+  .contact {
+    padding-block-end: var(--sp-3xl);
+  }
+
+  .contact__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--sp-2xl);
+  }
+
+  .contact__title {
+    margin-block-start: var(--sp-md);
+    font-size: var(--fs-4xl);
+    line-height: 0.95;
+  }
+
+  .contact__title em {
+    display: block;
+    font-style: italic;
+    color: var(--c-accent);
+    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
+  }
+
+  .contact__rows {
+    display: grid;
+    align-content: start;
+    margin: 0;
+  }
+
+  .contact__row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    padding-block: var(--sp-md);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .contact__row dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-accent);
+  }
+
+  .contact__row dd {
+    margin: 0;
+    text-align: end;
+    color: var(--c-fg);
+  }
+
+  .contact__row a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .contact__row a:hover {
+    color: var(--c-accent);
+  }
+
+  @media (max-width: 860px) {
+    .contact__grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

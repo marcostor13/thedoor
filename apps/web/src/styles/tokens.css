@@ -1,60 +1,69 @@
 /* ===========================================================================
- * TOKENS DE DISEÑO — The Door
+ * TOKENS DE DISEÑO — The Door PR
  *
- * ⚠️  VALORES PROVISIONALES.
- *
- * Ninguno de los valores de este archivo procede todavía del sitio real: el
- * dominio thedoor-pr.netlify.app está bloqueado por la política de egress de
- * la sesión, así que no se ha podido medir la línea gráfica original.
- *
- * Lo que hay aquí es un andamiaje neutro para poder construir la estructura.
- * NO se corresponde con el diseño de The Door y no debe darse por bueno.
- *
- * En cuanto el dominio sea accesible, cada bloque marcado con [PENDIENTE] se
- * sustituye por los valores extraídos del sitio. Como todo el CSS del proyecto
- * consume estas custom properties y nunca valores literales, ese reemplazo
- * propaga la línea gráfica correcta a todo el sitio sin tocar los componentes.
+ * Extraídos del sitio de referencia (thedoor-pr.netlify.app): paleta,
+ * tipografías, escala y curvas de animación reales. Todo el CSS del proyecto
+ * consume estas custom properties y nunca valores literales, así que
+ * cualquier ajuste futuro de línea gráfica se hace aquí una sola vez.
  * =========================================================================== */
 
 :root {
-  /* --- Tipografía [PENDIENTE: familias, pesos y escala reales] ------------ */
-  --font-display: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  /* --- Tipografía ---------------------------------------------------------
+     Italiana  → titulares grandes, wordmark (solo weight 400 disponible)
+     Cormorant Garamond → acentos itálicos, subrayados editoriales
+     Archivo   → cuerpo de texto
+     JetBrains Mono → navegación, etiquetas, meta-datos, todo en mayúsculas
+  ------------------------------------------------------------------------- */
+  --font-display: 'Italiana', 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-serif-body: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-body: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
   --fw-bold: 700;
 
-  /* Escala fluida. Los extremos se sustituyen por los del sitio original. */
-  --fs-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
-  --fs-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.9375rem);
-  --fs-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
-  --fs-lg: clamp(1.125rem, 1.05rem + 0.36vw, 1.375rem);
-  --fs-xl: clamp(1.375rem, 1.24rem + 0.68vw, 1.875rem);
-  --fs-2xl: clamp(1.75rem, 1.5rem + 1.25vw, 2.625rem);
-  --fs-3xl: clamp(2.25rem, 1.8rem + 2.25vw, 3.75rem);
-  --fs-4xl: clamp(2.75rem, 1.9rem + 4.25vw, 5.5rem);
+  /* Escala fluida. Los titulares de sección llegan a 180px en desktop. */
+  --fs-xs: clamp(0.6875rem, 0.66rem + 0.12vw, 0.75rem);
+  --fs-sm: clamp(0.8125rem, 0.78rem + 0.16vw, 0.875rem);
+  --fs-base: clamp(0.9375rem, 0.9rem + 0.18vw, 1rem);
+  --fs-lg: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --fs-xl: clamp(1.25rem, 1.1rem + 0.7vw, 1.75rem);
+  --fs-2xl: clamp(1.75rem, 1.4rem + 1.75vw, 2.75rem);
+  --fs-3xl: clamp(2.25rem, 1.6rem + 3.25vw, 4rem);
+  --fs-4xl: clamp(2.75rem, 1.4rem + 6.75vw, 7.5rem);
+  --fs-5xl: clamp(3rem, 0.5rem + 12.5vw, 11.25rem);
 
-  --lh-tight: 1.05;
-  --lh-snug: 1.2;
+  --lh-tight: 1.02;
+  --lh-snug: 1.15;
   --lh-normal: 1.55;
   --lh-relaxed: 1.75;
 
-  --ls-tight: -0.03em;
-  --ls-normal: 0;
-  --ls-wide: 0.08em;
+  --ls-tight: -0.01em;
+  --ls-normal: 0.01em;
+  --ls-wide: 0.18em;
+  --ls-widest: 0.3em;
 
-  /* --- Color [PENDIENTE: paleta real] ------------------------------------ */
-  --c-bg: #0a0a0a;
-  --c-bg-elevated: #141414;
-  --c-fg: #f5f5f5;
-  --c-fg-muted: #a3a3a3;
-  --c-accent: #e5e5e5;
-  --c-accent-contrast: #0a0a0a;
-  --c-border: rgb(255 255 255 / 0.12);
-  --c-overlay: rgb(0 0 0 / 0.6);
+  /* --- Color ---------------------------------------------------------------
+     Fondo negro puro, tinta crema cálida, un único acento rojo neón que
+     porta todo el peso emocional de la marca (CTAs, glow de la puerta,
+     etiquetas de sección).
+  ------------------------------------------------------------------------- */
+  --c-ink: #050505;
+  --c-bg: #000000;
+  --c-bg-elevated: #0c0a0a;
+  --c-bg-elevated-2: #14100f;
+  --c-fg: #f4f1ea;
+  --c-fg-muted: #a8a39a;
+  --c-accent: #ff1a25;
+  --c-accent-soft: #ff5560;
+  --c-accent-deep: #c00d18;
+  --c-accent-contrast: #050505;
+  --c-border: rgb(255 255 255 / 0.08);
+  --c-border-strong: rgb(255 255 255 / 0.18);
+  --c-border-accent: rgb(255 26 37 / 0.35);
+  --c-overlay: rgb(0 0 0 / 0.75);
 
   /* --- Espaciado ---------------------------------------------------------- */
   --sp-3xs: 0.25rem;
@@ -68,27 +77,32 @@
   --sp-3xl: 9rem;
 
   /* --- Layout ------------------------------------------------------------- */
-  --container-max: 80rem;
+  --container-max: 84rem;
   --container-narrow: 48rem;
   --gutter: clamp(1.25rem, 4vw, 4rem);
 
   /* --- Bordes y sombras --------------------------------------------------- */
   --radius-sm: 2px;
-  --radius-md: 6px;
-  --radius-lg: 14px;
+  --radius-md: 4px;
+  --radius-lg: 10px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.28);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.42);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.55);
+  --glow-accent: 0 0 32px rgb(255 26 37 / 0.45);
 
-  /* --- Movimiento [PENDIENTE: curvas y duraciones de la animación real] --- */
+  /* --- Movimiento -----------------------------------------------------------
+     Curvas y duraciones de la animación de apertura de puerta del sitio
+     original: los dos leaves giran/escalan con overshoot y el resplandor
+     central del quicio entra con un pequeño rebote.
+  ------------------------------------------------------------------------- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-fast: 180ms;
-  --dur-base: 320ms;
-  --dur-slow: 640ms;
-  --dur-intro: 2200ms;
+  --dur-fast: 200ms;
+  --dur-base: 400ms;
+  --dur-slow: 700ms;
+  --dur-intro: 1900ms;
 
   /* --- Capas -------------------------------------------------------------- */
   --z-base: 0;

@@ -1,26 +1,11 @@
 ---
-import Logo from './Logo.astro'
+import DoorMark from './DoorMark.astro'
 ---
-
-{/*
-  ANIMACIÓN DE ENTRADA — MARCADOR DE POSICIÓN
-
-  ⚠️  Esta NO es la animación de The Door.
-
-  El requisito es que la animación de entrada sea idéntica a la del sitio
-  actual, pero thedoor-pr.netlify.app está bloqueado por la política de egress
-  de la sesión, así que no se ha podido capturar la original (ni su mecanismo,
-  ni duraciones, ni curvas, ni la secuencia).
-
-  Lo que hay aquí es un contenedor con el comportamiento de infraestructura ya
-  resuelto —bloqueo de scroll, `prefers-reduced-motion`, mostrar solo una vez
-  por sesión, limpieza del DOM al terminar— para que al portar la animación
-  real solo haya que sustituir el marcado y los keyframes de abajo.
-*/}
 
 <div id="intro" class="intro" role="presentation" aria-hidden="true">
   <div class="intro__stage">
-    <Logo class="intro__logo" />
+    <DoorMark class="intro__mark" id="intro" />
+    <p class="intro__label">THE&nbsp;&nbsp;DOOR&nbsp;&nbsp;PR</p>
   </div>
 </div>
 
@@ -44,29 +29,126 @@ import Logo from './Logo.astro'
 
   .intro__stage {
     display: grid;
-    place-items: center;
-    width: min(60vw, 28rem);
+    justify-items: center;
+    gap: var(--sp-lg);
+    width: min(50vw, 22rem);
   }
 
-  .intro__logo {
+  :global(.intro__mark) {
     width: 100%;
     height: auto;
-    animation: intro-logo var(--dur-intro) var(--ease-out) forwards;
+    opacity: 0;
+    animation: frame-draw-in var(--dur-slow) var(--ease-out) 100ms forwards;
   }
 
-  /* [PENDIENTE] Sustituir por los keyframes reales del sitio original. */
-  @keyframes intro-logo {
+  :global(.intro__mark .door-frame) {
+    opacity: 0;
+    animation: frame-draw-in var(--dur-slow) var(--ease-out) 150ms forwards;
+  }
+
+  :global(.intro__mark .door-leaf--left) {
+    animation: leaf-open-left 900ms var(--ease-out) 500ms backwards;
+  }
+
+  :global(.intro__mark .door-leaf--right) {
+    animation: leaf-open-right 900ms var(--ease-out) 500ms backwards;
+  }
+
+  :global(.intro__mark .door-seam rect) {
+    transform-origin: center;
+    animation:
+      seam-reveal 900ms var(--ease-out) 350ms backwards,
+      seam-flicker 1400ms linear 350ms;
+  }
+
+  :global(.intro__mark .door-floor-spill) {
+    opacity: 0;
+    animation: frame-draw-in var(--dur-slow) var(--ease-out) 900ms forwards;
+  }
+
+  .intro__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    color: var(--c-fg-muted);
+    opacity: 0;
+    animation: frame-draw-in var(--dur-slow) var(--ease-out) 1200ms forwards;
+  }
+
+  @keyframes frame-draw-in {
     0% {
       opacity: 0;
-      transform: scale(0.94);
-    }
-    35% {
-      opacity: 1;
-      transform: scale(1);
+      transform: translateY(8px);
     }
     100% {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes leaf-open-left {
+    0% {
+      transform: scaleX(1.09);
+      filter: brightness(0.55);
+    }
+    60% {
+      transform: scaleX(0.88);
+      filter: brightness(1.15);
+    }
+    100% {
+      transform: scaleX(0.92);
+      filter: brightness(1);
+    }
+  }
+
+  @keyframes leaf-open-right {
+    0% {
+      transform: scaleX(1.09);
+      filter: brightness(0.55);
+    }
+    60% {
+      transform: scaleX(0.88);
+      filter: brightness(1.15);
+    }
+    100% {
+      transform: scaleX(0.92);
+      filter: brightness(1);
+    }
+  }
+
+  @keyframes seam-reveal {
+    0% {
+      opacity: 0;
+      transform: scaleY(0.1) scaleX(0.4);
+    }
+    35% {
+      opacity: 1;
+      transform: scaleY(1.05) scaleX(2.2);
+    }
+    60% {
+      opacity: 1;
+      transform: scaleY(1) scaleX(1.6);
+    }
+    100% {
+      opacity: 1;
+      transform: scaleY(1) scaleX(1);
+    }
+  }
+
+  @keyframes seam-flicker {
+    0%,
+    18%,
+    22%,
+    60%,
+    64%,
+    100% {
+      opacity: 1;
+    }
+    20% {
+      opacity: 0.65;
+    }
+    62% {
+      opacity: 0.55;
     }
   }
 
@@ -113,18 +195,10 @@ import Logo from './Logo.astro'
       })
     }
 
-    const logo = intro.querySelector<SVGElement | HTMLElement>('.intro__logo')
-
-    if (logo) {
-      logo.addEventListener('animationend', finish, { once: true })
-    } else {
-      finish()
-    }
-
-    // Red de seguridad: si la animación no llega a emitir `animationend`
-    // (pestaña en segundo plano, fallo al cargar el activo), el overlay no
-    // puede quedarse bloqueando la página.
-    window.setTimeout(finish, 6000)
+    // Red de seguridad: si la secuencia no termina sola (pestaña en segundo
+    // plano, fuente sin cargar), el overlay no puede quedarse bloqueando
+    // la página para siempre.
+    window.setTimeout(finish, Number.parseInt(getComputedStyle(intro).getPropertyValue('--dur-intro')) || 2200)
   }
 
   runIntro()

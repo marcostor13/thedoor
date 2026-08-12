@@ -61,9 +61,10 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-regular);
   line-height: var(--lh-tight);
-  letter-spacing: var(--ls-tight);
+  letter-spacing: var(--ls-normal);
+  text-transform: uppercase;
   text-wrap: balance;
 }
 

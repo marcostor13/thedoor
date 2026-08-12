@@ -43,7 +43,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
   }
 
   .form__label {
-    font-size: var(--fs-sm);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--c-fg-muted);
@@ -54,7 +55,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
     color: var(--c-fg);
     background: var(--c-bg-elevated);
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-md);
+    border-radius: 0;
     transition: border-color var(--dur-fast) var(--ease-out);
   }
 
@@ -76,20 +77,25 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
   .form__submit {
     justify-self: start;
-    padding: var(--sp-xs) var(--sp-lg);
-    font-weight: var(--fw-semibold);
+    padding: var(--sp-sm) var(--sp-md);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
-    color: var(--c-accent-contrast);
+    color: var(--c-fg);
     cursor: pointer;
-    background: var(--c-accent);
-    border: 0;
-    border-radius: var(--radius-full);
-    transition: opacity var(--dur-fast) var(--ease-out);
+    background: none;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 0;
+    transition: 0.2s;
   }
 
   .form__submit:hover:not(:disabled) {
-    opacity: 0.85;
+    color: var(--c-ink);
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow: var(--glow-accent);
+    opacity: 1;
   }
 
   .form__submit:disabled {

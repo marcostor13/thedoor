@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs'
+import { setServers } from 'node:dns'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
@@ -35,6 +36,26 @@ export function loadEnv() {
 
     if (process.env[key] === undefined) process.env[key] = value
   }
+
+  applyDnsServers()
+}
+
+/**
+ * Algunos resolvers DNS (redes corporativas, ciertas VPN) fallan consultas
+ * SRV o de hosts externos aunque el resto de la red funcione. Si `.env` trae
+ * `NODE_DNS_SERVERS`, se apunta el resolver de Node a esos servidores antes
+ * de que los scripts hagan ninguna petición.
+ */
+function applyDnsServers() {
+  const dnsServers = process.env.NODE_DNS_SERVERS
+  if (!dnsServers) return
+
+  setServers(
+    dnsServers
+      .split(',')
+      .map((server) => server.trim())
+      .filter(Boolean),
+  )
 }
 
 export function requireEnv(name) {

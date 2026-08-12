@@ -1,8 +1,23 @@
 import 'reflect-metadata'
+import { setServers } from 'node:dns'
 import { ValidationPipe, Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
+
+// Algunos resolvers DNS (redes corporativas, ciertas VPN) fallan la consulta
+// SRV que necesita `mongodb+srv://` aunque el resto de DNS funcione. Apuntar
+// el resolver de Node a servidores públicos antes de conectar evita ese fallo
+// sin depender de la configuración de red del host.
+const dnsServers = process.env.NODE_DNS_SERVERS
+if (dnsServers) {
+  setServers(
+    dnsServers
+      .split(',')
+      .map((server) => server.trim())
+      .filter(Boolean),
+  )
+}
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule)

@@ -1,12 +1,12 @@
 ---
 import Logo from './Logo.astro'
-import { NAV_LINKS } from '../data/navigation'
+import { NAV_LINKS, SITE } from '../data/navigation'
 ---
 
 <header class="header">
   <div class="container header__inner">
-    <a class="header__brand" href="/" aria-label="The Door — inicio">
-      <Logo class="header__logo" />
+    <a class="header__brand" href="/#top" aria-label={`${SITE.name} — inicio`}>
+      <Logo />
     </a>
 
     <nav class="header__nav" aria-label="Navegación principal">
@@ -14,11 +14,7 @@ import { NAV_LINKS } from '../data/navigation'
         {
           NAV_LINKS.map((link) => (
             <li>
-              <a
-                class="header__link"
-                href={link.href}
-                aria-current={Astro.url.pathname === link.href ? 'page' : undefined}
-              >
+              <a class="header__link" href={link.href}>
                 {link.label}
               </a>
             </li>
@@ -26,6 +22,16 @@ import { NAV_LINKS } from '../data/navigation'
         }
       </ul>
     </nav>
+
+    <div class="header__right">
+      <div class="lang-toggle" role="group" aria-label="Idioma">
+        <button type="button" class="lang-toggle__btn is-active" aria-pressed="true">ES</button>
+        <span class="lang-toggle__sep" aria-hidden="true">/</span>
+        <button type="button" class="lang-toggle__btn" aria-pressed="false">EN</button>
+      </div>
+
+      <a class="header__cta" href="/#apply">{SITE.cta} →</a>
+    </div>
   </div>
 </header>
 
@@ -34,7 +40,7 @@ import { NAV_LINKS } from '../data/navigation'
     position: sticky;
     top: 0;
     z-index: var(--z-header);
-    background: color-mix(in srgb, var(--c-bg) 82%, transparent);
+    background: rgb(0 0 0 / 0.75);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--c-border);
   }
@@ -52,62 +58,101 @@ import { NAV_LINKS } from '../data/navigation'
     text-decoration: none;
   }
 
-  .header__logo {
-    width: 8.75rem;
+  .header__nav {
+    min-width: 0;
   }
 
   .header__list {
     display: flex;
-    gap: clamp(var(--sp-sm), 2.5vw, var(--sp-lg));
+    gap: clamp(var(--sp-sm), 2.5vw, 1.75rem);
     align-items: center;
     margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
   }
 
   .header__link {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
     text-decoration: none;
+    color: var(--c-fg);
+    opacity: 0.72;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .header__link:hover {
+    opacity: 1;
+    color: var(--c-accent);
+  }
+
+  .header__right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+  }
+
+  .lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+  }
+
+  .lang-toggle__btn {
+    padding: 4px 2px;
     color: var(--c-fg-muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
     transition: color var(--dur-fast) var(--ease-out);
   }
 
-  .header__link:hover,
-  .header__link[aria-current='page'] {
+  .lang-toggle__btn:hover {
     color: var(--c-fg);
   }
 
-  /* En móvil la navegación no se oculta: se deja desplazable en horizontal,
-     para no dejar el sitio sin navegación mientras no exista un menú
-     hamburguesa. Ese menú se decidirá con el inventario de contenido delante,
-     cuando se sepa cuántas secciones hay realmente. */
-  @media (max-width: 768px) {
-    .header__inner {
-      gap: var(--sp-sm);
-    }
+  .lang-toggle__btn.is-active {
+    color: var(--c-accent);
+    text-shadow: 0 0 12px var(--c-accent);
+  }
 
-    .header__logo {
-      width: 6.5rem;
-    }
+  .lang-toggle__sep {
+    color: var(--c-fg-muted);
+  }
 
+  .header__cta {
+    padding: 10px 18px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    color: var(--c-fg);
+    border: 1px solid var(--c-border-strong);
+    transition: 0.2s;
+  }
+
+  .header__cta:hover {
+    color: var(--c-ink);
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow: var(--glow-accent);
+  }
+
+  @media (max-width: 860px) {
     .header__nav {
-      min-width: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .header__nav::-webkit-scrollbar {
       display: none;
     }
+  }
 
-    .header__list {
-      gap: var(--sp-sm);
-    }
-
-    .header__link {
-      white-space: nowrap;
-      font-size: var(--fs-xs);
+  @media (max-width: 560px) {
+    .header__cta {
+      display: none;
     }
   }
 </style>
