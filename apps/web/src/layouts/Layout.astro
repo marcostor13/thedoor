@@ -30,6 +30,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -58,6 +60,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
 
     {intro && <Intro />}
 
+    <div class="progress" role="presentation" aria-hidden="true"><span></span></div>
+
     <Header />
 
     <main id="main">
@@ -65,6 +69,49 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     </main>
 
     <Footer />
+
+    <style>
+      /* Hilo de progreso de lectura. Se apoya en una animación ligada al scroll
+         del documento, así que el navegador la resuelve en el compositor y no
+         cuesta un solo listener. Donde no haya soporte simplemente no aparece
+         nada: no hay fallback en JS porque no merece uno. */
+      .progress {
+        position: fixed;
+        inset-block-start: 0;
+        inset-inline: 0;
+        z-index: var(--z-header);
+        height: 1px;
+        pointer-events: none;
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--c-accent-deep), var(--c-accent));
+        box-shadow: var(--glow-sm);
+        transform-origin: 0 50%;
+        transform: scaleX(0);
+      }
+
+      @supports (animation-timeline: scroll()) {
+        .progress span {
+          animation: progress-grow linear both;
+          animation-timeline: scroll(root block);
+        }
+      }
+
+      @keyframes progress-grow {
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .progress {
+          display: none;
+        }
+      }
+    </style>
 
     <script>
       import { initReveal } from '../scripts/reveal'

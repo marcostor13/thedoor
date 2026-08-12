@@ -15,6 +15,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Los anclajes de sección no deben quedar bajo la cabecera pegajosa. */
+  scroll-padding-block-start: var(--header-h);
 }
 
 body {
@@ -26,6 +28,15 @@ body {
   background-color: var(--c-bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* La página entera es una escena nocturna: sin esto, el negro plano deja los
+     bordes de sección flotando sin aire. */
+  background-image: radial-gradient(
+    120% 55% at 50% -8%,
+    rgb(255 26 37 / 0.07) 0%,
+    transparent 62%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 img,
@@ -93,6 +104,27 @@ ol[role='list'] {
   padding: 0;
 }
 
+::selection {
+  color: var(--c-accent-contrast);
+  background: var(--c-accent);
+}
+
+/* --- Grano ----------------------------------------------------------------
+   Una capa de ruido fijísima sobre todo el documento. En un sitio casi
+   enteramente negro el degradado de fondo produce bandas visibles; el grano las
+   rompe y de paso da textura de película a la escena. Se genera con un SVG
+   embebido para no pedir ningún recurso extra. -------------------------------- */
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* --- Accesibilidad -------------------------------------------------------- */
 
 :focus-visible {
@@ -116,7 +148,7 @@ ol[role='list'] {
   position: absolute;
   top: var(--sp-sm);
   left: var(--sp-sm);
-  z-index: var(--z-overlay);
+  z-index: var(--z-intro);
   padding: var(--sp-2xs) var(--sp-sm);
   color: var(--c-accent-contrast);
   background: var(--c-accent);
@@ -143,25 +175,69 @@ ol[role='list'] {
 }
 
 .section {
+  position: relative;
   padding-block: var(--sp-2xl);
 }
 
-/* --- Revelado al hacer scroll --------------------------------------------- */
-/* El estado inicial solo se aplica si JS está activo (la clase `js` la pone
-   Layout.astro). Sin JS el contenido es visible desde el principio. */
+/* --- Antetítulos ----------------------------------------------------------
+   Aparecen en cinco secciones; vivían duplicados en cada bloque de estilos. --- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2xs);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--c-accent);
+  text-shadow: var(--text-glow-sm);
+}
+
+/* El guion manual de cada antetítulo, hecho regla: mide siempre lo mismo y se
+   alinea con la mayúscula en vez de con la línea base del texto. */
+.eyebrow::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  flex: none;
+  background: currentColor;
+  box-shadow: var(--glow-xs);
+}
+
+/* --- Revelado al hacer scroll ---------------------------------------------
+   El estado inicial solo se aplica si JS está activo (la clase `js` la pone
+   Layout.astro). Sin JS el contenido es visible desde el principio.
+
+   El desenfoque de medio píxel es lo que hace que el elemento parezca *entrar
+   en foco* en vez de deslizarse: el desplazamiento se puede reducir a un tercio
+   y el gesto sigue leyéndose. Menos movimiento, misma intención. ------------- */
 
 .js [data-reveal] {
   opacity: 0;
-  transform: translateY(1.5rem);
+  transform: translateY(0.75rem);
+  filter: blur(6px);
   transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
+    opacity var(--dur-slower) var(--ease-cinematic),
+    transform var(--dur-slower) var(--ease-cinematic),
+    filter var(--dur-slow) var(--ease-cinematic);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
 .js [data-reveal].is-revealed {
   opacity: 1;
   transform: none;
+  filter: none;
+}
+
+/* Variantes. `reveal-rise` es para titulares grandes, donde un desplazamiento
+   mayor se lee como intención y no como salto. */
+.js [data-reveal='rise'] {
+  transform: translateY(2rem);
+}
+
+.js [data-reveal='scale'] {
+  transform: scale(0.97);
 }
 
 /* --- Movimiento reducido -------------------------------------------------- */
@@ -183,5 +259,6 @@ ol[role='list'] {
   .js [data-reveal] {
     opacity: 1;
     transform: none;
+    filter: none;
   }
 }

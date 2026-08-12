@@ -1,139 +1,395 @@
 ---
 /**
- * Marca de la puerta — el icono que abre la animación de entrada y preside
- * el hero. Trazo rojo neón con resplandor SVG, quicio partido en dos leaves
- * que se abren en Intro.astro, y un halo central que se derrama sobre el
- * "suelo" al terminar la apertura.
+ * Marca de la puerta — el icono que abre la secuencia de entrada y preside el
+ * hero.
+ *
+ * GEOMETRÍA
+ * Todo el dibujo es un espejo exacto respecto al eje x=100 del viewBox: cada
+ * coordenada de la izquierda tiene su pareja `200 - x` a la derecha, y el marco
+ * y el umbral están partidos en dos mitades que arrancan en el mismo punto para
+ * poder dibujarse a la vez. La simetría es estructural, no un ajuste a ojo, así
+ * que cualquier animación sobre las mitades sale simétrica por construcción.
+ *
+ * NEÓN
+ * El trazo no se pinta una vez: se pinta tres, como un tubo de neón real.
+ *   · halo   — desenfoque ancho con la alfa amplificada, tiñe el aire
+ *   · bloom  — desenfoque medio, el cuerpo del resplandor
+ *   · core   — trazo nítido casi blanco, el filamento incandescente
+ * Las tres capas son un `<use>` del mismo `<g>` de `<defs>`, así que la
+ * geometría vive una sola vez y animarla propaga a las tres.
+ *
+ * `--dm-intensity` (0–1.4) gradúa halo y bloom sin tocar el núcleo: es lo que
+ * permite que la puerta pase de brasa apagada a neón pleno durante la entrada.
  */
 interface Props {
   class?: string
   id?: string
+  /**
+   * `closed`    puerta cerrada, junta tenue — uso general.
+   * `ajar`      junta encendida, derrame y respiración del neón — hero.
+   * `sequenced` todo apagado y sin dibujar, a la espera de que la secuencia de
+   *             entrada lo encienda pieza a pieza.
+   */
+  state?: 'closed' | 'ajar' | 'sequenced'
 }
 
-const { class: className, id = 'r1' } = Astro.props
+const { class: className, id = 'r1', state = 'closed' } = Astro.props
+
+const uid = `dm-${id}`
 ---
 
 <svg
-  class={className}
-  viewBox="0 0 200 270"
+  class:list={['dm', `dm--${state}`, className]}
+  viewBox="0 0 200 280"
   role="img"
   aria-label="The Door PR"
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
 >
   <defs>
-    <filter id={`glow-${id}`} x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="2.2" result="b1"></feGaussianBlur>
-      <feGaussianBlur stdDeviation="5" result="b2"></feGaussianBlur>
+    <!-- Halo: desenfoque ancho + amplificación de alfa. El `feFunc` es lo que
+         convierte un blur discreto en un resplandor que de verdad ilumina. -->
+    <filter
+      id={`${uid}-halo`}
+      x="-60%"
+      y="-45%"
+      width="220%"
+      height="190%"
+      color-interpolation-filters="sRGB"
+    >
+      <feGaussianBlur stdDeviation="7.5" result="b"></feGaussianBlur>
+      <feComponentTransfer in="b">
+        <feFuncA type="linear" slope="3.4"></feFuncA>
+      </feComponentTransfer>
+    </filter>
+
+    <filter
+      id={`${uid}-bloom`}
+      x="-40%"
+      y="-30%"
+      width="180%"
+      height="160%"
+      color-interpolation-filters="sRGB"
+    >
+      <feGaussianBlur stdDeviation="2.6" result="b"></feGaussianBlur>
+      <feComponentTransfer in="b">
+        <feFuncA type="linear" slope="2.4"></feFuncA>
+      </feComponentTransfer>
+    </filter>
+
+    <!-- El núcleo lleva un desenfoque mínimo: un trazo de 0.8px a pelo sobre
+         negro produce aliasing duro y mata la sensación de luz. -->
+    <filter
+      id={`${uid}-core`}
+      x="-20%"
+      y="-15%"
+      width="140%"
+      height="130%"
+      color-interpolation-filters="sRGB"
+    >
+      <feGaussianBlur stdDeviation="0.45"></feGaussianBlur>
+    </filter>
+
+    <filter
+      id={`${uid}-seam`}
+      x="-400%"
+      y="-25%"
+      width="900%"
+      height="150%"
+      color-interpolation-filters="sRGB"
+    >
+      <feGaussianBlur stdDeviation="5" result="b"></feGaussianBlur>
+      <feComponentTransfer in="b" result="wide">
+        <feFuncA type="linear" slope="2.6"></feFuncA>
+      </feComponentTransfer>
       <feMerge>
-        <feMergeNode in="b2"></feMergeNode>
-        <feMergeNode in="b1"></feMergeNode>
+        <feMergeNode in="wide"></feMergeNode>
         <feMergeNode in="SourceGraphic"></feMergeNode>
       </feMerge>
     </filter>
-    <filter id={`glow-strong-${id}`} x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="b1"></feGaussianBlur>
-      <feGaussianBlur stdDeviation="14" result="b2"></feGaussianBlur>
-      <feMerge>
-        <feMergeNode in="b2"></feMergeNode>
-        <feMergeNode in="b1"></feMergeNode>
-        <feMergeNode in="SourceGraphic"></feMergeNode>
-      </feMerge>
-    </filter>
-    <linearGradient id={`seam-${id}`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ff2030" stop-opacity="0.1"></stop>
-      <stop offset="0.5" stop-color="#ff5560" stop-opacity="1"></stop>
-      <stop offset="1" stop-color="#ff2030" stop-opacity="0.2"></stop>
+
+    <linearGradient id={`${uid}-seam-fill`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff2030" stop-opacity="0.15"></stop>
+      <stop offset="0.42" stop-color="#ffe8e6" stop-opacity="1"></stop>
+      <stop offset="0.72" stop-color="#ff5560" stop-opacity="0.9"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0.25"></stop>
     </linearGradient>
-    <radialGradient id={`floor-${id}`} cx="0.5" cy="0" r="0.7">
-      <stop offset="0" stop-color="#ff1a25" stop-opacity="0.55"></stop>
+
+    <linearGradient id={`${uid}-beam-fill`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff5560" stop-opacity="0.5"></stop>
+      <stop offset="0.55" stop-color="#ff1a25" stop-opacity="0.16"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
+    </linearGradient>
+
+    <radialGradient id={`${uid}-spill-fill`} cx="0.5" cy="0" r="0.75">
+      <stop offset="0" stop-color="#ffd9d6" stop-opacity="0.6"></stop>
+      <stop offset="0.4" stop-color="#ff1a25" stop-opacity="0.34"></stop>
       <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
     </radialGradient>
+
+    <radialGradient id={`${uid}-seed-fill`} cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe8e6" stop-opacity="0.95"></stop>
+      <stop offset="0.35" stop-color="#ff1a25" stop-opacity="0.55"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
+    </radialGradient>
+
+    <!-- ---- Geometría, declarada una sola vez ---- -->
+
+    <!-- Marco: dos mitades que nacen ambas en el vértice (100,34) y bajan.
+         Dibujarlas con el mismo dashoffset da un trazado espejo perfecto. -->
+    <g id={`${uid}-frame`} stroke-linecap="round" stroke-linejoin="round">
+      <path
+        class="dm-draw"
+        pathLength="1"
+        stroke-width="1.1"
+        d="M 100 34 C 62 34 32 54 32 98 L 32 256"></path>
+      <path
+        class="dm-draw"
+        pathLength="1"
+        stroke-width="1.1"
+        d="M 100 34 C 138 34 168 54 168 98 L 168 256"></path>
+      <path
+        class="dm-draw"
+        pathLength="1"
+        stroke-width="0.7"
+        opacity="0.8"
+        d="M 100 45 C 69 45 44 62 44 100 L 44 256"></path>
+      <path
+        class="dm-draw"
+        pathLength="1"
+        stroke-width="0.7"
+        opacity="0.8"
+        d="M 100 45 C 131 45 156 62 156 100 L 156 256"></path>
+      <path class="dm-draw" pathLength="1" stroke-width="0.8" d="M 100 256 L 24 256"></path>
+      <path class="dm-draw" pathLength="1" stroke-width="0.8" d="M 100 256 L 176 256"></path>
+      <path
+        class="dm-draw"
+        pathLength="1"
+        stroke-width="0.55"
+        opacity="0.55"
+        d="M 100 262 L 18 262"></path>
+      <path
+        class="dm-draw"
+        pathLength="1"
+        stroke-width="0.55"
+        opacity="0.55"
+        d="M 100 262 L 182 262"></path>
+    </g>
+
+    <!-- Farol del dintel: rombo colgado del eje, simétrico por definición. -->
+    <g id={`${uid}-lamp`} stroke-linecap="round" stroke-linejoin="round">
+      <path stroke-width="0.7" d="M 100 4 L 100 12"></path>
+      <path stroke-width="0.9" d="M 100 12 L 88 23 L 100 34 L 112 23 Z"></path>
+      <path stroke-width="0.6" opacity="0.85" d="M 100 18 L 94 23 L 100 28 L 106 23 Z"></path>
+    </g>
+
+    <g id={`${uid}-leaf-l`} stroke-linecap="round" stroke-linejoin="round">
+      <path stroke-width="0.9" d="M 48 250 L 48 102 C 48 66 72 52 99 52 L 99 250 Z"></path>
+      <path
+        stroke-width="0.6"
+        opacity="0.8"
+        d="M 56 104 C 56 76 74 64 92 64 L 92 100 L 56 100 Z"></path>
+      <rect x="56" y="112" width="36" height="54" stroke-width="0.6" opacity="0.8"></rect>
+      <rect x="56" y="176" width="36" height="62" stroke-width="0.6" opacity="0.8"></rect>
+      <path stroke-width="0.5" opacity="0.6" d="M 88 142 L 88 158"></path>
+      <circle cx="93" cy="150" r="3.2" stroke-width="0.7"></circle>
+      <circle cx="93" cy="150" r="1.3" stroke-width="0.7"></circle>
+      <rect x="45" y="94" width="6" height="9" stroke-width="0.5" opacity="0.7"></rect>
+      <rect x="45" y="146" width="6" height="9" stroke-width="0.5" opacity="0.7"></rect>
+      <rect x="45" y="198" width="6" height="9" stroke-width="0.5" opacity="0.7"></rect>
+    </g>
+
+    <!-- Espejo exacto de la hoja izquierda: cada x sustituida por 200-x. -->
+    <g id={`${uid}-leaf-r`} stroke-linecap="round" stroke-linejoin="round">
+      <path stroke-width="0.9" d="M 152 250 L 152 102 C 152 66 128 52 101 52 L 101 250 Z"></path>
+      <path
+        stroke-width="0.6"
+        opacity="0.8"
+        d="M 144 104 C 144 76 126 64 108 64 L 108 100 L 144 100 Z"></path>
+      <rect x="108" y="112" width="36" height="54" stroke-width="0.6" opacity="0.8"></rect>
+      <rect x="108" y="176" width="36" height="62" stroke-width="0.6" opacity="0.8"></rect>
+      <path stroke-width="0.5" opacity="0.6" d="M 112 142 L 112 158"></path>
+      <circle cx="107" cy="150" r="3.2" stroke-width="0.7"></circle>
+      <circle cx="107" cy="150" r="1.3" stroke-width="0.7"></circle>
+      <rect x="149" y="94" width="6" height="9" stroke-width="0.5" opacity="0.7"></rect>
+      <rect x="149" y="146" width="6" height="9" stroke-width="0.5" opacity="0.7"></rect>
+      <rect x="149" y="198" width="6" height="9" stroke-width="0.5" opacity="0.7"></rect>
+    </g>
   </defs>
 
-  <g
-    stroke="#ff1a25"
-    stroke-width="1"
-    fill="none"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    filter={`url(#glow-${id})`}
-  >
-    <g class="door-frame">
-      <path d="M 40 240 L 40 80 Q 40 30 100 30 Q 160 30 160 80 L 160 240"></path>
-      <path
-        d="M 50 240 L 50 82 Q 50 40 100 40 Q 150 40 150 82 L 150 240"
-        stroke-width="0.7"
-        opacity="0.85"></path>
-      <g stroke-width="0.9">
-        <path d="M 100 8 L 100 30"></path>
-        <path d="M 92 12 Q 100 4 108 12"></path>
-        <path d="M 88 18 Q 100 26 112 18"></path>
-        <path d="M 88 18 Q 78 16 76 24 Q 75 30 82 30"></path>
-        <path d="M 112 18 Q 122 16 124 24 Q 125 30 118 30"></path>
-        <path
-          d="M 96 16 L 96 24 Q 100 28 104 24 L 104 16 Q 100 14 96 16 Z"
-          stroke-width="0.7"></path>
-        <path d="M 82 30 Q 86 32 90 30" stroke-width="0.6"></path>
-        <path d="M 110 30 Q 114 32 118 30" stroke-width="0.6"></path>
-      </g>
-      <g stroke-width="0.7">
-        <line x1="40" y1="80" x2="40" y2="240"></line>
-        <line x1="34" y1="80" x2="34" y2="249"></line>
-        <line x1="160" y1="80" x2="160" y2="240"></line>
-        <line x1="166" y1="80" x2="166" y2="249"></line>
-      </g>
-    </g>
+  <!-- Brasa: el único punto de luz antes de que exista nada más. -->
+  <circle class="dm__seed" cx="100" cy="150" r="26" fill={`url(#${uid}-seed-fill)`}></circle>
 
-    <g class="door-leaf door-leaf--left" transform="translate(-1 0)">
-      <path d="M 52 240 L 52 84 Q 52 50 96 50 L 96 240 Z" stroke-width="0.8"></path>
-      <path
-        d="M 58 90 Q 60 60 92 60 L 92 110 L 58 110 Z"
-        stroke-width="0.6"
-        opacity="0.8"></path>
-      <rect x="58" y="120" width="34" height="48" stroke-width="0.6" opacity="0.8"></rect>
-      <rect x="58" y="178" width="34" height="56" stroke-width="0.6" opacity="0.8"></rect>
-      <circle cx="90" cy="148" r="3" stroke-width="0.7"></circle>
-      <circle cx="90" cy="148" r="1.2"></circle>
-      <circle cx="75" cy="148" r="2" stroke-width="0.5" opacity="0.7"></circle>
-    </g>
+  <!-- Haz que escapa por el umbral, simétrico respecto al eje. -->
+  <path
+    class="dm__beam"
+    d="M 92 56 L 108 56 L 178 272 L 22 272 Z"
+    fill={`url(#${uid}-beam-fill)`}></path>
 
-    <g class="door-leaf door-leaf--right" transform="translate(1 0)">
-      <path d="M 148 240 L 148 84 Q 148 50 104 50 L 104 240 Z" stroke-width="0.8"></path>
-      <path
-        d="M 142 90 Q 140 60 108 60 L 108 110 L 142 110 Z"
-        stroke-width="0.6"
-        opacity="0.8"></path>
-      <rect x="108" y="120" width="34" height="48" stroke-width="0.6" opacity="0.8"></rect>
-      <rect x="108" y="178" width="34" height="56" stroke-width="0.6" opacity="0.8"></rect>
-      <circle cx="110" cy="148" r="3" stroke-width="0.7"></circle>
-      <circle cx="110" cy="148" r="1.2"></circle>
-      <circle cx="125" cy="148" r="2" stroke-width="0.5" opacity="0.7"></circle>
+  <!-- Junta de luz entre las hojas: crece desde el centro hacia los extremos. -->
+  <rect
+    class="dm__seam"
+    x="98"
+    y="52"
+    width="4"
+    height="200"
+    fill={`url(#${uid}-seam-fill)`}
+    filter={`url(#${uid}-seam)`}></rect>
+
+  <g class="dm__leaves">
+    <g class="dm__leaf dm__leaf--l">
+      <use class="dm__halo" href={`#${uid}-leaf-l`} filter={`url(#${uid}-halo)`}></use>
+      <use class="dm__bloom" href={`#${uid}-leaf-l`} filter={`url(#${uid}-bloom)`}></use>
+      <use class="dm__core" href={`#${uid}-leaf-l`} filter={`url(#${uid}-core)`}></use>
+    </g>
+    <g class="dm__leaf dm__leaf--r">
+      <use class="dm__halo" href={`#${uid}-leaf-r`} filter={`url(#${uid}-halo)`}></use>
+      <use class="dm__bloom" href={`#${uid}-leaf-r`} filter={`url(#${uid}-bloom)`}></use>
+      <use class="dm__core" href={`#${uid}-leaf-r`} filter={`url(#${uid}-core)`}></use>
     </g>
   </g>
 
-  <g class="door-seam" filter={`url(#glow-strong-${id})`}>
-    <rect x="98.5" y="50" width="3" height="195" fill={`url(#seam-${id})`}></rect>
-    <ellipse class="door-floor-spill" cx="100" cy="246" rx="60" ry="8" fill={`url(#floor-${id})`}
-    ></ellipse>
+  <g class="dm__frame">
+    <use class="dm__halo" href={`#${uid}-frame`} filter={`url(#${uid}-halo)`}></use>
+    <use class="dm__bloom" href={`#${uid}-frame`} filter={`url(#${uid}-bloom)`}></use>
+    <use class="dm__core" href={`#${uid}-frame`} filter={`url(#${uid}-core)`}></use>
   </g>
+
+  <g class="dm__lamp">
+    <use class="dm__halo" href={`#${uid}-lamp`} filter={`url(#${uid}-halo)`}></use>
+    <use class="dm__bloom" href={`#${uid}-lamp`} filter={`url(#${uid}-bloom)`}></use>
+    <use class="dm__core" href={`#${uid}-lamp`} filter={`url(#${uid}-core)`}></use>
+  </g>
+
+  <ellipse
+    class="dm__spill"
+    cx="100"
+    cy="256"
+    rx="66"
+    ry="11"
+    fill={`url(#${uid}-spill-fill)`}></ellipse>
 </svg>
 
 <style>
-  svg {
+  .dm {
+    /* El halo se sale del viewBox por diseño: recortarlo delataría la caja. */
     overflow: visible;
+    --dm-intensity: 1;
   }
 
-  .door-leaf {
+  /* --- Capas de neón ------------------------------------------------------ */
+
+  .dm__halo {
+    stroke: var(--c-accent);
+    opacity: calc(0.55 * var(--dm-intensity));
+  }
+
+  .dm__bloom {
+    stroke: var(--c-accent-soft);
+    opacity: calc(0.85 * var(--dm-intensity));
+  }
+
+  .dm__core {
+    stroke: var(--c-accent-core);
+    /* El núcleo casi no baja de opacidad: es el filamento, y sin él el trazo
+       se convierte en una mancha roja sin dibujo. */
+    opacity: calc(0.35 + 0.65 * var(--dm-intensity));
+  }
+
+  /* --- Estado en reposo --------------------------------------------------- */
+
+  .dm__seed {
+    opacity: 0;
+  }
+
+  .dm__beam,
+  .dm__spill {
+    opacity: 0;
+  }
+
+  .dm__seam {
     transform-box: fill-box;
-    transform-origin: left center;
+    transform-origin: center;
   }
 
-  .door-leaf--left {
-    transform-origin: 52px 50%;
+  .dm--closed .dm__seam {
+    opacity: 0.55;
   }
 
-  .door-leaf--right {
-    transform-origin: 148px 50%;
+  .dm--ajar .dm__seam {
+    opacity: 1;
+  }
+
+  .dm--ajar .dm__spill {
+    opacity: 0.9;
+  }
+
+  .dm--ajar .dm__beam {
+    opacity: 0.55;
+  }
+
+  /* --- Estado de partida de la secuencia ------------------------------------
+     Nada visible salvo el negro. Intro.astro enciende cada pieza con
+     animaciones, que ganan a estas declaraciones por cascada sin necesidad de
+     pelear especificidad. ---------------------------------------------------- */
+
+  .dm--sequenced {
+    --dm-intensity: 0.28;
+  }
+
+  .dm--sequenced .dm__seam,
+  .dm--sequenced .dm__leaves,
+  .dm--sequenced .dm__lamp {
+    opacity: 0;
+  }
+
+  .dm--sequenced .dm-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  /* --- Hojas ---------------------------------------------------------------
+     Cada hoja pivota sobre su propio canto exterior: con `fill-box` los
+     porcentajes se resuelven contra la caja del propio grupo, así que 0% es el
+     canto izquierdo de la hoja izquierda y 100% el canto derecho de la derecha.
+     Los signos de rotación son opuestos, de modo que ambas se abren hacia
+     dentro describiendo el mismo arco. -------------------------------------- */
+
+  .dm__leaf {
+    transform-box: fill-box;
+    will-change: transform;
+  }
+
+  .dm__leaf--l {
+    transform-origin: 0% 50%;
+  }
+
+  .dm__leaf--r {
+    transform-origin: 100% 50%;
+  }
+
+  /* --- Respiración en reposo ------------------------------------------------
+     Un neón real no es estable: la corriente fluctúa. Media respiración por
+     segundo, apenas perceptible, es lo que separa un SVG de una luz encendida.
+     No es parpadeo — el parpadeo es ruido, esto es latido. ------------------ */
+
+  .dm--ajar {
+    animation: dm-breathe 6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes dm-breathe {
+    0%,
+    100% {
+      --dm-intensity: 0.92;
+    }
+    50% {
+      --dm-intensity: 1.16;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dm--ajar {
+      animation: none;
+    }
   }
 </style>

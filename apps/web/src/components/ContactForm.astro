@@ -48,23 +48,56 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--c-fg-muted);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
+  /* Los campos son una línea, no una caja: el resto del sitio se construye con
+     filetes horizontales y una caja con borde completo rompía ese vocabulario.
+     El fondo elevado marca la zona editable sin necesidad de contorno. */
   .form__input {
     padding: var(--sp-xs) var(--sp-sm);
     color: var(--c-fg);
     background: var(--c-bg-elevated);
-    border: 1px solid var(--c-border);
+    border: 0;
+    border-bottom: 1px solid var(--c-border-strong);
     border-radius: 0;
-    transition: border-color var(--dur-fast) var(--ease-out);
+    outline: 0;
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      background var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
   }
 
-  .form__input:focus-visible {
-    border-color: var(--c-accent);
+  .form__input::placeholder {
+    color: var(--c-fg-faint);
   }
 
-  .form__input[aria-invalid='true'] {
-    border-color: #ef4444;
+  .form__input:hover {
+    background: var(--c-bg-elevated-2);
+  }
+
+  /* Se enciende como el neón del resto de la página en vez de con el anillo de
+     foco del navegador — que además quedaría desalineado con la caja. */
+  .form__input:focus {
+    background: var(--c-bg-elevated-2);
+    border-bottom-color: var(--c-accent);
+    box-shadow: 0 1px 0 0 var(--c-accent), var(--glow-sm);
+  }
+
+  .form__field:focus-within .form__label {
+    color: var(--c-accent);
+  }
+
+  /* `:user-invalid` solo marca el campo una vez que la persona ha interactuado
+     con él: `:invalid` a secas pintaría el formulario entero en rojo antes de
+     escribir la primera letra. */
+  .form__input:user-invalid {
+    border-bottom-color: var(--c-accent-deep);
+  }
+
+  textarea.form__input {
+    resize: vertical;
+    min-height: 6rem;
   }
 
   .form__honeypot {
@@ -76,8 +109,9 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
   }
 
   .form__submit {
+    position: relative;
     justify-self: start;
-    padding: var(--sp-sm) var(--sp-md);
+    padding: var(--sp-sm) var(--sp-lg);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
@@ -87,15 +121,36 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
     background: none;
     border: 1px solid var(--c-border-strong);
     border-radius: 0;
-    transition: 0.2s;
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      color var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out),
+      opacity var(--dur-fast) var(--ease-out);
+  }
+
+  /* Mismo barrido que el CTA de la cabecera y los enlaces de `apply`: un solo
+     gesto de relleno repetido en todos los botones del sitio. */
+  .form__submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--c-accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur-base) var(--ease-out);
   }
 
   .form__submit:hover:not(:disabled) {
-    color: var(--c-ink);
-    background: var(--c-accent);
+    color: var(--c-accent-contrast);
     border-color: var(--c-accent);
-    box-shadow: var(--glow-accent);
-    opacity: 1;
+    box-shadow: var(--glow-md);
+  }
+
+  .form__submit:hover:not(:disabled)::before {
+    transform: scaleX(1);
   }
 
   .form__submit:disabled {
@@ -108,8 +163,25 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
   }
 
   .form__status {
-    font-size: var(--fs-sm);
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2xs);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
     color: var(--c-fg-muted);
+  }
+
+  .form__status::before {
+    content: '—';
+    color: var(--c-accent);
+  }
+
+  /* El estado de error se distingue por color además de por el texto: el
+     mensaje puede quedar fuera de pantalla en móvil tras enviar. */
+  .form__status[data-state='error'] {
+    color: var(--c-accent-soft);
   }
 </style>
 
@@ -130,6 +202,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
       }
 
       submit.disabled = true
+      status.dataset.state = 'pending'
       status.textContent = 'Enviando…'
 
       const data = Object.fromEntries(new FormData(form).entries())
@@ -144,8 +217,10 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
         form.reset()
+        status.dataset.state = 'sent'
         status.textContent = 'Mensaje enviado. Gracias por escribirnos.'
       } catch {
+        status.dataset.state = 'error'
         status.textContent =
           'No se ha podido enviar el mensaje. Inténtalo de nuevo en unos minutos.'
       } finally {

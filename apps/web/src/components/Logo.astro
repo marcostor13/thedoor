@@ -29,11 +29,13 @@ const { class: className } = Astro.props
 
   .wordmark__dot {
     display: inline-block;
-    width: 5px;
-    height: 5px;
+    /* Escalado con el texto: en el pie mide la mitad que en el hero sin
+       necesidad de una variante por sitio de uso. */
+    width: 0.3em;
+    height: 0.3em;
     margin-inline: 0.5em;
     background: var(--c-accent);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--c-accent);
+    box-shadow: var(--glow-sm);
   }
 </style>

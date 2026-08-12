@@ -1,12 +1,39 @@
 ---
 import DoorMark from './DoorMark.astro'
+
+/**
+ * Secuencia de entrada.
+ *
+ * Está escrita como una partitura: los instantes viven en `tokens.css`
+ * (`--t-*`) y aquí solo se dice qué entra en cada uno. Mover un token desplaza
+ * esa entrada sin descuadrar las demás.
+ *
+ * Principios:
+ *  · Simetría — todo lo que se mueve tiene su pareja espejo moviéndose a la vez
+ *    y con la misma curva. Nada entra desde un lado.
+ *  · Sutileza — ningún elemento aparece de golpe ni parpadea; se encienden por
+ *    rampa. Los desplazamientos son de pocos píxeles; el peso lo lleva la luz.
+ *  · Tiempo — siete segundos con respiración entre gestos, en vez de dos
+ *    segundos de cosas amontonadas.
+ */
 ---
 
-<div id="intro" class="intro" role="presentation" aria-hidden="true">
+<div id="intro" class="intro" role="presentation">
+  <div class="intro__veil" aria-hidden="true"></div>
+
   <div class="intro__stage">
-    <DoorMark class="intro__mark" id="intro" />
-    <p class="intro__label">THE&nbsp;&nbsp;DOOR&nbsp;&nbsp;PR</p>
+    <DoorMark class="intro__mark" id="intro" state="sequenced" />
+
+    <p class="intro__word" aria-hidden="true">
+      <span style="--i: 0">The</span>
+      <span class="intro__word-dot"></span>
+      <span style="--i: 1">Door</span>
+      <span class="intro__word-dot"></span>
+      <span style="--i: 2">PR</span>
+    </p>
   </div>
+
+  <button class="intro__skip" type="button">Saltar</button>
 </div>
 
 <style>
@@ -17,117 +44,183 @@ import DoorMark from './DoorMark.astro'
     display: grid;
     place-items: center;
     background: var(--c-bg);
+    /* El cursor delata que la escena es saltable antes de leer el botón. */
+    cursor: pointer;
   }
 
-  .intro[hidden] {
-    display: none;
-  }
-
-  .intro--done {
-    animation: intro-out var(--dur-slow) var(--ease-out) forwards;
+  /* Viñeta cálida que centra la mirada en el umbral. Entra con el neón, así
+     que el fondo deja de ser negro plano justo cuando hay algo que iluminar. */
+  .intro__veil {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      62% 52% at 50% 48%,
+      rgb(255 26 37 / 0.12) 0%,
+      rgb(120 8 14 / 0.05) 38%,
+      transparent 72%
+    );
+    opacity: 0;
+    animation: fade-to 2600ms var(--ease-soft) var(--t-ignite) forwards;
+    --to: 1;
   }
 
   .intro__stage {
     display: grid;
     justify-items: center;
     gap: var(--sp-lg);
-    width: min(50vw, 22rem);
+    width: min(46vw, 19rem);
+    transform-origin: 50% 46%;
   }
+
+  /* --- Salida ---------------------------------------------------------------
+     No es un fundido: la escena se acerca y se abre, como cruzar el umbral.
+     Empieza muy lenta, así que la sensación es de avanzar, no de cortar. ---- */
+
+  .intro--leaving .intro__stage {
+    animation: threshold-pass var(--dur-exit) cubic-bezier(0.32, 0, 0.24, 1) forwards;
+  }
+
+  .intro--leaving .intro__veil,
+  .intro--leaving .intro__skip {
+    animation: fade-out 420ms var(--ease-soft) forwards;
+  }
+
+  .intro--leaving {
+    animation: fade-out var(--dur-exit) cubic-bezier(0.5, 0, 0.85, 0.3) forwards;
+    pointer-events: none;
+  }
+
+  @keyframes threshold-pass {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+      filter: blur(0);
+    }
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+      filter: blur(6px);
+    }
+  }
+
+  /* --- El dibujo ----------------------------------------------------------- */
 
   :global(.intro__mark) {
     width: 100%;
     height: auto;
-    opacity: 0;
-    animation: frame-draw-in var(--dur-slow) var(--ease-out) 100ms forwards;
   }
 
-  :global(.intro__mark .door-frame) {
-    opacity: 0;
-    animation: frame-draw-in var(--dur-slow) var(--ease-out) 150ms forwards;
+  /* 1 · La brasa. Único punto de luz; late una vez y se retira dejando el
+        marco ya dibujándose sobre ella. */
+  :global(.intro__mark .dm__seed) {
+    animation: seed-bloom 2200ms var(--ease-soft) var(--t-seed) forwards;
   }
 
-  :global(.intro__mark .door-leaf--left) {
-    animation: leaf-open-left 900ms var(--ease-out) 500ms backwards;
+  @keyframes seed-bloom {
+    0% {
+      opacity: 0;
+      transform: scale(0.2);
+    }
+    28% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(2.4);
+    }
   }
 
-  :global(.intro__mark .door-leaf--right) {
-    animation: leaf-open-right 900ms var(--ease-out) 500ms backwards;
-  }
-
-  :global(.intro__mark .door-seam rect) {
+  :global(.intro__mark .dm__seed) {
+    transform-box: fill-box;
     transform-origin: center;
-    animation:
-      seam-reveal 900ms var(--ease-out) 350ms backwards,
-      seam-flicker 1400ms linear 350ms;
   }
 
-  :global(.intro__mark .door-floor-spill) {
-    opacity: 0;
-    animation: frame-draw-in var(--dur-slow) var(--ease-out) 900ms forwards;
+  /* 2 · El marco se dibuja. Cada pareja de trazos nace en el mismo punto y
+        avanza en espejo: las dos mitades llegan abajo a la vez. */
+  :global(.intro__mark .dm-draw) {
+    animation: draw-on var(--dur-frame-draw) var(--ease-cinematic) var(--t-frame) forwards;
   }
 
-  .intro__label {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-widest);
-    color: var(--c-fg-muted);
-    opacity: 0;
-    animation: frame-draw-in var(--dur-slow) var(--ease-out) 1200ms forwards;
+  :global(.intro__mark .dm-draw:nth-child(3)),
+  :global(.intro__mark .dm-draw:nth-child(4)) {
+    animation-delay: calc(var(--t-frame) + 260ms);
   }
 
-  @keyframes frame-draw-in {
+  :global(.intro__mark .dm-draw:nth-child(5)),
+  :global(.intro__mark .dm-draw:nth-child(6)) {
+    animation-delay: calc(var(--t-frame) + 620ms);
+  }
+
+  :global(.intro__mark .dm-draw:nth-child(7)),
+  :global(.intro__mark .dm-draw:nth-child(8)) {
+    animation-delay: calc(var(--t-frame) + 800ms);
+  }
+
+  @keyframes draw-on {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* 3 · Las hojas materializan dentro del marco ya trazado. */
+  :global(.intro__mark .dm__leaves) {
+    animation: leaves-in 1300ms var(--ease-cinematic) var(--t-leaves) forwards;
+  }
+
+  @keyframes leaves-in {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  :global(.intro__mark .dm__leaves) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* 4 · Prende el farol y con él sube la corriente de todo el neón. La subida
+        es una rampa larga con un solo sobrepico: es un tubo que arranca, no un
+        interruptor. */
+  :global(.intro__mark .dm__lamp) {
+    animation: fade-to 900ms var(--ease-soft) var(--t-ignite) forwards;
+    --to: 1;
+  }
+
+  :global(.intro__mark) {
+    animation: current-up 2400ms var(--ease-soft) var(--t-ignite) forwards;
+  }
+
+  @keyframes current-up {
+    0% {
+      --dm-intensity: 0.28;
+    }
+    55% {
+      --dm-intensity: 1.28;
+    }
+    100% {
+      --dm-intensity: 1;
+    }
+  }
+
+  /* 5 · La junta de luz se abre desde el centro hacia arriba y abajo a la vez
+        — el gesto simétrico que anticipa la apertura. */
+  :global(.intro__mark .dm__seam) {
+    animation: seam-open 1500ms var(--ease-cinematic) var(--t-seam) forwards;
+  }
+
+  @keyframes seam-open {
     0% {
       opacity: 0;
-      transform: translateY(8px);
+      transform: scaleY(0) scaleX(0.35);
     }
-    100% {
+    30% {
       opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes leaf-open-left {
-    0% {
-      transform: scaleX(1.09);
-      filter: brightness(0.55);
-    }
-    60% {
-      transform: scaleX(0.88);
-      filter: brightness(1.15);
-    }
-    100% {
-      transform: scaleX(0.92);
-      filter: brightness(1);
-    }
-  }
-
-  @keyframes leaf-open-right {
-    0% {
-      transform: scaleX(1.09);
-      filter: brightness(0.55);
-    }
-    60% {
-      transform: scaleX(0.88);
-      filter: brightness(1.15);
-    }
-    100% {
-      transform: scaleX(0.92);
-      filter: brightness(1);
-    }
-  }
-
-  @keyframes seam-reveal {
-    0% {
-      opacity: 0;
-      transform: scaleY(0.1) scaleX(0.4);
-    }
-    35% {
-      opacity: 1;
-      transform: scaleY(1.05) scaleX(2.2);
-    }
-    60% {
-      opacity: 1;
-      transform: scaleY(1) scaleX(1.6);
     }
     100% {
       opacity: 1;
@@ -135,33 +228,189 @@ import DoorMark from './DoorMark.astro'
     }
   }
 
-  @keyframes seam-flicker {
-    0%,
-    18%,
-    22%,
-    60%,
-    64%,
+  /* 6 · La apertura. Las dos hojas giran sobre su canto exterior con signos
+        opuestos y la misma curva, de modo que en cualquier fotograma el dibujo
+        sigue siendo un espejo perfecto. El oscurecimiento acompaña al giro:
+        la cara se aparta de la luz. */
+  :global(.intro__mark .dm__leaf--l) {
+    animation: swing-left var(--dur-swing) var(--ease-swing) var(--t-swing) forwards;
+  }
+
+  :global(.intro__mark .dm__leaf--r) {
+    animation: swing-right var(--dur-swing) var(--ease-swing) var(--t-swing) forwards;
+  }
+
+  @keyframes swing-left {
+    0% {
+      transform: perspective(760px) rotateY(0deg);
+      filter: brightness(1);
+    }
     100% {
-      opacity: 1;
-    }
-    20% {
-      opacity: 0.65;
-    }
-    62% {
-      opacity: 0.55;
+      transform: perspective(760px) rotateY(-74deg);
+      filter: brightness(0.45);
     }
   }
 
-  @keyframes intro-out {
+  @keyframes swing-right {
+    0% {
+      transform: perspective(760px) rotateY(0deg);
+      filter: brightness(1);
+    }
+    100% {
+      transform: perspective(760px) rotateY(74deg);
+      filter: brightness(0.45);
+    }
+  }
+
+  /* 7 · Lo que había detrás: el haz y el derrame sobre el suelo. */
+  :global(.intro__mark .dm__beam) {
+    animation: fade-to 1700ms var(--ease-soft) var(--t-spill) forwards;
+    --to: 0.62;
+  }
+
+  :global(.intro__mark .dm__spill) {
+    animation: spill-in 1700ms var(--ease-cinematic) var(--t-spill) forwards;
+  }
+
+  @keyframes spill-in {
+    from {
+      opacity: 0;
+      transform: scaleX(0.35);
+    }
+    to {
+      opacity: 0.95;
+      transform: scaleX(1);
+    }
+  }
+
+  :global(.intro__mark .dm__spill) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* --- Wordmark -------------------------------------------------------------
+     Entra con el interletrado abierto y se cierra hasta su sitio. Es un gesto
+     de composición, no un movimiento: la palabra se asienta. ---------------- */
+
+  .intro__word {
+    display: flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    text-transform: uppercase;
+    color: var(--c-fg);
+    white-space: nowrap;
+  }
+
+  .intro__word span {
+    display: inline-block;
+    opacity: 0;
+    letter-spacing: 0.62em;
+    /* El interletrado abre por la derecha; el margen negativo lo compensa para
+       que el conjunto no se descentre mientras se cierra. */
+    margin-inline-end: -0.62em;
+    transform: translateY(4px);
+    animation: word-settle var(--dur-word) var(--ease-cinematic) forwards;
+    animation-delay: calc(var(--t-word) + var(--i, 0) * 140ms);
+  }
+
+  @keyframes word-settle {
+    to {
+      opacity: 1;
+      letter-spacing: var(--ls-widest);
+      margin-inline-end: calc(var(--ls-widest) * -1);
+      transform: translateY(0);
+    }
+  }
+
+  .intro__word-dot {
+    width: 3px;
+    height: 3px;
+    margin-inline: 0.85em;
+    background: var(--c-accent);
+    border-radius: 50%;
+    box-shadow: var(--glow-sm);
+    opacity: 0;
+    animation: fade-to 1200ms var(--ease-soft) calc(var(--t-word) + 420ms) forwards;
+    --to: 1;
+  }
+
+  /* --- Saltar --------------------------------------------------------------- */
+
+  .intro__skip {
+    position: absolute;
+    inset-block-end: var(--sp-lg);
+    inset-inline: 0;
+    margin-inline: auto;
+    width: max-content;
+    padding: var(--sp-2xs) var(--sp-sm);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-faint);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    opacity: 0;
+    animation: fade-to 900ms var(--ease-soft) 2400ms forwards;
+    --to: 1;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .intro__skip:hover,
+  .intro__skip:focus-visible {
+    color: var(--c-fg);
+  }
+
+  /* --- Utilidades de fundido ------------------------------------------------
+     Un solo keyframe parametrizado por `--to` en vez de un keyframe por opacidad
+     de destino. -------------------------------------------------------------- */
+
+  @keyframes fade-to {
+    to {
+      opacity: var(--to, 1);
+    }
+  }
+
+  @keyframes fade-out {
     to {
       opacity: 0;
-      visibility: hidden;
     }
   }
 
+  /* --- Movimiento reducido --------------------------------------------------
+     No se suprime la marca: se muestra ya encendida, quieta, y el guardián de
+     JS la retira enseguida. Quien pide menos movimiento sigue viendo la pieza,
+     solo que no animada. ----------------------------------------------------- */
+
   @media (prefers-reduced-motion: reduce) {
-    .intro {
-      display: none;
+    .intro__veil,
+    .intro__word span,
+    .intro__word-dot,
+    .intro__skip,
+    :global(.intro__mark),
+    :global(.intro__mark *) {
+      animation: none !important;
+      opacity: 1;
+    }
+
+    :global(.intro__mark) {
+      --dm-intensity: 1;
+    }
+
+    :global(.intro__mark .dm-draw) {
+      stroke-dashoffset: 0;
+    }
+
+    :global(.intro__mark .dm__seed) {
+      opacity: 0;
+    }
+
+    .intro__word span {
+      letter-spacing: var(--ls-widest);
+      margin-inline-end: calc(var(--ls-widest) * -1);
+      transform: none;
     }
   }
 </style>
@@ -169,36 +418,76 @@ import DoorMark from './DoorMark.astro'
 <script>
   const STORAGE_KEY = 'thedoor:intro-seen'
 
+  /**
+   * Lee una duración CSS en milisegundos.
+   *
+   * El minificador de la build normaliza las unidades: `5600ms` sale del bundle
+   * escrito como `5.6s`. Un `parseInt` sobre ese valor devuelve 5, así que la
+   * secuencia se cerraba a los cinco milisegundos en producción mientras en
+   * desarrollo funcionaba. Hay que leer la unidad, no solo el número.
+   */
+  function readMs(value: string, fallback: number): number {
+    const match = value.trim().match(/^([\d.]+)(ms|s)$/)
+    if (!match) return fallback
+
+    const amount = Number.parseFloat(match[1])
+    if (!Number.isFinite(amount)) return fallback
+
+    return match[2] === 's' ? amount * 1000 : amount
+  }
+
   function runIntro(): void {
     const intro = document.getElementById('intro')
     if (!intro) return
 
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const seen = sessionStorage.getItem(STORAGE_KEY) === '1'
 
-    // Ya vista en esta sesión, o el usuario pidió menos movimiento:
-    // se retira sin animar y el scroll no llega a bloquearse.
-    if (prefersReducedMotion || sessionStorage.getItem(STORAGE_KEY) === '1') {
+    // Ya vista en esta sesión: la secuencia es un umbral, y un umbral solo se
+    // cruza una vez. Se retira sin animar y el scroll nunca llega a bloquearse.
+    if (seen) {
       intro.remove()
       return
     }
 
     document.body.style.overflow = 'hidden'
 
+    let done = false
+
     const finish = (): void => {
+      if (done) return
+      done = true
+
       sessionStorage.setItem(STORAGE_KEY, '1')
       document.body.style.overflow = ''
-      intro.classList.add('intro--done')
-      intro.addEventListener('animationend', () => intro.remove(), {
-        once: true,
-      })
+      intro.classList.add('intro--leaving')
+
+      const remove = (): void => intro.remove()
+      intro.addEventListener('animationend', remove, { once: true })
+      // La salida es la última animación de la escena; si el navegador la
+      // saltase (pestaña en segundo plano), `animationend` no llega nunca.
+      window.setTimeout(remove, 1600)
     }
 
-    // Red de seguridad: si la secuencia no termina sola (pestaña en segundo
-    // plano, fuente sin cargar), el overlay no puede quedarse bloqueando
-    // la página para siempre.
-    window.setTimeout(finish, Number.parseInt(getComputedStyle(intro).getPropertyValue('--dur-intro')) || 2200)
+    // Se puede salir en cualquier momento: clic, Escape o scroll. Una entrada
+    // de siete segundos solo es elegante si no es una cárcel.
+    intro.addEventListener('click', finish)
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') finish()
+    })
+    window.addEventListener('wheel', finish, { once: true, passive: true })
+    window.addEventListener('touchmove', finish, { once: true, passive: true })
+
+    if (reduced) {
+      window.setTimeout(finish, 900)
+      return
+    }
+
+    // La secuencia se cierra sola al agotarse la partitura. El valor sale del
+    // token, así que retocar los tiempos no deja el guardián descuadrado.
+    const total = readMs(getComputedStyle(intro).getPropertyValue('--dur-intro'), 5600)
+
+    window.setTimeout(finish, total)
   }
 
   runIntro()

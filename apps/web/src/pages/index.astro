@@ -85,46 +85,50 @@ const contactRows = [
 
 <Layout title={`${SITE.name} — PR for hospitality, nightlife & the people who fill the rooms`} intro>
   <section id="top" class="hero">
+    <span class="hero__aura" aria-hidden="true"></span>
+
     <div class="container hero__inner">
       <div class="hero__topbar">
         <span>{SITE.city}</span>
         <span class="hero__topbar-right">
-          <em>— Solo miembros —</em>
-          <span data-reveal>MMXXVI</span>
+          <em>Solo miembros</em>
+          <span>MMXXVI</span>
         </span>
       </div>
 
-      <div class="hero__stage" data-reveal>
-        <DoorMark class="hero__mark" id="hero" />
+      <div class="hero__stage">
+        <DoorMark class="hero__mark" id="hero" state="ajar" />
         <Logo class="hero__wordmark" />
         <span class="hero__rule" aria-hidden="true"></span>
       </div>
 
-      <p class="hero__tagline" data-reveal>
+      <p class="hero__tagline">
         Doors don’t open for everyone. Ours do — <em>for the right people, on the right
         nights.</em>
       </p>
 
       <div class="hero__foot">
-        <p class="hero__eyebrow" data-reveal>{SITE.description.toUpperCase()}</p>
-        <p class="hero__scroll">After hours / 01 — 03 <span class="hero__scroll-cue"></span> Baja</p>
+        <p class="hero__eyebrow">{SITE.description.toUpperCase()}</p>
+        <a class="hero__scroll" href="#services">
+          After hours / 01 — 03 <span class="hero__scroll-cue" aria-hidden="true"></span> Baja
+        </a>
       </div>
     </div>
   </section>
 
   <section class="section question">
     <div class="container">
-      <p class="eyebrow" data-reveal>— The question</p>
+      <p class="eyebrow" data-reveal>The question</p>
       <h2 class="question__title">
-        <span data-reveal>Are you in?</span>
-        <em data-reveal>Or are you out?</em>
+        <span data-reveal="rise">Are you in?</span>
+        <em data-reveal="rise">Or are you out?</em>
       </h2>
       <p class="manifesto" data-reveal>
         Anyone can fill a room. We fill it with the people who come back.
       </p>
     </div>
 
-    <div class="container stat-grid">
+    <div class="container stat-grid" data-reveal-stagger="90">
       {
         stats.map((stat) => (
           <div class="stat-grid__item" data-reveal>
@@ -138,8 +142,8 @@ const contactRows = [
 
   <section id="services" class="section services">
     <div class="container services__head">
-      <p class="eyebrow" data-reveal>— What we do</p>
-      <h2 class="services__title" data-reveal>
+      <p class="eyebrow" data-reveal>What we do</p>
+      <h2 class="services__title" data-reveal="rise">
         Four things, on repeat — for venues that take the door seriously.
       </h2>
     </div>
@@ -147,13 +151,13 @@ const contactRows = [
     <div class="container">
       {
         services.map((service) => (
-          <div class="service-row" data-reveal>
+          <article class="service-row" data-reveal>
             <span class="service-row__num">{service.num} /</span>
             <h3 class="service-row__title">{service.title}</h3>
             <p class="service-row__desc">{service.desc}</p>
-            <span class="service-row__tag">→ {service.tag}</span>
+            <span class="service-row__tag">{service.tag}</span>
             <span class="service-row__label">{service.label}</span>
-          </div>
+          </article>
         ))
       }
     </div>
@@ -161,8 +165,8 @@ const contactRows = [
 
   <section id="roster" class="section roster">
     <div class="container roster__head">
-      <p class="eyebrow" data-reveal>— Selección de socios / NDA en el resto</p>
-      <h2 class="roster__title" data-reveal>Rooms we keep full.</h2>
+      <p class="eyebrow" data-reveal>Selección de socios / NDA en el resto</p>
+      <h2 class="roster__title" data-reveal="rise">Rooms we keep full.</h2>
       <span class="roster__meta">2024 — 2026</span>
     </div>
 
@@ -205,7 +209,7 @@ const contactRows = [
   <section id="apply" class="section apply">
     <div class="apply__col" data-reveal>
       <div>
-        <p class="eyebrow">— For venues</p>
+        <p class="eyebrow">For venues</p>
         <h3 class="apply__title">Put us on the door.</h3>
         <p class="apply__desc">
           Bares, hoteles, restaurantes. Tomamos una cartera reducida y la llenamos —
@@ -225,7 +229,7 @@ const contactRows = [
 
     <div class="apply__col apply__col--list" data-reveal>
       <div>
-        <p class="eyebrow">— For the list</p>
+        <p class="eyebrow">For the list</p>
         <h3 class="apply__title">Get on the list.</h3>
         <p class="apply__desc">
           Mantenemos una cartera filtrada de invitados que reciben primer aviso de
@@ -247,8 +251,8 @@ const contactRows = [
   <section id="contact" class="section contact">
     <div class="container contact__grid">
       <div>
-        <p class="eyebrow" data-reveal>— Contact</p>
-        <h2 class="contact__title" data-reveal>
+        <p class="eyebrow" data-reveal>Contact</p>
+        <h2 class="contact__title" data-reveal="rise">
           Knock once. <em>We’ll answer.</em>
         </h2>
         <ContactForm />
@@ -271,16 +275,51 @@ const contactRows = [
 <style>
   /* --- Hero ------------------------------------------------------------- */
   .hero {
+    position: relative;
     display: grid;
     align-content: space-between;
     min-height: 100svh;
     padding-block: var(--sp-lg);
+    overflow: hidden;
+  }
+
+  /* El aura que proyecta la puerta sobre la sala. Va detrás del contenido y
+     respira con el mismo compás que el neón del SVG, así que la luz de la
+     página y la de la marca son la misma luz. */
+  .hero__aura {
+    position: absolute;
+    inset-block-start: 34%;
+    inset-inline-start: 50%;
+    width: min(120vw, 60rem);
+    aspect-ratio: 1;
+    translate: -50% -40%;
+    pointer-events: none;
+    background: radial-gradient(
+      closest-side,
+      rgb(255 26 37 / 0.16) 0%,
+      rgb(255 26 37 / 0.06) 42%,
+      transparent 72%
+    );
+    animation: aura-breathe 6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes aura-breathe {
+    0%,
+    100% {
+      opacity: 0.75;
+      scale: 0.97;
+    }
+    50% {
+      opacity: 1;
+      scale: 1.03;
+    }
   }
 
   .hero__inner {
+    position: relative;
     display: grid;
     align-content: space-between;
-    min-height: calc(100svh - 4.5rem);
+    min-height: calc(100svh - var(--header-h));
     gap: var(--sp-xl);
   }
 
@@ -298,12 +337,20 @@ const contactRows = [
   .hero__topbar-right {
     display: flex;
     gap: var(--sp-md);
-    color: var(--c-fg-muted);
   }
 
   .hero__topbar-right em {
     font-style: normal;
     color: var(--c-accent);
+  }
+
+  /* El separador es un punto, no un guion mecanografiado: no se confunde con
+     el guion de los antetítulos y no cambia de ancho con la fuente. */
+  .hero__topbar-right em::before,
+  .hero__topbar-right em::after {
+    content: '·';
+    margin-inline: 0.6em;
+    color: var(--c-fg-faint);
   }
 
   .hero__stage {
@@ -314,7 +361,7 @@ const contactRows = [
   }
 
   :global(.hero__mark) {
-    width: min(45vw, 15rem);
+    width: min(42vw, 14rem);
     height: auto;
   }
 
@@ -326,7 +373,7 @@ const contactRows = [
     width: 2.5rem;
     height: 1px;
     background: var(--c-accent);
-    box-shadow: var(--glow-accent);
+    box-shadow: var(--glow-md);
   }
 
   .hero__tagline {
@@ -337,13 +384,14 @@ const contactRows = [
     font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
     line-height: 1.3;
     text-align: center;
+    text-wrap: balance;
     color: var(--c-fg);
   }
 
   .hero__tagline em {
     color: var(--c-accent);
     font-style: italic;
-    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
+    text-shadow: var(--text-glow-md);
   }
 
   .hero__foot {
@@ -367,24 +415,39 @@ const contactRows = [
     display: flex;
     align-items: center;
     gap: var(--sp-2xs);
+    text-decoration: none;
+    color: inherit;
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
+  .hero__scroll:hover {
+    color: var(--c-fg);
+  }
+
+  /* Un trazo que se alarga y se retira: la única invitación a bajar que no
+     necesita una flecha rebotando. */
   .hero__scroll-cue {
-    width: 1.5rem;
+    width: 2.5rem;
     height: 1px;
     background: var(--c-accent);
+    box-shadow: var(--glow-xs);
+    transform-origin: 0 50%;
+    animation: cue-draw 2.8s var(--ease-in-out) infinite;
+  }
+
+  @keyframes cue-draw {
+    0%,
+    100% {
+      transform: scaleX(0.25);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scaleX(1);
+      opacity: 1;
+    }
   }
 
   /* --- Question / stats --------------------------------------------------- */
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-widest);
-    text-transform: uppercase;
-    color: var(--c-accent);
-    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
-  }
-
   .question__title {
     display: grid;
     margin-block-start: var(--sp-md);
@@ -395,9 +458,7 @@ const contactRows = [
   .question__title em {
     font-style: italic;
     color: var(--c-accent);
-    text-shadow:
-      0 0 40px rgb(255 26 37 / 0.4),
-      0 0 80px rgb(255 26 37 / 0.2);
+    text-shadow: var(--text-glow-lg);
   }
 
   .manifesto {
@@ -429,6 +490,20 @@ const contactRows = [
     margin-block-start: var(--sp-2xs);
     font-size: var(--fs-sm);
     color: var(--c-fg-muted);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 860px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 460px) {
+    .stat-grid {
+      grid-template-columns: 1fr;
+      gap: var(--sp-md);
+    }
   }
 
   /* --- Services ------------------------------------------------------------ */
@@ -444,6 +519,7 @@ const contactRows = [
   }
 
   .service-row {
+    position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto;
     grid-template-areas: 'num title label' 'num desc label' 'num tag label';
@@ -451,11 +527,41 @@ const contactRows = [
     row-gap: var(--sp-2xs);
     align-items: start;
     padding-block: var(--sp-lg);
+    /* El padding lateral es lo que permite que el resaltado ocupe toda la fila;
+       el margen negativo devuelve el texto a la retícula del contenedor. El
+       sangrado nunca puede pasar del gutter, o en pantallas estrechas la fila
+       se saldría del viewport y aparecería scroll horizontal. */
+    padding-inline: min(var(--sp-md), var(--gutter));
+    margin-inline: calc(min(var(--sp-md), var(--gutter)) * -1);
     border-top: 1px solid var(--c-border);
+    transition: background var(--dur-base) var(--ease-out);
   }
 
-  .service-row:last-child {
+  .service-row:last-of-type {
     border-bottom: 1px solid var(--c-border);
+  }
+
+  /* La línea superior se reilumina en rojo al pasar por encima, creciendo
+     desde el borde de entrada. La fila entera se comporta como una puerta. */
+  .service-row::before {
+    content: '';
+    position: absolute;
+    inset-block-start: -1px;
+    inset-inline: 0;
+    height: 1px;
+    background: var(--c-accent);
+    box-shadow: var(--glow-sm);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .service-row:hover {
+    background: linear-gradient(90deg, rgb(255 26 37 / 0.05), transparent 65%);
+  }
+
+  .service-row:hover::before {
+    transform: scaleX(1);
   }
 
   .service-row__num {
@@ -463,11 +569,18 @@ const contactRows = [
     font-family: var(--font-mono);
     font-size: var(--fs-sm);
     color: var(--c-accent);
+    text-shadow: var(--text-glow-sm);
   }
 
   .service-row__title {
     grid-area: title;
     font-size: var(--fs-3xl);
+    transition: color var(--dur-base) var(--ease-out);
+  }
+
+  .service-row:hover .service-row__title {
+    color: var(--c-accent);
+    text-shadow: var(--text-glow-sm);
   }
 
   .service-row__desc {
@@ -475,17 +588,32 @@ const contactRows = [
     max-width: 34rem;
     margin-block-start: var(--sp-2xs);
     color: var(--c-fg-muted);
+    text-wrap: pretty;
   }
 
   .service-row__tag {
     grid-area: tag;
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2xs);
     margin-block-start: var(--sp-2xs);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-normal);
     text-transform: uppercase;
-    color: var(--c-fg-muted);
+    color: var(--c-fg-faint);
+  }
+
+  /* La flecha avanza con el cursor: el mismo desplazamiento que ya hacen los
+     enlaces de `apply`, para que el vocabulario de la página sea uno solo. */
+  .service-row__tag::before {
+    content: '→';
+    color: var(--c-accent);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .service-row:hover .service-row__tag::before {
+    transform: translateX(4px);
   }
 
   .service-row__label {
@@ -495,8 +623,26 @@ const contactRows = [
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
-    color: var(--c-fg-muted);
+    color: var(--c-fg-faint);
     white-space: nowrap;
+  }
+
+  @media (max-width: 760px) {
+    /* La etiqueta de periodicidad pasa a la cabecera de la fila: mantenerla en
+       una tercera columna estrangulaba el titular a dos caracteres por línea. */
+    .service-row {
+      grid-template-columns: auto 1fr;
+      grid-template-areas: 'num label' 'num title' 'num desc' 'num tag';
+      column-gap: var(--sp-md);
+    }
+
+    .service-row__label {
+      margin-block-end: var(--sp-2xs);
+    }
+
+    .service-row__title {
+      font-size: var(--fs-2xl);
+    }
   }
 
   /* --- Roster / marquee ------------------------------------------------- */
@@ -516,13 +662,17 @@ const contactRows = [
   .roster__meta {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
-    color: var(--c-fg-muted);
+    letter-spacing: var(--ls-wide);
+    color: var(--c-fg-faint);
   }
 
   .marquee {
     overflow: hidden;
     padding-block: var(--sp-sm);
     border-top: 1px solid var(--c-border);
+    /* Los nombres se disuelven en los bordes en vez de cortarse contra el
+       viewport: sin esto la cinta parece una tabla recortada, no un desfile. */
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
   }
 
   .marquee__track {
@@ -536,6 +686,11 @@ const contactRows = [
     animation-duration: 50s;
   }
 
+  /* Al pasar por encima la cinta se detiene para poder leer un nombre. */
+  .roster:hover .marquee__track {
+    animation-play-state: paused;
+  }
+
   .marquee__item {
     display: flex;
     align-items: center;
@@ -543,8 +698,13 @@ const contactRows = [
     font-family: var(--font-display);
     font-size: var(--fs-2xl);
     text-transform: uppercase;
-    color: var(--c-fg);
+    color: var(--c-fg-muted);
     white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .marquee__item:hover {
+    color: var(--c-fg);
   }
 
   .marquee__dot {
@@ -553,7 +713,7 @@ const contactRows = [
     margin-inline-start: var(--sp-lg);
     background: var(--c-accent);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--c-accent);
+    box-shadow: var(--glow-xs);
   }
 
   @keyframes marquee-left {
@@ -594,10 +754,13 @@ const contactRows = [
 
   .roster__cta:hover {
     color: var(--c-accent);
+    text-shadow: var(--text-glow-sm);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .marquee__track {
+    .marquee__track,
+    .hero__aura,
+    .hero__scroll-cue {
       animation: none;
     }
   }
@@ -610,21 +773,28 @@ const contactRows = [
   }
 
   .apply__col {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: var(--sp-xl);
     padding: var(--sp-2xl) var(--gutter);
-    background: var(--c-bg);
     border-top: 1px solid var(--c-border);
-    transition: background var(--dur-base) var(--ease-out);
+    transition: background var(--dur-slow) var(--ease-out);
   }
 
+  /* Las dos columnas se iluminan hacia dentro, cada una desde su borde
+     exterior: son las dos hojas de la puerta a escala de sección. */
   .apply__col:hover {
-    background: var(--c-bg-elevated);
+    background: radial-gradient(
+      90% 70% at var(--apply-origin, 0%) 0%,
+      rgb(255 26 37 / 0.09),
+      transparent 70%
+    );
   }
 
   .apply__col--list {
+    --apply-origin: 100%;
     border-inline-start: 1px solid var(--c-border);
   }
 
@@ -638,6 +808,7 @@ const contactRows = [
     max-width: 30rem;
     margin-block-start: var(--sp-md);
     color: var(--c-fg-muted);
+    text-wrap: pretty;
   }
 
   .apply__bullets {
@@ -651,17 +822,22 @@ const contactRows = [
   }
 
   .apply__bullets li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2xs);
     padding-block: var(--sp-sm);
     border-top: 1px solid var(--c-border);
   }
 
   .apply__bullets li::before {
-    content: '• ';
+    content: '•';
     color: var(--c-accent);
   }
 
   .apply__arrow {
+    position: relative;
     justify-self: start;
+    align-self: start;
     padding: var(--sp-sm) var(--sp-md);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
@@ -670,14 +846,33 @@ const contactRows = [
     text-decoration: none;
     color: var(--c-fg);
     border: 1px solid var(--c-border-strong);
-    transition: 0.2s;
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      color var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+
+  .apply__arrow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--c-accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur-base) var(--ease-out);
   }
 
   .apply__arrow:hover {
-    color: var(--c-ink);
-    background: var(--c-accent);
+    color: var(--c-accent-contrast);
     border-color: var(--c-accent);
-    box-shadow: var(--glow-accent);
+    box-shadow: var(--glow-md);
+  }
+
+  .apply__arrow:hover::before {
+    transform: scaleX(1);
   }
 
   @media (max-width: 860px) {
@@ -711,7 +906,7 @@ const contactRows = [
     display: block;
     font-style: italic;
     color: var(--c-accent);
-    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
+    text-shadow: var(--text-glow-md);
   }
 
   .contact__rows {
@@ -734,6 +929,7 @@ const contactRows = [
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--c-accent);
+    white-space: nowrap;
   }
 
   .contact__row dd {
@@ -745,15 +941,18 @@ const contactRows = [
   .contact__row a {
     color: inherit;
     text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .contact__row a:hover {
     color: var(--c-accent);
+    text-shadow: var(--text-glow-sm);
   }
 
   @media (max-width: 860px) {
     .contact__grid {
       grid-template-columns: 1fr;
+      gap: var(--sp-xl);
     }
   }
 </style>

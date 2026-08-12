@@ -1,18 +1,31 @@
 /* ===========================================================================
  * TOKENS DE DISEÑO — The Door PR
  *
- * Extraídos del sitio de referencia (thedoor-pr.netlify.app): paleta,
- * tipografías, escala y curvas de animación reales. Todo el CSS del proyecto
- * consume estas custom properties y nunca valores literales, así que
- * cualquier ajuste futuro de línea gráfica se hace aquí una sola vez.
+ * Todo el CSS del proyecto consume estas custom properties y nunca valores
+ * literales, así que cualquier ajuste de línea gráfica se hace aquí una sola
+ * vez y se propaga al sitio entero.
  * =========================================================================== */
+
+/* Propiedades registradas: sin `@property` un custom property no interpola y
+   las rampas de intensidad del neón saltarían en escalones. */
+@property --dm-intensity {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+@property --glow-spread {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
 
 :root {
   /* --- Tipografía ---------------------------------------------------------
-     Italiana  → titulares grandes, wordmark (solo weight 400 disponible)
+     Italiana           → titulares grandes, wordmark (solo weight 400)
      Cormorant Garamond → acentos itálicos, subrayados editoriales
-     Archivo   → cuerpo de texto
-     JetBrains Mono → navegación, etiquetas, meta-datos, todo en mayúsculas
+     Archivo            → cuerpo de texto
+     JetBrains Mono     → navegación, etiquetas, meta-datos, todo en mayúsculas
   ------------------------------------------------------------------------- */
   --font-display: 'Italiana', 'Cormorant Garamond', 'Times New Roman', serif;
   --font-serif-body: 'Cormorant Garamond', 'Times New Roman', serif;
@@ -46,9 +59,10 @@
   --ls-widest: 0.3em;
 
   /* --- Color ---------------------------------------------------------------
-     Fondo negro puro, tinta crema cálida, un único acento rojo neón que
-     porta todo el peso emocional de la marca (CTAs, glow de la puerta,
-     etiquetas de sección).
+     Fondo negro puro, tinta crema cálida, un único acento rojo neón que porta
+     todo el peso emocional de la marca. El neón se descompone en tres tonos:
+     el núcleo casi blanco (lo que en un tubo real está incandescente), el rojo
+     saturado del gas y el halo profundo que tiñe el aire alrededor.
   ------------------------------------------------------------------------- */
   --c-ink: #050505;
   --c-bg: #000000;
@@ -56,10 +70,14 @@
   --c-bg-elevated-2: #14100f;
   --c-fg: #f4f1ea;
   --c-fg-muted: #a8a39a;
+  --c-fg-faint: #6d6862;
+
   --c-accent: #ff1a25;
   --c-accent-soft: #ff5560;
   --c-accent-deep: #c00d18;
+  --c-accent-core: #ffe8e6;
   --c-accent-contrast: #050505;
+
   --c-border: rgb(255 255 255 / 0.08);
   --c-border-strong: rgb(255 255 255 / 0.18);
   --c-border-accent: rgb(255 26 37 / 0.35);
@@ -80,6 +98,7 @@
   --container-max: 84rem;
   --container-narrow: 48rem;
   --gutter: clamp(1.25rem, 4vw, 4rem);
+  --header-h: 4.5rem;
 
   /* --- Bordes y sombras --------------------------------------------------- */
   --radius-sm: 2px;
@@ -90,19 +109,83 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 24px rgb(0 0 0 / 0.45);
   --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.55);
-  --glow-accent: 0 0 32px rgb(255 26 37 / 0.45);
+
+  /* Escala de resplandor. Cada peldaño suma un halo más ancho y más tenue,
+     que es como se comporta la luz real: núcleo duro, caída larga. */
+  --glow-xs: 0 0 8px rgb(255 26 37 / 0.55);
+  --glow-sm:
+    0 0 6px rgb(255 26 37 / 0.7),
+    0 0 18px rgb(255 26 37 / 0.35);
+  --glow-md:
+    0 0 4px rgb(255 232 230 / 0.5),
+    0 0 14px rgb(255 26 37 / 0.75),
+    0 0 38px rgb(255 26 37 / 0.4);
+  --glow-lg:
+    0 0 6px rgb(255 232 230 / 0.6),
+    0 0 20px rgb(255 26 37 / 0.8),
+    0 0 52px rgb(255 26 37 / 0.5),
+    0 0 96px rgb(255 26 37 / 0.22);
+  --glow-accent: var(--glow-md);
+
+  --text-glow-sm: 0 0 18px rgb(255 26 37 / 0.45);
+  --text-glow-md:
+    0 0 12px rgb(255 26 37 / 0.5),
+    0 0 42px rgb(255 26 37 / 0.32);
+  --text-glow-lg:
+    0 0 14px rgb(255 26 37 / 0.55),
+    0 0 48px rgb(255 26 37 / 0.4),
+    0 0 110px rgb(255 26 37 / 0.22);
 
   /* --- Movimiento -----------------------------------------------------------
-     Curvas y duraciones de la animación de apertura de puerta del sitio
-     original: los dos leaves giran/escalan con overshoot y el resplandor
-     central del quicio entra con un pequeño rebote.
+     `cinematic` es la curva larga de la secuencia de apertura: arranca muy
+     despacio, gana velocidad en el centro y se posa sin rebote. Es lo que
+     separa una puerta que se abre de un elemento que aparece.
   ------------------------------------------------------------------------- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-cinematic: cubic-bezier(0.16, 0.84, 0.24, 1);
+  --ease-swing: cubic-bezier(0.5, 0.02, 0.18, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
   --dur-fast: 200ms;
   --dur-base: 400ms;
   --dur-slow: 700ms;
-  --dur-intro: 1900ms;
+  --dur-slower: 1100ms;
+
+  /* --- Secuencia de entrada -------------------------------------------------
+     La animación está escrita como una partitura: cada token es el instante en
+     que entra un elemento, no una duración suelta. Mover un token desplaza esa
+     entrada sin descuadrar el resto.
+
+       0ms      negro absoluto, brasa central
+       450ms    los dos montantes del marco se dibujan desde el vértice
+       1500ms   las hojas materializan
+       2050ms   el farol prende y el neón sube a intensidad plena
+       2600ms   la junta de luz se abre en vertical
+       3050ms   las hojas giran — el momento de la pieza
+       3800ms   la luz se derrama sobre el suelo
+       4050ms   el wordmark se asienta
+       5600ms   salida: se atraviesa el umbral
+  ------------------------------------------------------------------------- */
+  --t-seed: 0ms;
+  --t-frame: 450ms;
+  --t-leaves: 1500ms;
+  --t-ignite: 2050ms;
+  --t-seam: 2600ms;
+  --t-swing: 3050ms;
+  --t-spill: 3800ms;
+  --t-word: 4050ms;
+  --t-exit: 5600ms;
+
+  --dur-frame-draw: 1250ms;
+  --dur-swing: 1750ms;
+  --dur-word: 1200ms;
+  --dur-exit: 1250ms;
+  /* Instante en que arranca la salida — no la duración total. Lo lee el
+     guardián de JS que dispara el cierre por si alguna animación no termina
+     (pestaña en segundo plano, fuente que no carga). Mantenerlo igual a
+     `--t-exit` es lo que evita que el overlay se quede colgado. */
+  --dur-intro: 5600ms;
 
   /* --- Capas -------------------------------------------------------------- */
   --z-base: 0;
