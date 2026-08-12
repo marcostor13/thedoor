@@ -1,0 +1,74 @@
+---
+import { NAV_LINKS, SITE } from '../data/navigation'
+
+const year = new Date().getFullYear()
+---
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <p class="footer__brand">{SITE.name}</p>
+
+    <nav aria-label="Navegación del pie">
+      <ul role="list" class="footer__list">
+        {
+          NAV_LINKS.map((link) => (
+            <li>
+              <a class="footer__link" href={link.href}>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <p class="footer__legal">© {year} {SITE.name}. Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-block: var(--sp-xl);
+    margin-top: var(--sp-2xl);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-md);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer__brand {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+  }
+
+  .footer__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-md);
+    margin: 0;
+  }
+
+  .footer__link {
+    font-size: var(--fs-sm);
+    color: var(--c-fg-muted);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .footer__link:hover {
+    color: var(--c-fg);
+  }
+
+  .footer__legal {
+    font-size: var(--fs-xs);
+    color: var(--c-fg-muted);
+  }
+</style>

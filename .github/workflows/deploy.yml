@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Se compila antes de desplegar: si el build falla, Coolify no llega a
+      # reemplazar lo que ya está sirviendo en producción.
+      - name: Build de verificación
+        run: |
+          npm run build:web
+          npm run build:api
+        env:
+          PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+
+      - name: Disparar despliegue en Coolify
+        run: node scripts/deploy.mjs --deploy-all
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_WEB_UUID: ${{ secrets.COOLIFY_WEB_UUID }}
+          COOLIFY_API_UUID: ${{ secrets.COOLIFY_API_UUID }}

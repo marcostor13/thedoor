@@ -1,0 +1,52 @@
+---
+interface Props {
+  class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+{/*
+  LOGO — MARCADOR DE POSICIÓN
+
+  ⚠️  Este NO es el logo de The Door.
+
+  El requisito es reutilizar el logo original. No se ha podido descargar porque
+  thedoor-pr.netlify.app está bloqueado por la política de egress de la sesión.
+
+  Al portar el original: sustituir el contenido de <svg> por el del activo real
+  (o cambiar por <img> si es un raster), ajustar el viewBox y mantener el
+  atributo `class` para que hereden los estilos de quien lo usa.
+*/}
+
+<svg
+  class={className}
+  viewBox="0 0 240 60"
+  role="img"
+  aria-label="The Door"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect
+    x="1"
+    y="1"
+    width="238"
+    height="58"
+    rx="2"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-dasharray="6 4"
+  />
+  <text
+    x="120"
+    y="37"
+    text-anchor="middle"
+    fill="currentColor"
+    font-family="var(--font-display)"
+    font-size="20"
+    font-weight="700"
+    letter-spacing="0.14em"
+  >
+    THE DOOR
+  </text>
+</svg>

@@ -1,0 +1,131 @@
+---
+import Logo from './Logo.astro'
+---
+
+{/*
+  ANIMACIÓN DE ENTRADA — MARCADOR DE POSICIÓN
+
+  ⚠️  Esta NO es la animación de The Door.
+
+  El requisito es que la animación de entrada sea idéntica a la del sitio
+  actual, pero thedoor-pr.netlify.app está bloqueado por la política de egress
+  de la sesión, así que no se ha podido capturar la original (ni su mecanismo,
+  ni duraciones, ni curvas, ni la secuencia).
+
+  Lo que hay aquí es un contenedor con el comportamiento de infraestructura ya
+  resuelto —bloqueo de scroll, `prefers-reduced-motion`, mostrar solo una vez
+  por sesión, limpieza del DOM al terminar— para que al portar la animación
+  real solo haya que sustituir el marcado y los keyframes de abajo.
+*/}
+
+<div id="intro" class="intro" role="presentation" aria-hidden="true">
+  <div class="intro__stage">
+    <Logo class="intro__logo" />
+  </div>
+</div>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-intro);
+    display: grid;
+    place-items: center;
+    background: var(--c-bg);
+  }
+
+  .intro[hidden] {
+    display: none;
+  }
+
+  .intro--done {
+    animation: intro-out var(--dur-slow) var(--ease-out) forwards;
+  }
+
+  .intro__stage {
+    display: grid;
+    place-items: center;
+    width: min(60vw, 28rem);
+  }
+
+  .intro__logo {
+    width: 100%;
+    height: auto;
+    animation: intro-logo var(--dur-intro) var(--ease-out) forwards;
+  }
+
+  /* [PENDIENTE] Sustituir por los keyframes reales del sitio original. */
+  @keyframes intro-logo {
+    0% {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+    35% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes intro-out {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const STORAGE_KEY = 'thedoor:intro-seen'
+
+  function runIntro(): void {
+    const intro = document.getElementById('intro')
+    if (!intro) return
+
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+
+    // Ya vista en esta sesión, o el usuario pidió menos movimiento:
+    // se retira sin animar y el scroll no llega a bloquearse.
+    if (prefersReducedMotion || sessionStorage.getItem(STORAGE_KEY) === '1') {
+      intro.remove()
+      return
+    }
+
+    document.body.style.overflow = 'hidden'
+
+    const finish = (): void => {
+      sessionStorage.setItem(STORAGE_KEY, '1')
+      document.body.style.overflow = ''
+      intro.classList.add('intro--done')
+      intro.addEventListener('animationend', () => intro.remove(), {
+        once: true,
+      })
+    }
+
+    const logo = intro.querySelector<SVGElement | HTMLElement>('.intro__logo')
+
+    if (logo) {
+      logo.addEventListener('animationend', finish, { once: true })
+    } else {
+      finish()
+    }
+
+    // Red de seguridad: si la animación no llega a emitir `animationend`
+    // (pestaña en segundo plano, fallo al cargar el activo), el overlay no
+    // puede quedarse bloqueando la página.
+    window.setTimeout(finish, 6000)
+  }
+
+  runIntro()
+</script>

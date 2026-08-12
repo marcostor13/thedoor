@@ -1,0 +1,71 @@
+---
+import Layout from '../layouts/Layout.astro'
+import ContactForm from '../components/ContactForm.astro'
+import { SITE } from '../data/navigation'
+---
+
+{/*
+  PORTADA — ESTRUCTURA PROVISIONAL
+
+  ⚠️  Los textos de esta página son de relleno. El contenido real de
+  thedoor-pr.netlify.app no se ha podido inventariar porque el dominio está
+  bloqueado por la política de egress. Esta página existe para validar el
+  layout, el sistema de tokens y el revelado por scroll de extremo a extremo.
+*/}
+
+<Layout title={`${SITE.name} — ${SITE.tagline}`} intro>
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero__title" data-reveal>{SITE.tagline}</h1>
+      <p class="hero__lead" data-reveal>
+        Contenido pendiente de migrar desde el sitio actual.
+      </p>
+    </div>
+  </section>
+
+  <section id="nosotros" class="section">
+    <div class="container container--narrow">
+      <h2 data-reveal>Nosotros</h2>
+      <p data-reveal>Contenido pendiente de migrar desde el sitio actual.</p>
+    </div>
+  </section>
+
+  <section id="servicios" class="section">
+    <div class="container">
+      <h2 data-reveal>Servicios</h2>
+      <p data-reveal>Contenido pendiente de migrar desde el sitio actual.</p>
+    </div>
+  </section>
+
+  <section id="clientes" class="section">
+    <div class="container">
+      <h2 data-reveal>Clientes</h2>
+      <p data-reveal>Contenido pendiente de migrar desde el sitio actual.</p>
+    </div>
+  </section>
+
+  <section id="contacto" class="section">
+    <div class="container container--narrow">
+      <h2 data-reveal>Contacto</h2>
+      <ContactForm />
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    display: grid;
+    place-items: center;
+    min-height: min(92svh, 60rem);
+    padding-block: var(--sp-2xl);
+    text-align: center;
+  }
+
+  .hero__lead {
+    max-width: 42ch;
+    margin-block-start: var(--sp-md);
+    margin-inline: auto;
+    font-size: var(--fs-lg);
+    color: var(--c-fg-muted);
+  }
+</style>

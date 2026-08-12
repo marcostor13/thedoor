@@ -1,0 +1,24 @@
+{
+  "name": "thedoor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:web": "npm run dev -w @thedoor/web",
+    "dev:api": "npm run dev -w @thedoor/api",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build -w @thedoor/web",
+    "build:api": "npm run build -w @thedoor/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "deploy": "node scripts/deploy.mjs",
+    "dns": "node scripts/cloudflare-dns.mjs"
+  }
+}

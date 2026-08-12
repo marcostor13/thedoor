@@ -1,0 +1,150 @@
+---
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
+---
+
+<form class="form" id="contact-form" data-api={apiUrl} novalidate data-reveal>
+  <div class="form__field">
+    <label class="form__label" for="contact-name">Nombre</label>
+    <input class="form__input" id="contact-name" name="name" type="text" required maxlength="120" autocomplete="name" />
+  </div>
+
+  <div class="form__field">
+    <label class="form__label" for="contact-email">Email</label>
+    <input class="form__input" id="contact-email" name="email" type="email" required maxlength="180" autocomplete="email" />
+  </div>
+
+  <div class="form__field">
+    <label class="form__label" for="contact-message">Mensaje</label>
+    <textarea class="form__input" id="contact-message" name="message" rows="5" required maxlength="4000"></textarea>
+  </div>
+
+  {/* Trampa para bots: un campo que una persona nunca rellena. El backend
+      descarta el envío si llega con contenido. */}
+  <div class="form__honeypot" aria-hidden="true">
+    <label for="contact-company">No rellenar</label>
+    <input id="contact-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <button class="form__submit" type="submit">Enviar</button>
+
+  <p class="form__status" id="contact-status" role="status" aria-live="polite"></p>
+</form>
+
+<style>
+  .form {
+    display: grid;
+    gap: var(--sp-md);
+    margin-block-start: var(--sp-lg);
+  }
+
+  .form__field {
+    display: grid;
+    gap: var(--sp-3xs);
+  }
+
+  .form__label {
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .form__input {
+    padding: var(--sp-xs) var(--sp-sm);
+    color: var(--c-fg);
+    background: var(--c-bg-elevated);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .form__input:focus-visible {
+    border-color: var(--c-accent);
+  }
+
+  .form__input[aria-invalid='true'] {
+    border-color: #ef4444;
+  }
+
+  .form__honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .form__submit {
+    justify-self: start;
+    padding: var(--sp-xs) var(--sp-lg);
+    font-weight: var(--fw-semibold);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-accent-contrast);
+    cursor: pointer;
+    background: var(--c-accent);
+    border: 0;
+    border-radius: var(--radius-full);
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .form__submit:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  .form__submit:disabled {
+    cursor: progress;
+    opacity: 0.55;
+  }
+
+  .form__status:empty {
+    display: none;
+  }
+
+  .form__status {
+    font-size: var(--fs-sm);
+    color: var(--c-fg-muted);
+  }
+</style>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement | null
+  const status = document.getElementById('contact-status')
+
+  if (form && status) {
+    const submit = form.querySelector('button[type="submit"]') as HTMLButtonElement
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+
+      // Validación nativa antes de tocar la red.
+      if (!form.checkValidity()) {
+        form.reportValidity()
+        return
+      }
+
+      submit.disabled = true
+      status.textContent = 'Enviando…'
+
+      const data = Object.fromEntries(new FormData(form).entries())
+
+      try {
+        const response = await fetch(`${form.dataset.api}/contact`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+        form.reset()
+        status.textContent = 'Mensaje enviado. Gracias por escribirnos.'
+      } catch {
+        status.textContent =
+          'No se ha podido enviar el mensaje. Inténtalo de nuevo en unos minutos.'
+      } finally {
+        submit.disabled = false
+      }
+    })
+  }
+</script>
