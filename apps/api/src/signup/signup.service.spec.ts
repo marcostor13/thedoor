@@ -4,9 +4,11 @@ import { getModelToken } from '@nestjs/mongoose'
 import { BadRequestException } from '@nestjs/common'
 import { SignupService } from './signup.service'
 import { Signup } from './signup.schema'
+import { MailService } from '../mail/mail.service'
 
 describe('SignupService', () => {
   const create = mock()
+  const sendSignupConfirmation = mock(() => Promise.resolve(true))
   let service: SignupService
 
   const guest = {
@@ -19,9 +21,15 @@ describe('SignupService', () => {
 
   beforeEach(async () => {
     create.mockReset()
+    sendSignupConfirmation.mockReset()
+    sendSignupConfirmation.mockImplementation(() => Promise.resolve(true))
 
     const moduleRef = await Test.createTestingModule({
-      providers: [SignupService, { provide: getModelToken(Signup.name), useValue: { create } }],
+      providers: [
+        SignupService,
+        { provide: getModelToken(Signup.name), useValue: { create } },
+        { provide: MailService, useValue: { sendSignupConfirmation } },
+      ],
     }).compile()
 
     service = moduleRef.get(SignupService)
@@ -78,6 +86,50 @@ describe('SignupService', () => {
     await expect(service.create(guest)).rejects.toThrow('conexión perdida')
   })
 
+  it('confirma el alta por correo', async () => {
+    await service.create(guest)
+
+    expect(sendSignupConfirmation).toHaveBeenCalledWith('ana@example.com', {
+      name: 'Ana',
+      kind: 'guest',
+      reference: '@ana',
+      duplicate: false,
+    })
+  })
+
+  it('marca la confirmación como duplicada cuando el correo ya estaba', async () => {
+    create.mockImplementation(() => {
+      throw Object.assign(new Error('E11000 duplicate key'), { code: 11000 })
+    })
+
+    await service.create(guest)
+
+    expect(sendSignupConfirmation).toHaveBeenCalledWith(
+      'ana@example.com',
+      expect.objectContaining({ duplicate: true }),
+    )
+  })
+
+  it('no confirma nada cuando la escritura falla de verdad', async () => {
+    create.mockImplementation(() => {
+      throw new Error('conexión perdida')
+    })
+
+    await expect(service.create(guest)).rejects.toThrow('conexión perdida')
+    expect(sendSignupConfirmation).not.toHaveBeenCalled()
+  })
+
+  it('registra el alta aunque el correo falle', async () => {
+    // El servicio de correo no lanza, pero si algún día lo hiciera, un SMTP
+    // caído no puede convertir un alta correcta en un error.
+    sendSignupConfirmation.mockImplementation(() => Promise.reject(new Error('SMTP caído')))
+
+    await expect(service.create(guest)).resolves.toEqual({
+      registered: true,
+      duplicate: false,
+    })
+  })
+
   it('descarta el registro cuando el honeypot llega relleno', async () => {
     const bot = { ...guest, company: 'relleno por un bot' }
 
@@ -86,7 +138,9 @@ describe('SignupService', () => {
       registered: true,
       duplicate: false,
     })
-    // …pero no llega a escribir nada.
+    // …pero no llega a escribir nada, ni a mandar correo a una dirección que
+    // probablemente no es de nadie.
     expect(create).not.toHaveBeenCalled()
+    expect(sendSignupConfirmation).not.toHaveBeenCalled()
   })
 })

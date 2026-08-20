@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
+import { MailModule } from './mail/mail.module'
 import { HealthModule } from './health/health.module'
 import { ContactModule } from './contact/contact.module'
 import { SignupModule } from './signup/signup.module'
@@ -27,6 +28,7 @@ import { SignupModule } from './signup/signup.module'
     // aprietan más este límite con su propio @Throttle.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
 
+    MailModule,
     HealthModule,
     ContactModule,
     SignupModule,

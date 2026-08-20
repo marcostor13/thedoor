@@ -157,7 +157,24 @@ PORT=3000
 MONGO_URI=<cadena de conexión de Atlas>
 CORS_ORIGINS=https://thedoorpr.com
 JWT_SECRET=<openssl rand -base64 48>
+
+# Correo de confirmación de alta. Opcional: sin MAIL_HOST ni MAIL_FROM la API
+# arranca igual y sigue registrando, solo que sin confirmar nada por correo.
+MAIL_HOST=<smtp del proveedor>
+MAIL_PORT=587
+MAIL_USER=<usuario smtp>
+MAIL_PASSWORD=<contraseña o app password>
+MAIL_FROM=The Door PR <hola@thedoorpr.com>
+SITE_URL=https://thedoorpr.com
 ```
+
+El dominio de `MAIL_FROM` necesita **SPF y DKIM** publicados en Cloudflare, y
+conviene añadir DMARC. Sin eso el correo sale, pero Gmail y Outlook lo mandan a
+spam: para un correo que la gente está esperando, eso es lo mismo que no
+enviarlo. Los registros exactos los da el proveedor de SMTP.
+
+La imagen del correo se sirve desde el frontend (`/email/door.png`), así que
+`SITE_URL` tiene que apuntar al sitio publicado, no a la API.
 
 Ojo con las variables de build: en esta versión de la API el campo se llama
 `is_buildtime` (sin guion bajo entre *build* y *time*). `is_build_time` da un

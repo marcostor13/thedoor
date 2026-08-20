@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { CreateSignupDto } from './dto/create-signup.dto'
 import { Signup, SignupDocument } from './signup.schema'
+import { MailService } from '../mail/mail.service'
 
 export interface SignupResult {
   registered: true
@@ -20,6 +21,7 @@ export class SignupService {
   constructor(
     @InjectModel(Signup.name)
     private readonly signupModel: Model<SignupDocument>,
+    private readonly mailService: MailService,
   ) {}
 
   async create(dto: CreateSignupDto): Promise<SignupResult> {
@@ -35,6 +37,8 @@ export class SignupService {
       throw new BadRequestException('Indica el nombre del local.')
     }
 
+    let duplicate = false
+
     try {
       await this.signupModel.create({
         kind: dto.kind,
@@ -47,13 +51,29 @@ export class SignupService {
     } catch (error) {
       // Segundo envío del mismo correo: para quien lo manda no es un error,
       // es la confirmación de que ya estaba dentro.
-      if (isDuplicateKeyError(error)) {
-        return { registered: true, duplicate: true }
-      }
-      throw error
+      if (!isDuplicateKeyError(error)) throw error
+      duplicate = true
     }
 
-    return { registered: true, duplicate: false }
+    // Sin `await`: quien acaba de registrarse no tiene por qué esperar a que
+    // un SMTP conteste para ver su confirmación en pantalla.
+    //
+    // El `.catch` no es decorativo aunque MailService prometa no lanzar: una
+    // promesa suelta que se rechaza es un unhandled rejection, y eso tumba el
+    // proceso entero. El alta ya está escrita; que se pierda el saludo es un
+    // problema mucho menor que caerse por ello.
+    void this.mailService
+      .sendSignupConfirmation(dto.email, {
+        name: dto.name,
+        kind: dto.kind,
+        reference: dto.reference,
+        duplicate,
+      })
+      .catch((error: unknown) => {
+        this.logger.error(`Confirmación no enviada a ${dto.email}: ${String(error)}`)
+      })
+
+    return { registered: true, duplicate }
   }
 
   async findAll(limit = 50): Promise<Signup[]> {
