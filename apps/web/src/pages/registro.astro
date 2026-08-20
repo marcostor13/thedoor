@@ -1,0 +1,251 @@
+---
+import Layout from '../layouts/Layout.astro'
+import DoorMark from '../components/DoorMark.astro'
+import Logo from '../components/Logo.astro'
+import SignupForm from '../components/SignupForm.astro'
+import { SITE } from '../data/navigation'
+
+const steps = [
+  {
+    num: '01',
+    title: 'Llamas',
+    desc: 'Rellenas el formulario. Treinta segundos, sin cuenta ni contraseña.',
+  },
+  {
+    num: '02',
+    title: 'Te leemos',
+    desc: 'Una persona, no un filtro automático. Contestamos en menos de 48 horas.',
+  },
+  {
+    num: '03',
+    title: 'Te abrimos',
+    desc: 'Si encajas, te escribimos con la siguiente fecha y lo que necesitamos de ti.',
+  },
+]
+---
+
+<Layout
+  title={`Registro — ${SITE.name}`}
+  description="Regístrate en The Door PR: si tienes una sala que llenar o quieres estar en la lista, esto es lo único que hay que rellenar. Lima, Perú."
+>
+  <section class="access">
+    <div class="container access__grid">
+      <div class="access__stage">
+        <DoorMark class="access__mark" id="access" staged entrance="full" />
+        <Logo class="access__wordmark" />
+        <p class="access__kicker">Solo miembros — Lima</p>
+      </div>
+
+      <div class="access__panel">
+        <p class="eyebrow">— Registro</p>
+
+        <h1 class="access__title">
+          Come through. <em>The list starts here.</em>
+        </h1>
+
+        <p class="access__lede">
+          Dos puertas, una sola cola. Si tienes una sala que llenar o quieres estar donde
+          pasan las cosas, esto es lo único que hay que rellenar.
+        </p>
+
+        <SignupForm />
+      </div>
+    </div>
+  </section>
+
+  <section class="section steps">
+    <div class="container">
+      <p class="eyebrow" data-reveal>— Qué pasa después</p>
+
+      <ol role="list" class="steps__list">
+        {
+          steps.map((step) => (
+            <li class="steps__item" data-reveal>
+              <span class="steps__num">{step.num} /</span>
+              <h2 class="steps__title">{step.title}</h2>
+              <p class="steps__desc">{step.desc}</p>
+            </li>
+          ))
+        }
+      </ol>
+
+      <p class="steps__note" data-reveal>
+        — La lista es por referencia y nunca se vende. Puedes salir de ella cuando
+        quieras escribiendo a <a href="mailto:list@thedoor.pe">list@thedoor.pe</a>.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* --- Escenario ------------------------------------------------------------ */
+
+  .access {
+    display: grid;
+    min-height: calc(100svh - 4.75rem);
+    padding-block: var(--sp-lg);
+  }
+
+  .access__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+    gap: clamp(var(--sp-xl), 6vw, 7rem);
+    align-items: center;
+  }
+
+  .access__stage {
+    display: grid;
+    justify-items: center;
+    gap: clamp(var(--sp-sm), 2.5vh, var(--sp-lg));
+    text-align: center;
+  }
+
+  /* Misma regla que en la portada: la puerta se mide por altura y el
+     aspect-ratio deduce el ancho, para que nunca desborde la pantalla. */
+  :global(.access__mark) {
+    aspect-ratio: 24 / 34;
+    width: auto;
+    height: min(52vh, 30rem);
+    max-width: 100%;
+  }
+
+  :global(.access__wordmark) {
+    font-size: var(--fs-xl);
+  }
+
+  .access__kicker {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  /* --- Panel ---------------------------------------------------------------- */
+
+  .access__panel {
+    display: grid;
+    align-content: center;
+    gap: var(--sp-sm);
+    padding-inline-start: clamp(var(--sp-xl), 6vw, 7rem);
+    border-inline-start: 1px solid var(--c-border);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--c-accent);
+    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
+  }
+
+  .access__title {
+    max-width: 14ch;
+    font-size: var(--fs-3xl);
+    line-height: 0.98;
+  }
+
+  .access__title em {
+    display: block;
+    font-style: italic;
+    color: var(--c-accent);
+    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
+  }
+
+  .access__lede {
+    max-width: var(--measure-sm);
+    margin-block: var(--sp-2xs) var(--sp-md);
+    color: var(--c-fg-muted);
+  }
+
+  /* --- Qué pasa después ------------------------------------------------------ */
+
+  .steps {
+    border-top: 1px solid var(--c-border);
+  }
+
+  .steps__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--sp-lg) clamp(var(--sp-lg), 4vw, var(--sp-2xl));
+    padding: 0;
+    margin-block-start: var(--sp-lg);
+  }
+
+  .steps__item {
+    display: grid;
+    align-content: start;
+    gap: var(--sp-2xs);
+    padding-block-start: var(--sp-md);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .steps__num {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--c-accent);
+  }
+
+  .steps__title {
+    font-size: var(--fs-2xl);
+  }
+
+  .steps__desc {
+    color: var(--c-fg-muted);
+  }
+
+  .steps__note {
+    max-width: var(--measure-md);
+    margin-block-start: var(--sp-xl);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.9;
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .steps__note a {
+    color: var(--c-fg);
+  }
+
+  /* --- Apilado -------------------------------------------------------------- */
+
+  @media (max-width: 900px) {
+    .access__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-xl);
+    }
+
+    .access__panel {
+      padding-inline-start: 0;
+      border-inline-start: 0;
+    }
+
+    :global(.access__mark) {
+      height: min(38vh, 20rem);
+    }
+  }
+</style>
+
+<script>
+  /**
+   * La recompensa del registro: cuando el alta se acepta, la puerta de la
+   * landing se abre de par en par. La animación vive en DoorMark.astro; aquí
+   * solo se le pide entrar en ese estado.
+   */
+  function initAccessDoor(): void {
+    const mark = document.querySelector<SVGElement>('.access__mark')
+    if (!mark) return
+
+    document.addEventListener(
+      'thedoor:signup-done',
+      () => mark.classList.add('dm-opened'),
+      { once: true },
+    )
+  }
+
+  initAccessDoor()
+  document.addEventListener('astro:after-swap', initAccessDoor)
+</script>

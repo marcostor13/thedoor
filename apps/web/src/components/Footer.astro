@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro'
+import DoorGlyph from './DoorGlyph.astro'
 import { SITE } from '../data/navigation'
 
 const year = new Date().getFullYear()
@@ -7,7 +8,10 @@ const year = new Date().getFullYear()
 
 <footer class="footer">
   <div class="container footer__inner">
-    <Logo class="footer__brand" />
+    <a class="footer__brand" href="/#top" aria-label={`${SITE.name} — inicio`}>
+      <DoorGlyph class="footer__glyph" id="footer" />
+      <Logo class="footer__wordmark" />
+    </a>
     <p class="footer__legal">
       © {year} {SITE.name.toUpperCase()} — Casa de hospitalidad en Lima
     </p>
@@ -27,6 +31,18 @@ const year = new Date().getFullYear()
     gap: var(--sp-md);
     align-items: center;
     justify-content: space-between;
+  }
+
+  .footer__brand {
+    display: inline-flex;
+    gap: 0.625rem;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  :global(.footer__glyph) {
+    width: auto;
+    height: 1.4rem;
   }
 
   .footer__legal,

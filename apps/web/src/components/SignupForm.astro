@@ -1,0 +1,543 @@
+---
+/**
+ * Formulario de registro de la landing. Habla con `POST /signup` del API.
+ *
+ * Dos públicos en un solo formulario: quien tiene sala (`venue`) y quien
+ * quiere estar en la lista (`guest`). El selector de arriba cambia qué
+ * significa el campo de referencia y si es obligatorio, en vez de duplicar
+ * formularios que solo se diferencian en una línea.
+ *
+ * Al aceptarse el alta se emite `thedoor:signup-done` para que la página
+ * pueda celebrarlo — en la landing, abriendo la puerta de par en par.
+ */
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
+---
+
+<div class="signup">
+  <form class="signup__form" id="signup-form" data-api={apiUrl} novalidate>
+    <fieldset class="segmented">
+      <legend class="signup__label">Quién eres</legend>
+
+      {/* `autocomplete="off"` en los radios, no en el formulario: Chrome
+          restaura el estado de los controles al volver a una página ya
+          visitada y le ganaba a la preselección por URL (`?tipo=`). Los campos
+          de texto sí conservan su autocompletado. */}
+      <div class="segmented__options">
+        <label class="segmented__option">
+          <input type="radio" name="kind" value="venue" autocomplete="off" checked />
+          <span>Tengo un local</span>
+        </label>
+        <label class="segmented__option">
+          <input type="radio" name="kind" value="guest" autocomplete="off" />
+          <span>Quiero la lista</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="signup__row">
+      <div class="signup__field">
+        <label class="signup__label" for="signup-name">Nombre</label>
+        <input
+          class="signup__input"
+          id="signup-name"
+          name="name"
+          type="text"
+          required
+          minlength="2"
+          maxlength="120"
+          autocomplete="name"
+        />
+      </div>
+
+      <div class="signup__field">
+        <label class="signup__label" for="signup-email">Email</label>
+        <input
+          class="signup__input"
+          id="signup-email"
+          name="email"
+          type="email"
+          required
+          maxlength="180"
+          autocomplete="email"
+        />
+      </div>
+    </div>
+
+    <div class="signup__row">
+      <div class="signup__field">
+        <label class="signup__label" for="signup-reference" id="signup-reference-label">
+          Nombre del local
+        </label>
+        <input
+          class="signup__input"
+          id="signup-reference"
+          name="reference"
+          type="text"
+          required
+          maxlength="160"
+          autocomplete="organization"
+        />
+        <p class="signup__hint" id="signup-reference-hint">
+          Cómo se llama la sala que quieres que programemos.
+        </p>
+      </div>
+
+      <div class="signup__field">
+        <label class="signup__label" for="signup-phone">
+          Teléfono <span class="signup__optional">— opcional</span>
+        </label>
+        <input
+          class="signup__input"
+          id="signup-phone"
+          name="phone"
+          type="tel"
+          maxlength="40"
+          autocomplete="tel"
+        />
+      </div>
+    </div>
+
+    <div class="signup__row">
+      <div class="signup__field">
+        <label class="signup__label" for="signup-city">
+          Ciudad <span class="signup__optional">— opcional</span>
+        </label>
+        <input
+          class="signup__input"
+          id="signup-city"
+          name="city"
+          type="text"
+          maxlength="80"
+          autocomplete="address-level2"
+          value="Lima"
+        />
+      </div>
+    </div>
+
+    {/* Trampa para bots: un campo que una persona nunca rellena. El backend
+        descarta el envío si llega con contenido. */}
+    <div class="signup__honeypot" aria-hidden="true">
+      <label for="signup-company">No rellenar</label>
+      <input id="signup-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <button class="signup__submit" type="submit">
+      Toca la puerta <span aria-hidden="true">→</span>
+    </button>
+
+    <p class="signup__status" id="signup-status" role="status" aria-live="polite"></p>
+
+    <p class="signup__legal">
+      Solo usamos tus datos para responderte. Sin listas vendidas, sin boletines
+      que no hayas pedido.
+    </p>
+  </form>
+
+  <div class="signup__done" id="signup-done" hidden>
+    <p class="signup__done-eyebrow">— Estás dentro</p>
+    <h3 class="signup__done-title" id="signup-done-title" tabindex="-1">Te hemos abierto.</h3>
+    <p class="signup__done-text" id="signup-done-text">
+      Hemos anotado tu solicitud. Te escribimos desde
+      <a href="mailto:venues@thedoor.pe">venues@thedoor.pe</a> en menos de 48 horas.
+    </p>
+    <a class="signup__done-link" href="/#services">Mientras tanto, mira qué hacemos →</a>
+  </div>
+</div>
+
+<style>
+  .signup {
+    max-width: var(--measure-md);
+  }
+
+  .signup__form {
+    display: grid;
+    gap: var(--sp-md);
+  }
+
+  .signup__form[hidden] {
+    display: none;
+  }
+
+  .signup__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-md);
+  }
+
+  .signup__field {
+    display: grid;
+    gap: var(--sp-3xs);
+    align-content: start;
+  }
+
+  .signup__label {
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .signup__optional {
+    letter-spacing: var(--ls-normal);
+    text-transform: none;
+    opacity: 0.65;
+  }
+
+  .signup__input {
+    width: 100%;
+    padding: var(--sp-xs) var(--sp-sm);
+    color: var(--c-fg);
+    background: var(--c-bg-elevated);
+    border: 1px solid var(--c-border);
+    border-radius: 0;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .signup__input:focus-visible {
+    border-color: var(--c-accent);
+  }
+
+  .signup__input[aria-invalid='true'] {
+    border-color: #ef4444;
+  }
+
+  .signup__hint {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: var(--ls-normal);
+    color: var(--c-fg-muted);
+    opacity: 0.75;
+  }
+
+  /* --- Selector de público -------------------------------------------------- */
+
+  .segmented {
+    display: grid;
+    gap: var(--sp-3xs);
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+
+  .segmented__options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid var(--c-border-strong);
+  }
+
+  .segmented__option {
+    position: relative;
+  }
+
+  .segmented__option + .segmented__option {
+    border-inline-start: 1px solid var(--c-border-strong);
+  }
+
+  .segmented__option input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .segmented__option span {
+    display: block;
+    padding: var(--sp-xs) var(--sp-sm);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--c-fg-muted);
+    transition: 0.2s;
+  }
+
+  .segmented__option input:hover + span {
+    color: var(--c-fg);
+  }
+
+  .segmented__option input:checked + span {
+    color: var(--c-ink);
+    background: var(--c-accent);
+    box-shadow: var(--glow-accent);
+  }
+
+  .segmented__option input:focus-visible + span {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+  }
+
+  /* --- Envío ---------------------------------------------------------------- */
+
+  .signup__honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .signup__submit {
+    justify-self: start;
+    padding: var(--sp-sm) var(--sp-lg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg);
+    cursor: pointer;
+    background: none;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 0;
+    transition: 0.2s;
+  }
+
+  .signup__submit:hover:not(:disabled) {
+    color: var(--c-ink);
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow: var(--glow-accent);
+  }
+
+  .signup__submit:disabled {
+    cursor: progress;
+    opacity: 0.55;
+  }
+
+  .signup__status:empty {
+    display: none;
+  }
+
+  .signup__status {
+    font-size: var(--fs-sm);
+    color: var(--c-fg-muted);
+  }
+
+  .signup__status[data-tone='error'] {
+    color: var(--c-accent-soft);
+  }
+
+  .signup__legal {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.7;
+    letter-spacing: var(--ls-normal);
+    color: var(--c-fg-muted);
+    opacity: 0.7;
+  }
+
+  /* --- Confirmación --------------------------------------------------------- */
+
+  .signup__done[hidden] {
+    display: none;
+  }
+
+  .signup__done {
+    display: grid;
+    gap: var(--sp-sm);
+    justify-items: start;
+    animation: signup-done-in var(--dur-slow) var(--ease-out) both;
+  }
+
+  .signup__done-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--c-accent);
+    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
+  }
+
+  .signup__done-title {
+    font-size: var(--fs-3xl);
+  }
+
+  .signup__done-text {
+    max-width: var(--measure-sm);
+    color: var(--c-fg-muted);
+  }
+
+  .signup__done-text a {
+    color: var(--c-fg);
+  }
+
+  .signup__done-link {
+    margin-block-start: var(--sp-2xs);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--c-fg);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .signup__done-link:hover {
+    color: var(--c-accent);
+  }
+
+  @keyframes signup-done-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .signup__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .signup__done {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  interface SignupResponse {
+    registered: true
+    duplicate: boolean
+  }
+
+  /** Qué significa el campo de referencia para cada público. */
+  const REFERENCE_COPY = {
+    venue: {
+      label: 'Nombre del local',
+      hint: 'Cómo se llama la sala que quieres que programemos.',
+      required: true,
+    },
+    guest: {
+      label: 'Quién te refiere',
+      hint: 'Un nombre o un @ de Instagram. Si no tienes referencia, déjalo vacío.',
+      required: false,
+    },
+  } as const
+
+  type Kind = keyof typeof REFERENCE_COPY
+
+  const REPLY_TO: Record<Kind, string> = {
+    venue: 'venues@thedoor.pe',
+    guest: 'list@thedoor.pe',
+  }
+
+  function initSignup(): void {
+    const form = document.getElementById('signup-form') as HTMLFormElement | null
+    const status = document.getElementById('signup-status')
+    const done = document.getElementById('signup-done')
+    if (!form || !status || !done) return
+
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
+    const reference = document.getElementById('signup-reference') as HTMLInputElement
+    const referenceLabel = document.getElementById('signup-reference-label')!
+    const referenceHint = document.getElementById('signup-reference-hint')!
+    const doneTitle = document.getElementById('signup-done-title')!
+    const doneText = document.getElementById('signup-done-text')!
+
+    const currentKind = (): Kind =>
+      (new FormData(form).get('kind') as Kind | null) ?? 'venue'
+
+    const syncKind = (): void => {
+      const copy = REFERENCE_COPY[currentKind()]
+      referenceLabel.textContent = copy.label
+      referenceHint.textContent = copy.hint
+      reference.required = copy.required
+      reference.removeAttribute('aria-invalid')
+    }
+
+    // El público puede venir preseleccionado desde los CTA del sitio
+    // (`/registro?tipo=guest`), para que nadie tenga que elegir dos veces.
+    const applyPreselection = (): void => {
+      const wanted = new URLSearchParams(location.search).get('tipo')
+      if (wanted === 'venue' || wanted === 'guest') {
+        const option = form.querySelector<HTMLInputElement>(`input[name="kind"][value="${wanted}"]`)
+        if (option) option.checked = true
+      }
+      syncKind()
+    }
+
+    applyPreselection()
+
+    // Volver atrás restaura la página desde la bfcache sin reejecutar nada:
+    // la URL vuelve a mandar sobre lo que el navegador haya recordado.
+    window.addEventListener('pageshow', applyPreselection)
+
+    form.querySelectorAll<HTMLInputElement>('input[name="kind"]').forEach((option) => {
+      option.addEventListener('change', syncKind)
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+
+      // Validación nativa antes de tocar la red.
+      if (!form.checkValidity()) {
+        form.reportValidity()
+        return
+      }
+
+      submit.disabled = true
+      status.dataset.tone = 'info'
+      status.textContent = 'Llamando…'
+
+      const kind = currentKind()
+      const entries = Object.fromEntries(new FormData(form).entries()) as Record<string, string>
+
+      // Los opcionales vacíos no se mandan: el DTO los valida solo si vienen,
+      // y una cadena vacía haría fallar la validación de longitud.
+      const payload = Object.fromEntries(
+        Object.entries(entries).filter(([, value]) => value.trim() !== ''),
+      )
+
+      try {
+        const response = await fetch(`${form.dataset.api}/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (response.status === 429) {
+          status.dataset.tone = 'error'
+          status.textContent = 'Has llamado demasiadas veces. Prueba dentro de unos minutos.'
+          return
+        }
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+        const result = (await response.json()) as SignupResponse
+
+        doneTitle.textContent = result.duplicate ? 'Ya estabas dentro.' : 'Te hemos abierto.'
+        doneText.innerHTML = result.duplicate
+          ? `Ese correo ya estaba en la lista, así que no hemos duplicado nada. Si necesitas cambiar algo, escríbenos a <a href="mailto:${REPLY_TO[kind]}">${REPLY_TO[kind]}</a>.`
+          : `Hemos anotado tu solicitud. Te escribimos desde <a href="mailto:${REPLY_TO[kind]}">${REPLY_TO[kind]}</a> en menos de 48 horas.`
+
+        status.textContent = ''
+        form.hidden = true
+        done.hidden = false
+        doneTitle.focus()
+
+        document.dispatchEvent(
+          new CustomEvent('thedoor:signup-done', { detail: { duplicate: result.duplicate } }),
+        )
+      } catch {
+        status.dataset.tone = 'error'
+        status.textContent = 'No hemos podido registrarte. Inténtalo de nuevo en unos minutos.'
+      } finally {
+        submit.disabled = false
+      }
+    })
+  }
+
+  initSignup()
+  document.addEventListener('astro:after-swap', initSignup)
+</script>

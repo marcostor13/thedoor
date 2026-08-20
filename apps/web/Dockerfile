@@ -2,17 +2,19 @@
 #   docker build -f apps/web/Dockerfile .
 
 # --- Etapa 1: build ---------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
 # Se copian primero los manifiestos para que la capa de dependencias se
-# reutilice mientras no cambien.
-COPY package.json package-lock.json ./
+# reutilice mientras no cambien. Bun valida el lockfile contra TODOS los
+# workspaces, así que hacen falta los dos package.json aunque solo se compile
+# el frontend.
+COPY package.json bun.lock ./
 COPY apps/web/package.json apps/web/
 COPY apps/api/package.json apps/api/
 
-RUN npm ci --workspace @thedoor/web --include-workspace-root
+RUN bun install --frozen-lockfile --filter @thedoor/web
 
 COPY apps/web apps/web
 
@@ -23,7 +25,7 @@ ARG PUBLIC_SITE_URL
 ENV PUBLIC_API_URL=$PUBLIC_API_URL
 ENV PUBLIC_SITE_URL=$PUBLIC_SITE_URL
 
-RUN npm run build --workspace @thedoor/web
+RUN bun run build:web
 
 # --- Etapa 2: runtime -------------------------------------------------------
 FROM nginx:1.27-alpine AS runtime

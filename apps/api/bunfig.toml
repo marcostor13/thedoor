@@ -1,0 +1,10 @@
+[test]
+# Sin acotar la raíz, `bun test` también recogería las copias compiladas de los
+# specs que quedan en dist/ y las ejecutaría por duplicado.
+root = "src"
+
+# En producción main.ts carga estas dos cosas antes que nada; los tests no pasan
+# por el bootstrap, así que se precargan aquí:
+#   - reflect-metadata, que necesitan los metadatos de los decoradores de Nest
+#   - bun-compat, que destraba la carga de mongoose bajo Bun
+preload = ["reflect-metadata", "./src/bun-compat.ts"]

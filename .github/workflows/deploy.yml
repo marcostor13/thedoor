@@ -1,43 +1,235 @@
 name: Deploy
 
+# Cada push a main despliega SOLO lo que ha cambiado: si el commit toca
+# apps/web se redespliega el frontend, si toca apps/api el backend, y si toca
+# algo compartido (lockfile, scripts, los propios workflows) los dos.
+#
+# Requisito en Coolify: las dos aplicaciones deben tener el auto-deploy por
+# webhook DESACTIVADO. Si no, Coolify desplegaría por su cuenta en cada push y
+# se saltaría la verificación de build de este workflow.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      target:
+        description: Qué desplegar
+        type: choice
+        options: [auto, web, api, all]
+        default: all
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # ---------------------------------------------------------------------------
+  # 1 · Qué hay que desplegar
+  # ---------------------------------------------------------------------------
+  changes:
     runs-on: ubuntu-latest
-    environment: production
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+      api: ${{ steps.detect.outputs.api }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Hace falta historia para comparar contra el commit anterior.
+          fetch-depth: 0
+
+      - id: detect
+        name: Detectar cambios
+        env:
+          EVENT: ${{ github.event_name }}
+          TARGET: ${{ inputs.target }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          decide() {
+            echo "web=$1" >> "$GITHUB_OUTPUT"
+            echo "api=$2" >> "$GITHUB_OUTPUT"
+            echo "### Despliegue: web=\`$1\` api=\`$2\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "$3" >> "$GITHUB_STEP_SUMMARY"
+            echo "→ web=$1 api=$2 ($3)"
+            exit 0
+          }
+
+          # Ejecución manual: manda lo que se haya elegido, salvo "auto".
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            case "$TARGET" in
+              web) decide true false "Lanzado a mano: solo frontend." ;;
+              api) decide false true "Lanzado a mano: solo backend." ;;
+              all) decide true true "Lanzado a mano: las dos aplicaciones." ;;
+            esac
+          fi
+
+          # Sin un commit base utilizable (primer push de la rama, force-push o
+          # ejecución manual en modo auto) no se puede saber qué cambió: se
+          # despliega todo, que es la opción segura.
+          if [ -z "${BEFORE:-}" ] \
+            || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+            || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            decide true true "Sin commit base comparable: se despliega todo."
+          fi
+
+          changed=$(git diff --name-only "$BEFORE" "$SHA")
+
+          if [ -z "$changed" ]; then
+            decide false false "El push no cambia ningún fichero."
+          fi
+
+          echo "Ficheros cambiados:"
+          echo "$changed" | sed 's/^/  /'
+
+          # Lo único realmente compartido es lo que entra en las dos imágenes:
+          # el manifiesto de la raíz y el lockfile (ver los dos Dockerfile).
+          # Los workflows y scripts/ quedan fuera a propósito — no viajan en
+          # ninguna imagen, así que tocarlos no cambia lo que hay desplegado;
+          # si aun así quieres forzar un despliegue, usa la ejecución manual.
+          if echo "$changed" | grep -Eq '^(package\.json|bun\.lock)$'; then
+            decide true true "Cambió el manifiesto o el lockfile de la raíz: se despliegan las dos."
+          fi
+
+          web=false
+          api=false
+          if echo "$changed" | grep -q '^apps/web/'; then web=true; fi
+          if echo "$changed" | grep -q '^apps/api/'; then api=true; fi
+
+          decide "$web" "$api" "Detectado a partir de los ficheros del commit."
+
+  # ---------------------------------------------------------------------------
+  # 2 · Verificación: si no compila, Coolify no llega a tocar producción
+  # ---------------------------------------------------------------------------
+  verify:
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.3.2
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
-      # Se compila antes de desplegar: si el build falla, Coolify no llega a
-      # reemplazar lo que ya está sirviendo en producción.
-      - name: Build de verificación
-        run: |
-          npm run build:web
-          npm run build:api
+      - name: Build frontend
+        if: needs.changes.outputs.web == 'true'
+        run: bun run build:web
         env:
           PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
           PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
 
-      - name: Disparar despliegue en Coolify
-        run: node scripts/deploy.mjs --deploy-all
+      - name: Build backend
+        if: needs.changes.outputs.api == 'true'
+        run: bun run build:api
+
+      - name: Tests
+        run: bun run test
+
+  # ---------------------------------------------------------------------------
+  # 3 · Despliegue, uno por aplicación
+  # ---------------------------------------------------------------------------
+  deploy-web:
+    needs: [changes, verify]
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-web
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.2
+
+      # El script solo usa la librería estándar: no hace falta bun install.
+      - name: Comprobar credenciales y UUID
+        run: bun scripts/deploy.mjs --check --target web
         env:
           COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           COOLIFY_WEB_UUID: ${{ secrets.COOLIFY_WEB_UUID }}
+
+      - name: Desplegar frontend
+        run: bun scripts/deploy.mjs --deploy --target web --timeout 900
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_WEB_UUID: ${{ secrets.COOLIFY_WEB_UUID }}
+
+      - name: Comprobar que el sitio responde
+        run: |
+          set -euo pipefail
+          url="${{ vars.PUBLIC_SITE_URL }}"
+          if [ -z "$url" ]; then
+            echo "PUBLIC_SITE_URL no está definida: se omite la comprobación."
+            exit 0
+          fi
+          for attempt in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo 000)
+            echo "intento $attempt → $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::$url no devolvió 200 tras el despliegue."
+          exit 1
+
+  deploy-api:
+    needs: [changes, verify]
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-api
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.2
+
+      - name: Comprobar credenciales y UUID
+        run: bun scripts/deploy.mjs --check --target api
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           COOLIFY_API_UUID: ${{ secrets.COOLIFY_API_UUID }}
+
+      - name: Desplegar backend
+        run: bun scripts/deploy.mjs --deploy --target api --timeout 900
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_API_UUID: ${{ secrets.COOLIFY_API_UUID }}
+
+      # El health check mira también la base de datos: si Atlas no deja entrar
+      # a la IP del servidor, la API arranca pero no sirve para nada.
+      - name: Comprobar /health
+        run: |
+          set -euo pipefail
+          url="${{ vars.PUBLIC_API_URL }}"
+          if [ -z "$url" ]; then
+            echo "PUBLIC_API_URL no está definida: se omite la comprobación."
+            exit 0
+          fi
+          for attempt in 1 2 3 4 5 6; do
+            body=$(curl -s --max-time 15 "$url/health" || echo '')
+            echo "intento $attempt → ${body:-sin respuesta}"
+            if echo "$body" | grep -q '"database":"up"'; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::$url/health no llegó a informar database=up. La API puede estar\
+           arriba pero sin conexión a Atlas: revisa la IP Access List del clúster y MONGO_URI."
+          exit 1

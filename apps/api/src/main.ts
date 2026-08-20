@@ -1,3 +1,5 @@
+import './bun-compat'
+
 import 'reflect-metadata'
 import { setServers } from 'node:dns'
 import { ValidationPipe, Logger } from '@nestjs/common'

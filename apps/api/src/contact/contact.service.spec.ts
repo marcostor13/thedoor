@@ -1,10 +1,11 @@
+import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { Test } from '@nestjs/testing'
 import { getModelToken } from '@nestjs/mongoose'
 import { ContactService } from './contact.service'
 import { Contact } from './contact.schema'
 
 describe('ContactService', () => {
-  const create = jest.fn()
+  const create = mock()
   let service: ContactService
 
   beforeEach(async () => {

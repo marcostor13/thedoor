@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
 import { HealthModule } from './health/health.module'
 import { ContactModule } from './contact/contact.module'
+import { SignupModule } from './signup/signup.module'
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ContactModule } from './contact/contact.module'
 
     HealthModule,
     ContactModule,
+    SignupModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

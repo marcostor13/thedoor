@@ -1,8 +1,10 @@
 name: CI
 
+# En main no corre: allí manda Deploy, que compila y prueba lo mismo antes de
+# tocar producción. Así un push a main no paga dos veces el mismo build.
 on:
   push:
-    branches: ['**']
+    branches-ignore: [main]
   pull_request:
 
 concurrency:
@@ -16,21 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.3.2
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       - name: Build frontend
-        run: npm run build:web
+        run: bun run build:web
         env:
           PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
           PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
 
       - name: Build backend
-        run: npm run build:api
+        run: bun run build:api
 
       - name: Tests
-        run: npm test
+        run: bun run test

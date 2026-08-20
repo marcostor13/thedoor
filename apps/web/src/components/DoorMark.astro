@@ -1,139 +1,1020 @@
 ---
 /**
- * Marca de la puerta — el icono que abre la animación de entrada y preside
- * el hero. Trazo rojo neón con resplandor SVG, quicio partido en dos leaves
- * que se abren en Intro.astro, y un halo central que se derrama sobre el
- * "suelo" al terminar la apertura.
+ * Marca de la puerta — el icono que preside el hero y protagoniza la
+ * animación de entrada.
+ *
+ * Anatomía (viewBox 240 × 340):
+ *   · Jamba de tres trazos + arco de medio punto sobre la línea de imposta.
+ *   · Montante en abanico (fanlight) con radios y rosetón: es la pieza que
+ *     más luz derrama, porque queda siempre por encima de las hojas.
+ *   · Dos hojas macizas con relleno oscuro — ocultan el interior encendido
+ *     y por eso la apertura se lee de verdad.
+ *   · Sistema de luz: halo ambiental, foco interior, barrido, motas de polvo,
+ *     rayos volumétricos, columna del quicio y derrame sobre el suelo.
+ *
+ * MOVIMIENTO — cada hoja es un sándwich de tres grupos que se multiplican,
+ * para que las tres capas de animación no se peleen por `transform`:
+ *
+ *   .door-leaf           apertura base   scaleX(--leaf) = 0.5 (entreabierta)
+ *   └ .door-leaf__swing  entrada         2 → 1  (de cerrada a su sitio)
+ *     └ .door-leaf__sway vaivén eterno   1 ↔ 0.84
+ *
+ * El mismo truco con los envoltorios `*-in`: el bucle ambiental vive en el
+ * elemento interior y la entrada en el envoltorio, así ninguna de las dos
+ * tiene que reescribir a la otra.
+ *
+ * Con `staged` la marca nace invisible y espera a que le pongan `dm-enter`
+ * (apertura completa) o `dm-settle` (solo asentarse, cuando la secuencia de
+ * Intro.astro ya ha contado la apertura). De eso se encarga scripts/door.ts.
  */
 interface Props {
   class?: string
   id?: string
+  /** La entrada la dispara JS en vez de ocurrir al pintar. */
+  staged?: boolean
+  /**
+   * `auto`  — apertura completa solo si no ha habido intro que la contara.
+   * `full`  — apertura completa siempre; para páginas donde la puerta ES el
+   *           contenido y no puede limitarse a asentarse.
+   */
+  entrance?: 'auto' | 'full'
 }
 
-const { class: className, id = 'r1' } = Astro.props
+const { class: className, id = 'r1', staged = false, entrance = 'auto' } = Astro.props
+
+const motes = [
+  { cx: 95, r: 1.2 },
+  { cx: 103, r: 0.9 },
+  { cx: 141, r: 1.3 },
+  { cx: 148, r: 1 },
+  { cx: 99, r: 1.1 },
+  { cx: 145, r: 0.9 },
+]
 ---
 
 <svg
-  class={className}
-  viewBox="0 0 200 270"
+  class={`doormark ${staged ? 'doormark--staged' : ''} ${className ?? ''}`}
+  data-door-entrance={staged ? entrance : undefined}
+  viewBox="0 0 240 340"
   role="img"
   aria-label="The Door PR"
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
 >
   <defs>
-    <filter id={`glow-${id}`} x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="2.2" result="b1"></feGaussianBlur>
-      <feGaussianBlur stdDeviation="5" result="b2"></feGaussianBlur>
+    <filter id={`dm-soft-${id}`} x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.4" result="b1"></feGaussianBlur>
+      <feGaussianBlur stdDeviation="4" result="b2"></feGaussianBlur>
       <feMerge>
         <feMergeNode in="b2"></feMergeNode>
         <feMergeNode in="b1"></feMergeNode>
         <feMergeNode in="SourceGraphic"></feMergeNode>
       </feMerge>
     </filter>
-    <filter id={`glow-strong-${id}`} x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="b1"></feGaussianBlur>
-      <feGaussianBlur stdDeviation="14" result="b2"></feGaussianBlur>
+
+    <filter id={`dm-hot-${id}`} x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="3" result="b1"></feGaussianBlur>
+      <feGaussianBlur stdDeviation="10" result="b2"></feGaussianBlur>
+      <feGaussianBlur stdDeviation="24" result="b3"></feGaussianBlur>
       <feMerge>
+        <feMergeNode in="b3"></feMergeNode>
         <feMergeNode in="b2"></feMergeNode>
         <feMergeNode in="b1"></feMergeNode>
         <feMergeNode in="SourceGraphic"></feMergeNode>
       </feMerge>
     </filter>
-    <linearGradient id={`seam-${id}`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ff2030" stop-opacity="0.1"></stop>
-      <stop offset="0.5" stop-color="#ff5560" stop-opacity="1"></stop>
-      <stop offset="1" stop-color="#ff2030" stop-opacity="0.2"></stop>
+
+    <filter id={`dm-haze-${id}`} x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="9"></feGaussianBlur>
+    </filter>
+
+    <!-- Aire encendido detrás de toda la pieza. -->
+    <radialGradient id={`dm-halo-${id}`} cx="0.5" cy="0.58" r="0.5">
+      <stop offset="0" stop-color="#ff2b36" stop-opacity="0.6"></stop>
+      <stop offset="0.45" stop-color="#c00d18" stop-opacity="0.22"></stop>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"></stop>
+    </radialGradient>
+
+    <!-- Lo que hay al otro lado: blanco al rojo. -->
+    <radialGradient id={`dm-inner-${id}`} cx="0.5" cy="0.66" r="0.62">
+      <stop offset="0" stop-color="#fff6f0" stop-opacity="0.95"></stop>
+      <stop offset="0.22" stop-color="#ff8a72" stop-opacity="0.8"></stop>
+      <stop offset="0.55" stop-color="#ff1a25" stop-opacity="0.45"></stop>
+      <stop offset="1" stop-color="#3d0206" stop-opacity="0.15"></stop>
+    </radialGradient>
+
+    <linearGradient id={`dm-fan-${id}`} x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#fff1e8" stop-opacity="0.85"></stop>
+      <stop offset="0.6" stop-color="#ff3a44" stop-opacity="0.42"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0.12"></stop>
     </linearGradient>
-    <radialGradient id={`floor-${id}`} cx="0.5" cy="0" r="0.7">
-      <stop offset="0" stop-color="#ff1a25" stop-opacity="0.55"></stop>
+
+    <!-- Barrido: la luz de dentro no está quieta. -->
+    <linearGradient id={`dm-sweep-${id}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff2ec" stop-opacity="0"></stop>
+      <stop offset="0.5" stop-color="#fff2ec" stop-opacity="0.4"></stop>
+      <stop offset="1" stop-color="#fff2ec" stop-opacity="0"></stop>
+    </linearGradient>
+
+    <!-- Hoja: canto interior tocado por la luz, resto en penumbra. -->
+    <linearGradient id={`dm-leaf-l-${id}`} x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000"></stop>
+      <stop offset="0.62" stop-color="#0b0507"></stop>
+      <stop offset="1" stop-color="#2a0a0d"></stop>
+    </linearGradient>
+    <linearGradient id={`dm-leaf-r-${id}`} x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#000000"></stop>
+      <stop offset="0.62" stop-color="#0b0507"></stop>
+      <stop offset="1" stop-color="#2a0a0d"></stop>
+    </linearGradient>
+
+    <linearGradient id={`dm-seam-${id}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff2030" stop-opacity="0.05"></stop>
+      <stop offset="0.35" stop-color="#fff0ea" stop-opacity="0.95"></stop>
+      <stop offset="0.75" stop-color="#ff5560" stop-opacity="0.9"></stop>
+      <stop offset="1" stop-color="#ff2030" stop-opacity="0.15"></stop>
+    </linearGradient>
+
+    <linearGradient id={`dm-beam-${id}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff2ec" stop-opacity="0.7"></stop>
+      <stop offset="0.35" stop-color="#ff5560" stop-opacity="0.32"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
+    </linearGradient>
+
+    <linearGradient
+      id={`dm-ray-${id}`}
+      gradientUnits="userSpaceOnUse"
+      x1="120"
+      y1="205"
+      x2="120"
+      y2="-60"
+    >
+      <stop offset="0" stop-color="#ffd9d2" stop-opacity="0.5"></stop>
+      <stop offset="0.4" stop-color="#ff4d58" stop-opacity="0.14"></stop>
+      <stop offset="0.72" stop-color="#ff1a25" stop-opacity="0"></stop>
+    </linearGradient>
+
+    <radialGradient id={`dm-floor-${id}`} cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffece6" stop-opacity="0.75"></stop>
+      <stop offset="0.4" stop-color="#ff1a25" stop-opacity="0.34"></stop>
       <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
     </radialGradient>
+
+    <clipPath id={`dm-bounds-${id}`}>
+      <rect x="-70" y="-50" width="380" height="450"></rect>
+    </clipPath>
+
+    <clipPath id={`dm-clip-${id}`}>
+      <path d="M 46 296 L 46 132 A 74 74 0 0 1 194 132 L 194 296 Z"></path>
+    </clipPath>
   </defs>
 
-  <g
-    stroke="#ff1a25"
-    stroke-width="1"
-    fill="none"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    filter={`url(#glow-${id})`}
-  >
-    <g class="door-frame">
-      <path d="M 40 240 L 40 80 Q 40 30 100 30 Q 160 30 160 80 L 160 240"></path>
-      <path
-        d="M 50 240 L 50 82 Q 50 40 100 40 Q 150 40 150 82 L 150 240"
-        stroke-width="0.7"
-        opacity="0.85"></path>
-      <g stroke-width="0.9">
-        <path d="M 100 8 L 100 30"></path>
-        <path d="M 92 12 Q 100 4 108 12"></path>
-        <path d="M 88 18 Q 100 26 112 18"></path>
-        <path d="M 88 18 Q 78 16 76 24 Q 75 30 82 30"></path>
-        <path d="M 112 18 Q 122 16 124 24 Q 125 30 118 30"></path>
-        <path
-          d="M 96 16 L 96 24 Q 100 28 104 24 L 104 16 Q 100 14 96 16 Z"
-          stroke-width="0.7"></path>
-        <path d="M 82 30 Q 86 32 90 30" stroke-width="0.6"></path>
-        <path d="M 110 30 Q 114 32 118 30" stroke-width="0.6"></path>
-      </g>
-      <g stroke-width="0.7">
-        <line x1="40" y1="80" x2="40" y2="240"></line>
-        <line x1="34" y1="80" x2="34" y2="249"></line>
-        <line x1="160" y1="80" x2="160" y2="240"></line>
-        <line x1="166" y1="80" x2="166" y2="249"></line>
-      </g>
-    </g>
+  <!-- 1 · Aire ------------------------------------------------------------ -->
+  <g class="dm-halo-in">
+    <ellipse class="dm-halo" cx="120" cy="190" rx="150" ry="170" fill={`url(#dm-halo-${id})`}
+    ></ellipse>
+  </g>
 
-    <g class="door-leaf door-leaf--left" transform="translate(-1 0)">
-      <path d="M 52 240 L 52 84 Q 52 50 96 50 L 96 240 Z" stroke-width="0.8"></path>
+  <!-- 2 · Lo que hay detrás de la puerta ---------------------------------- -->
+  <g class="dm-inside-in">
+    <g class="dm-inside" clip-path={`url(#dm-clip-${id})`}>
+      <rect x="46" y="52" width="148" height="248" fill={`url(#dm-inner-${id})`}></rect>
       <path
-        d="M 58 90 Q 60 60 92 60 L 92 110 L 58 110 Z"
-        stroke-width="0.6"
-        opacity="0.8"></path>
-      <rect x="58" y="120" width="34" height="48" stroke-width="0.6" opacity="0.8"></rect>
-      <rect x="58" y="178" width="34" height="56" stroke-width="0.6" opacity="0.8"></rect>
-      <circle cx="90" cy="148" r="3" stroke-width="0.7"></circle>
-      <circle cx="90" cy="148" r="1.2"></circle>
-      <circle cx="75" cy="148" r="2" stroke-width="0.5" opacity="0.7"></circle>
-    </g>
+        class="dm-fanlight-fill"
+        d="M 46 132 A 74 74 0 0 1 194 132 Z"
+        fill={`url(#dm-fan-${id})`}></path>
 
-    <g class="door-leaf door-leaf--right" transform="translate(1 0)">
-      <path d="M 148 240 L 148 84 Q 148 50 104 50 L 104 240 Z" stroke-width="0.8"></path>
-      <path
-        d="M 142 90 Q 140 60 108 60 L 108 110 L 142 110 Z"
-        stroke-width="0.6"
-        opacity="0.8"></path>
-      <rect x="108" y="120" width="34" height="48" stroke-width="0.6" opacity="0.8"></rect>
-      <rect x="108" y="178" width="34" height="56" stroke-width="0.6" opacity="0.8"></rect>
-      <circle cx="110" cy="148" r="3" stroke-width="0.7"></circle>
-      <circle cx="110" cy="148" r="1.2"></circle>
-      <circle cx="125" cy="148" r="2" stroke-width="0.5" opacity="0.7"></circle>
+      <!-- Una onda de luz sube por el hueco cada pocos segundos. -->
+      <rect class="dm-sweep" x="46" y="250" width="148" height="56" fill={`url(#dm-sweep-${id})`}
+      ></rect>
+
+      <!-- Polvo suspendido en el haz: lo que delata que la luz es real. -->
+      <g class="dm-motes" fill="#fff0e8">
+        {motes.map((mote) => <circle class="dm-mote" cx={mote.cx} cy="290" r={mote.r} />)}
+      </g>
     </g>
   </g>
 
-  <g class="door-seam" filter={`url(#glow-strong-${id})`}>
-    <rect x="98.5" y="50" width="3" height="195" fill={`url(#seam-${id})`}></rect>
-    <ellipse class="door-floor-spill" cx="100" cy="246" rx="60" ry="8" fill={`url(#floor-${id})`}
+  <!-- 3 · Hojas ----------------------------------------------------------- -->
+  <g class="dm-leaves" stroke-linecap="round" stroke-linejoin="round">
+    <g class="door-leaf door-leaf--left">
+      <g class="door-leaf__swing">
+        <g class="door-leaf__sway">
+          <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" fill={`url(#dm-leaf-l-${id})`}></path>
+          <g stroke="#ff1a25" fill="none" filter={`url(#dm-soft-${id})`}>
+            <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" stroke-width="1"></path>
+            <rect x="56" y="148" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
+            <rect x="60" y="152" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
+            <rect x="56" y="220" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
+            <rect x="60" y="224" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
+            <rect x="106" y="198" width="9" height="32" stroke-width="0.5" opacity="0.7"></rect>
+            <circle cx="110.5" cy="214" r="3" stroke-width="0.8"></circle>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <g class="door-leaf door-leaf--right">
+      <g class="door-leaf__swing">
+        <g class="door-leaf__sway">
+          <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" fill={`url(#dm-leaf-r-${id})`}></path>
+          <g stroke="#ff1a25" fill="none" filter={`url(#dm-soft-${id})`}>
+            <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" stroke-width="1"></path>
+            <rect x="138" y="148" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
+            <rect x="142" y="152" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
+            <rect x="138" y="220" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
+            <rect x="142" y="224" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
+            <rect x="125" y="198" width="9" height="32" stroke-width="0.5" opacity="0.7"></rect>
+            <circle cx="129.5" cy="214" r="3" stroke-width="0.8"></circle>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- 4 · Quicio encendido ------------------------------------------------- -->
+  <g class="dm-seam" filter={`url(#dm-hot-${id})`}>
+    <rect
+      class="dm-blade"
+      x="118"
+      y="136"
+      width="4"
+      height="158"
+      rx="2"
+      fill={`url(#dm-seam-${id})`}></rect>
+  </g>
+
+  <!-- 5 · Carpintería ------------------------------------------------------ -->
+  <g
+    class="dm-frame"
+    stroke="#ff1a25"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter={`url(#dm-soft-${id})`}
+  >
+    <path
+      class="dm-draw"
+      pathLength="1"
+      d="M 30 304 L 30 132 A 90 90 0 0 1 210 132 L 210 304"
+      stroke-width="1.1"></path>
+    <path
+      class="dm-draw"
+      pathLength="1"
+      d="M 40 298 L 40 132 A 80 80 0 0 1 200 132 L 200 298"
+      stroke-width="0.6"
+      opacity="0.75"></path>
+    <path
+      class="dm-draw"
+      pathLength="1"
+      d="M 46 296 L 46 132 A 74 74 0 0 1 194 132 L 194 296"
+      stroke-width="0.9"></path>
+
+    <!-- Imposta -->
+    <line class="dm-draw" pathLength="1" x1="36" y1="132" x2="204" y2="132" stroke-width="0.9"
+    ></line>
+    <line
+      class="dm-draw"
+      pathLength="1"
+      x1="42"
+      y1="127"
+      x2="198"
+      y2="127"
+      stroke-width="0.5"
+      opacity="0.6"></line>
+
+    <!-- Abanico -->
+    <g class="dm-fan" stroke-width="0.6" opacity="0.9">
+      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="184.1" y2="95"></line>
+      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="157" y2="67.9"></line>
+      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="120" y2="58"></line>
+      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="83" y2="67.9"></line>
+      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="55.9" y2="95"></line>
+      <path class="dm-draw" pathLength="1" d="M 94 132 A 26 26 0 0 1 146 132" stroke-width="0.8"
+      ></path>
+    </g>
+
+    <!-- Goznes -->
+    <g class="dm-hinges" stroke-width="0.6" opacity="0.7">
+      <rect x="42" y="162" width="8" height="13"></rect>
+      <rect x="42" y="208" width="8" height="13"></rect>
+      <rect x="42" y="254" width="8" height="13"></rect>
+      <rect x="190" y="162" width="8" height="13"></rect>
+      <rect x="190" y="208" width="8" height="13"></rect>
+      <rect x="190" y="254" width="8" height="13"></rect>
+    </g>
+
+    <!-- Clave del arco -->
+    <path class="dm-draw" pathLength="1" d="M 111 52 L 129 52 L 132 30 L 108 30 Z" stroke-width="0.8"
+    ></path>
+
+    <!-- Umbral -->
+    <line class="dm-draw" pathLength="1" x1="22" y1="296" x2="218" y2="296" stroke-width="1"></line>
+    <line
+      class="dm-draw"
+      pathLength="1"
+      x1="28"
+      y1="302"
+      x2="212"
+      y2="302"
+      stroke-width="0.5"
+      opacity="0.55"></line>
+  </g>
+
+  <!-- 6 · La luz de encima de la puerta ------------------------------------ -->
+  <g class="dm-star-in">
+    <g class="dm-star" filter={`url(#dm-hot-${id})`} stroke="#ff5560" fill="none">
+      <path
+        d="M 120 4 L 124.5 16 L 120 28 L 115.5 16 Z"
+        stroke-width="0.7"
+        fill="#ff8a90"
+        fill-opacity="0.25"></path>
+      <line x1="105" y1="16" x2="135" y2="16" stroke-width="0.5" opacity="0.75"></line>
+      <circle cx="120" cy="16" r="1.6" fill="#fff2ec" stroke="none"></circle>
+    </g>
+  </g>
+
+  <!-- 7 · Volumen: rayos, columna y derrame -------------------------------- -->
+  <g class="dm-rays-in">
+    <g class="dm-rays" filter={`url(#dm-haze-${id})`} clip-path={`url(#dm-bounds-${id})`}>
+      <path d="M 120 205 L 102 -60 L 136 -60 Z" fill={`url(#dm-ray-${id})`}></path>
+      <path
+        d="M 120 205 L 102 -60 L 136 -60 Z"
+        fill={`url(#dm-ray-${id})`}
+        transform="rotate(-38 120 205)"></path>
+      <path
+        d="M 120 205 L 102 -60 L 136 -60 Z"
+        fill={`url(#dm-ray-${id})`}
+        transform="rotate(38 120 205)"></path>
+      <path
+        d="M 120 205 L 106 -60 L 132 -60 Z"
+        fill={`url(#dm-ray-${id})`}
+        transform="rotate(-61 120 205)"></path>
+      <path
+        d="M 120 205 L 106 -60 L 132 -60 Z"
+        fill={`url(#dm-ray-${id})`}
+        transform="rotate(61 120 205)"></path>
+    </g>
+  </g>
+
+  <g class="dm-spill">
+    <path
+      class="dm-beam"
+      d="M 84 290 L 156 290 L 236 344 L 4 344 Z"
+      fill={`url(#dm-beam-${id})`}
+      filter={`url(#dm-haze-${id})`}></path>
+    <ellipse class="dm-pool" cx="120" cy="297" rx="98" ry="16" fill={`url(#dm-floor-${id})`}
     ></ellipse>
+    <!-- Donde el haz muerde el umbral: la línea más caliente de la marca. -->
+    <rect
+      class="dm-threshold"
+      x="86"
+      y="294.5"
+      width="68"
+      height="1.6"
+      rx="0.8"
+      fill="#ffe3d9"
+      opacity="0.75"
+      filter={`url(#dm-hot-${id})`}></rect>
   </g>
 </svg>
 
 <style>
-  svg {
+  .doormark {
     overflow: visible;
+    /* Apertura de reposo: 0.5 ≈ hoja girada 60° vista de frente. */
+    --leaf: 0.5;
+  }
+
+  /* =========================================================================
+     HOJAS — tres capas que se multiplican (ver cabecera del componente)
+     ====================================================================== */
+
+  .door-leaf,
+  .door-leaf__swing,
+  .door-leaf__sway {
+    transform-box: fill-box;
+  }
+
+  .door-leaf--left,
+  .door-leaf--left .door-leaf__swing,
+  .door-leaf--left .door-leaf__sway {
+    transform-origin: 0% 50%;
+  }
+
+  .door-leaf--right,
+  .door-leaf--right .door-leaf__swing,
+  .door-leaf--right .door-leaf__sway {
+    transform-origin: 100% 50%;
   }
 
   .door-leaf {
+    transform: scaleX(var(--leaf));
+  }
+
+  /* =========================================================================
+     BUCLE AMBIENTAL — la marca nunca está del todo quieta
+     ====================================================================== */
+
+  .door-leaf__sway {
+    will-change: transform;
+    animation: dm-sway 13s var(--ease-in-out) infinite;
+  }
+
+  /* La hoja derecha va medio compás por detrás: al unísono parecen un
+     acordeón; desfasadas parecen una corriente de aire. */
+  .door-leaf--right .door-leaf__sway {
+    animation-delay: -4.5s;
+  }
+
+  .dm-halo {
+    transform-origin: 120px 190px;
+    animation: dm-breathe 7s var(--ease-in-out) infinite;
+  }
+
+  .dm-inside {
+    animation: dm-inside-breathe 13s var(--ease-in-out) infinite;
+  }
+
+  .dm-sweep {
+    animation: dm-sweep 6.5s var(--ease-in-out) infinite;
+  }
+
+  .dm-mote {
+    animation: dm-mote 9s linear infinite;
+  }
+
+  .dm-mote:nth-child(2) {
+    animation-duration: 12s;
+    animation-delay: -2.5s;
+  }
+
+  .dm-mote:nth-child(3) {
+    animation-name: dm-mote-drift;
+    animation-duration: 10.5s;
+    animation-delay: -6s;
+  }
+
+  .dm-mote:nth-child(4) {
+    animation-duration: 13.5s;
+    animation-delay: -9s;
+  }
+
+  .dm-mote:nth-child(5) {
+    animation-name: dm-mote-drift;
+    animation-duration: 11s;
+    animation-delay: -4s;
+  }
+
+  .dm-mote:nth-child(6) {
+    animation-duration: 15s;
+    animation-delay: -12s;
+  }
+
+  .dm-rays {
+    transform-origin: 120px 205px;
+    opacity: 0.62;
+    animation: dm-rays-breathe 11s var(--ease-in-out) infinite;
+  }
+
+  .dm-seam {
+    animation: dm-flicker 9s linear infinite;
+  }
+
+  /* En reposo el quicio ya no es una rendija sino la columna de luz que
+     ocupa el hueco entreabierto; la entrada la abre desde la cuchilla. */
+  .dm-blade {
     transform-box: fill-box;
-    transform-origin: left center;
+    transform-origin: center;
+    transform: scaleX(var(--seam, 6));
   }
 
-  .door-leaf--left {
-    transform-origin: 52px 50%;
+  /* Zumbido de neón: la carpintería duda un instante de vez en cuando. */
+  .dm-frame {
+    animation: dm-neon 8s linear infinite;
   }
 
-  .door-leaf--right {
-    transform-origin: 148px 50%;
+  .dm-star {
+    transform-origin: 120px 16px;
+    animation: dm-star-pulse 5s var(--ease-in-out) infinite;
+  }
+
+  .dm-pool,
+  .dm-threshold {
+    animation: dm-inside-breathe 13s var(--ease-in-out) infinite;
+  }
+
+  @keyframes dm-sway {
+    0%,
+    100% {
+      transform: scaleX(1);
+    }
+    38% {
+      transform: scaleX(0.84);
+    }
+    64% {
+      transform: scaleX(0.93);
+    }
+  }
+
+  @keyframes dm-breathe {
+    0%,
+    100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.055);
+    }
+  }
+
+  /* Mismo perfil que dm-sway: el pico de luz cae donde la puerta está más
+     abierta. */
+  @keyframes dm-inside-breathe {
+    0%,
+    100% {
+      opacity: 0.8;
+    }
+    38% {
+      opacity: 1;
+    }
+    64% {
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes dm-sweep {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    18% {
+      opacity: 1;
+    }
+    82% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-262px);
+    }
+  }
+
+  @keyframes dm-mote {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+    12% {
+      opacity: 0.7;
+    }
+    78% {
+      opacity: 0.45;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-224px);
+    }
+  }
+
+  @keyframes dm-mote-drift {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    12% {
+      opacity: 0.65;
+    }
+    50% {
+      transform: translate(-7px, -112px);
+    }
+    78% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(4px, -224px);
+    }
+  }
+
+  @keyframes dm-rays-breathe {
+    0%,
+    100% {
+      opacity: 0.42;
+      transform: rotate(-1.5deg) scale(1);
+    }
+    50% {
+      opacity: 0.72;
+      transform: rotate(1.5deg) scale(1.05);
+    }
+  }
+
+  @keyframes dm-star-pulse {
+    0%,
+    100% {
+      opacity: 0.75;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.12);
+    }
+  }
+
+  @keyframes dm-flicker {
+    0%,
+    46%,
+    49.5%,
+    52%,
+    88%,
+    91%,
+    100% {
+      opacity: 1;
+    }
+    48% {
+      opacity: 0.72;
+    }
+    50.5% {
+      opacity: 0.88;
+    }
+    89.5% {
+      opacity: 0.66;
+    }
+  }
+
+  @keyframes dm-neon {
+    0%,
+    61%,
+    64.5%,
+    69%,
+    72%,
+    100% {
+      opacity: 1;
+    }
+    62.5% {
+      opacity: 0.5;
+    }
+    67% {
+      opacity: 0.78;
+    }
+    70.5% {
+      opacity: 0.62;
+    }
+  }
+
+  /* =========================================================================
+     ENTRADA — la marca `staged` nace invisible y espera a scripts/door.ts
+     ====================================================================== */
+
+  /* Solo con JS: sin él la puerta está ahí desde el primer pintado. */
+  :global(html.js) .doormark--staged {
+    opacity: 0;
+  }
+
+  .dm-halo-in {
+    transform-origin: 120px 190px;
+  }
+
+  .dm-star-in {
+    transform-origin: 120px 16px;
+  }
+
+  .dm-rays-in {
+    transform-origin: 120px 205px;
+  }
+
+  .doormark--staged.dm-enter,
+  .doormark--staged.dm-settle {
+    animation: dm-mark-in 600ms var(--ease-out) both;
+  }
+
+  /* --- Apertura completa: no hubo intro que la contara -------------------- */
+
+  .doormark--staged.dm-enter .dm-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: dm-draw-on 950ms var(--ease-in-out) 80ms forwards;
+  }
+
+  .doormark--staged.dm-enter .dm-fan .dm-draw {
+    animation-delay: 520ms;
+    animation-duration: 800ms;
+  }
+
+  .doormark--staged.dm-enter .dm-hinges {
+    animation: dm-mark-in 700ms var(--ease-out) 700ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-halo-in {
+    animation: dm-halo-in 1800ms var(--ease-out) 150ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-blade {
+    animation: dm-blade-in 1500ms var(--ease-door) 620ms both;
+  }
+
+  .doormark--staged.dm-enter .door-leaf__swing {
+    animation: dm-swing-open 1250ms var(--ease-door) 900ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-inside-in {
+    animation: dm-inside-in 1400ms var(--ease-out) 940ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-star-in {
+    animation: dm-star-in 1000ms var(--ease-out) 1150ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-rays-in {
+    animation: dm-rays-in 1500ms var(--ease-out) 1280ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-spill {
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+    animation: dm-spill-in 1300ms var(--ease-out) 1350ms both;
+  }
+
+  /* El vaivén y el zumbido esperan a que la puerta llegue a su sitio: si no,
+     ensucian el gesto de apertura. */
+  .doormark--staged.dm-enter .door-leaf__sway,
+  .doormark--staged.dm-enter .door-leaf--right .door-leaf__sway {
+    animation-delay: 2250ms;
+  }
+
+  .doormark--staged.dm-enter .dm-frame {
+    animation-delay: 2400ms;
+  }
+
+  /* --- Solo asentarse: el intro ya enseñó la apertura --------------------- */
+
+  .doormark--staged.dm-settle .door-leaf__swing {
+    animation: dm-swing-settle 1100ms var(--ease-out) 100ms both;
+  }
+
+  .doormark--staged.dm-settle .dm-inside-in {
+    animation: dm-inside-settle 1100ms var(--ease-out) both;
+  }
+
+  .doormark--staged.dm-settle .dm-halo-in {
+    animation: dm-halo-in 1200ms var(--ease-out) both;
+  }
+
+  .doormark--staged.dm-settle .dm-rays-in {
+    animation: dm-rays-in 1400ms var(--ease-out) 200ms both;
+  }
+
+  .doormark--staged.dm-settle .dm-spill {
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+    animation: dm-spill-in 1000ms var(--ease-out) 150ms both;
+  }
+
+  .doormark--staged.dm-settle .door-leaf__sway,
+  .doormark--staged.dm-settle .door-leaf--right .door-leaf__sway {
+    animation-delay: 1200ms;
+  }
+
+  /* --- Puerta abierta de par en par --------------------------------------
+     Estado que se pide desde fuera (`dm-opened`) cuando alguien acaba de
+     entrar: es la recompensa del registro. Va después de dm-enter/dm-settle
+     a propósito — misma especificidad, gana el orden de aparición.
+     ---------------------------------------------------------------------- */
+
+  .doormark--staged.dm-opened .door-leaf__swing {
+    animation: dm-swing-wide 1600ms var(--ease-door) both;
+  }
+
+  /* Con la puerta abierta ya no hay corriente que la mueva: se queda quieta
+     y quien respira es la luz. */
+  .doormark--staged.dm-opened .door-leaf__sway,
+  .doormark--staged.dm-opened .door-leaf--right .door-leaf__sway {
+    animation: none;
+  }
+
+  .doormark--staged.dm-opened .dm-blade {
+    animation: dm-blade-wide 1600ms var(--ease-out) both;
+  }
+
+  .doormark--staged.dm-opened .dm-inside-in {
+    animation: dm-flood 1600ms var(--ease-out) both;
+  }
+
+  .doormark--staged.dm-opened .dm-rays-in {
+    animation: dm-rays-wide 1800ms var(--ease-out) both;
+  }
+
+  .doormark--staged.dm-opened .dm-spill {
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+    animation: dm-spill-wide 1600ms var(--ease-out) 120ms both;
+  }
+
+  @keyframes dm-swing-wide {
+    0% {
+      transform: scaleX(1);
+      filter: brightness(1);
+    }
+    58% {
+      transform: scaleX(0.22);
+      filter: brightness(1.5);
+    }
+    100% {
+      transform: scaleX(0.3);
+      filter: brightness(1.15);
+    }
+  }
+
+  @keyframes dm-blade-wide {
+    from {
+      transform: scaleX(6);
+    }
+    to {
+      transform: scaleX(16);
+    }
+  }
+
+  @keyframes dm-flood {
+    0% {
+      filter: brightness(1) saturate(1);
+    }
+    50% {
+      filter: brightness(1.55) saturate(1.15);
+    }
+    100% {
+      filter: brightness(1.2) saturate(1);
+    }
+  }
+
+  @keyframes dm-rays-wide {
+    to {
+      transform: scale(1.18);
+    }
+  }
+
+  @keyframes dm-spill-wide {
+    to {
+      transform: scaleX(1.35);
+    }
+  }
+
+  @keyframes dm-mark-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes dm-draw-on {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes dm-halo-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes dm-star-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.3);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes dm-blade-in {
+    0% {
+      opacity: 0;
+      transform: scaleX(0.15) scaleY(0.28);
+    }
+    20% {
+      opacity: 1;
+      transform: scaleX(0.45) scaleY(1);
+    }
+    55% {
+      transform: scaleX(1.6) scaleY(1);
+    }
+    100% {
+      opacity: 1;
+      transform: scaleX(6) scaleY(1);
+    }
+  }
+
+  /* La hoja gira desde cerrada (×2 sobre la apertura base), pasa un punto de
+     la marca y vuelve, mientras su cara interior recibe la luz. */
+  @keyframes dm-swing-open {
+    0% {
+      transform: scaleX(2);
+      filter: brightness(0.32) saturate(0.65);
+    }
+    35% {
+      filter: brightness(0.9) saturate(1);
+    }
+    68% {
+      transform: scaleX(0.82);
+      filter: brightness(1.32);
+    }
+    100% {
+      transform: scaleX(1);
+      filter: brightness(1);
+    }
+  }
+
+  @keyframes dm-swing-settle {
+    0% {
+      transform: scaleX(0.84);
+      filter: brightness(1.3);
+    }
+    100% {
+      transform: scaleX(1);
+      filter: brightness(1);
+    }
+  }
+
+  @keyframes dm-inside-in {
+    0% {
+      opacity: 0;
+      filter: brightness(0.15) saturate(1.4);
+    }
+    55% {
+      opacity: 1;
+      filter: brightness(1.45) saturate(1.4);
+    }
+    100% {
+      opacity: 1;
+      filter: brightness(1) saturate(1);
+    }
+  }
+
+  @keyframes dm-inside-settle {
+    0% {
+      filter: brightness(1.55) saturate(1.35);
+    }
+    100% {
+      filter: brightness(1) saturate(1);
+    }
+  }
+
+  @keyframes dm-rays-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.35);
+    }
+    45% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes dm-spill-in {
+    0% {
+      opacity: 0;
+      transform: scaleX(0.12);
+    }
+    60% {
+      opacity: 1;
+      transform: scaleX(1.08);
+    }
+    100% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .doormark--staged {
+      opacity: 1;
+    }
+
+    .doormark,
+    .doormark * {
+      animation: none !important;
+    }
   }
 </style>

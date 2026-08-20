@@ -90,12 +90,12 @@ const contactRows = [
         <span>{SITE.city}</span>
         <span class="hero__topbar-right">
           <em>— Solo miembros —</em>
-          <span data-reveal>MMXXVI</span>
+          <span>MMXXVI</span>
         </span>
       </div>
 
       <div class="hero__stage" data-reveal>
-        <DoorMark class="hero__mark" id="hero" />
+        <DoorMark class="hero__mark" id="hero" staged />
         <Logo class="hero__wordmark" />
         <span class="hero__rule" aria-hidden="true"></span>
       </div>
@@ -106,7 +106,7 @@ const contactRows = [
       </p>
 
       <div class="hero__foot">
-        <p class="hero__eyebrow" data-reveal>{SITE.description.toUpperCase()}</p>
+        <p class="hero__eyebrow">{SITE.description.toUpperCase()}</p>
         <p class="hero__scroll">After hours / 01 — 03 <span class="hero__scroll-cue"></span> Baja</p>
       </div>
     </div>
@@ -220,7 +220,7 @@ const contactRows = [
         <li>Referencias bajo pedido</li>
       </ul>
 
-      <a class="apply__arrow" href="mailto:venues@thedoor.pe">Pitch your venue →</a>
+      <a class="apply__arrow" href="/registro/?tipo=venue">Pitch your venue →</a>
     </div>
 
     <div class="apply__col apply__col--list" data-reveal>
@@ -240,7 +240,7 @@ const contactRows = [
         <li>Te das de baja cuando quieras</li>
       </ul>
 
-      <a class="apply__arrow" href="mailto:list@thedoor.pe">Request an introduction →</a>
+      <a class="apply__arrow" href="/registro/?tipo=guest">Request an introduction →</a>
     </div>
   </section>
 
@@ -270,18 +270,18 @@ const contactRows = [
 
 <style>
   /* --- Hero ------------------------------------------------------------- */
+  /* La altura la fija el hero (pantalla menos cabecera) y el inner la
+     rellena: así el padding no se suma por fuera y la portada cabe justa. */
   .hero {
     display: grid;
-    align-content: space-between;
-    min-height: 100svh;
+    min-height: calc(100svh - 4.75rem);
     padding-block: var(--sp-lg);
   }
 
   .hero__inner {
     display: grid;
     align-content: space-between;
-    min-height: calc(100svh - 4.5rem);
-    gap: var(--sp-xl);
+    gap: clamp(var(--sp-sm), 3vh, var(--sp-lg));
   }
 
   .hero__topbar {
@@ -306,16 +306,27 @@ const contactRows = [
     color: var(--c-accent);
   }
 
+  @media (max-width: 600px) {
+    .hero__topbar-right em {
+      display: none;
+    }
+  }
+
   .hero__stage {
     display: grid;
     justify-items: center;
-    gap: var(--sp-md);
+    gap: clamp(var(--sp-sm), 2.5vh, var(--sp-lg));
     text-align: center;
   }
 
+  /* La puerta es el titular de la portada. Se mide por ALTURA —que es lo
+     que compite con el resto del hero— y el aspect-ratio deduce el ancho,
+     así nunca empuja la portada fuera de la primera pantalla. */
   :global(.hero__mark) {
-    width: min(45vw, 15rem);
-    height: auto;
+    aspect-ratio: 24 / 34;
+    width: auto;
+    height: min(46vh, 34rem);
+    max-width: 86vw;
   }
 
   :global(.hero__wordmark) {
@@ -330,7 +341,7 @@ const contactRows = [
   }
 
   .hero__tagline {
-    max-width: 44rem;
+    max-width: var(--measure-md);
     margin-inline: auto;
     font-family: var(--font-serif-body);
     font-style: italic;
@@ -401,7 +412,7 @@ const contactRows = [
   }
 
   .manifesto {
-    max-width: 34rem;
+    max-width: var(--measure-sm);
     margin-block-start: var(--sp-xl);
     font-family: var(--font-serif-body);
     font-style: italic;
@@ -411,8 +422,9 @@ const contactRows = [
 
   .stat-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--sp-lg);
+    /* A sangre caben las cuatro; en tablet se reparten solas sin romperse. */
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--sp-lg) clamp(var(--sp-lg), 4vw, var(--sp-2xl));
     margin-block-start: var(--sp-2xl);
     padding-block-start: var(--sp-lg);
     border-top: 1px solid var(--c-border);
@@ -439,7 +451,7 @@ const contactRows = [
   }
 
   .services__title {
-    max-width: 46rem;
+    max-width: var(--measure-md);
     font-size: var(--fs-3xl);
   }
 
@@ -458,6 +470,7 @@ const contactRows = [
     border-bottom: 1px solid var(--c-border);
   }
 
+
   .service-row__num {
     grid-area: num;
     font-family: var(--font-mono);
@@ -472,7 +485,7 @@ const contactRows = [
 
   .service-row__desc {
     grid-area: desc;
-    max-width: 34rem;
+    max-width: var(--measure-sm);
     margin-block-start: var(--sp-2xs);
     color: var(--c-fg-muted);
   }
@@ -499,6 +512,52 @@ const contactRows = [
     white-space: nowrap;
   }
 
+  /* En móvil la tercera columna no cabe: la etiqueta sube a la línea del
+     número y el resto de la fila ocupa el ancho completo. */
+  @media (max-width: 700px) {
+    .service-row {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        'num label'
+        'title title'
+        'desc desc'
+        'tag tag';
+      column-gap: var(--sp-md);
+    }
+
+    .service-row__label {
+      justify-self: end;
+    }
+
+    .service-row__title {
+      margin-block-start: var(--sp-2xs);
+    }
+  }
+
+  /* A partir de laptop ancha la fila apilada dejaba medio metro de vacío a la
+     derecha: título y texto pasan a convivir en cuatro columnas, así la fila
+     ocupa el ancho completo sin estirar ninguna medida de lectura. */
+  @media (min-width: 1100px) {
+    .service-row {
+      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+      grid-template-areas:
+        'num title desc label'
+        'num title tag label';
+      column-gap: clamp(var(--sp-lg), 4vw, var(--sp-2xl));
+      padding-block: var(--sp-xl);
+    }
+
+    .service-row__title {
+      align-self: start;
+      max-width: 16ch;
+    }
+
+    .service-row__desc {
+      max-width: var(--measure-md);
+      margin-block-start: 0;
+    }
+  }
+
   /* --- Roster / marquee ------------------------------------------------- */
   .roster__head {
     display: flex;
@@ -521,7 +580,7 @@ const contactRows = [
 
   .marquee {
     overflow: hidden;
-    padding-block: var(--sp-sm);
+    padding-block: clamp(var(--sp-2xs), 1vw, var(--sp-md));
     border-top: 1px solid var(--c-border);
   }
 
@@ -697,11 +756,13 @@ const contactRows = [
 
   .contact__grid {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: var(--sp-2xl);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-2xl) clamp(var(--sp-2xl), 8vw, 12rem);
+    align-items: start;
   }
 
   .contact__title {
+    max-width: var(--measure-md);
     margin-block-start: var(--sp-md);
     font-size: var(--fs-4xl);
     line-height: 0.95;

@@ -19,6 +19,9 @@ html {
 
 body {
   min-height: 100svh;
+  /* Los resplandores de la marca desbordan su caja a propósito: `clip` los
+     recorta sin crear contenedor de scroll (sticky del header intacto). */
+  overflow-x: clip;
   font-family: var(--font-body);
   font-size: var(--fs-base);
   line-height: var(--lh-normal);
@@ -142,8 +145,19 @@ ol[role='list'] {
   max-width: var(--container-narrow);
 }
 
+/* El ritmo vertical crece con el ancho: a sangre, 6rem fijos se quedan
+   cortos y las secciones se pisan. */
 .section {
-  padding-block: var(--sp-2xl);
+  padding-block: clamp(4rem, 7vw, 8.5rem);
+}
+
+/* Medidas de lectura reutilizables sobre cualquier bloque de texto. */
+.measure-sm {
+  max-width: var(--measure-sm);
+}
+
+.measure-md {
+  max-width: var(--measure-md);
 }
 
 /* --- Revelado al hacer scroll --------------------------------------------- */
