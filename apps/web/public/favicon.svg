@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- The Door PR — puerta de medio punto entreabierta al 50 %, misma
-       anatomía que DoorGlyph.astro simplificada para leerse a 16 px. -->
+  <!-- The Door PR — misma anatomía que DoorGlyph.astro (archivolta sobre
+       columnas, hojas arqueadas y la rendija de luz), simplificada para
+       leerse a 16 px: sin cuarterones, sin estrías y con la cresta reducida
+       a un remate. -->
   <defs>
     <linearGradient id="fv-light" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#ff1a25" stop-opacity=".5"/>
+      <stop offset="0" stop-color="#ff5560" stop-opacity=".6"/>
       <stop offset=".45" stop-color="#fff3ec"/>
-      <stop offset="1" stop-color="#ff5560" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#ff8088" stop-opacity=".75"/>
     </linearGradient>
     <clipPath id="fv-clip">
-      <path d="M7 29V13a9 9 0 0 1 18 0v16Z"/>
+      <path d="M8 29V13a8 8 0 0 1 16 0v16Z"/>
     </clipPath>
   </defs>
 
@@ -16,23 +18,31 @@
 
   <!-- Luz del otro lado -->
   <g clip-path="url(#fv-clip)">
-    <rect x="7" y="4" width="18" height="25" fill="url(#fv-light)"/>
+    <rect x="8" y="3" width="16" height="26" fill="url(#fv-light)"/>
   </g>
 
-  <!-- Hojas entreabiertas -->
-  <path d="M8 28.4V14h4.4v14.4Z" fill="#000"/>
-  <path d="M24 28.4V14h-4.4v14.4Z" fill="#000"/>
+  <!-- Hojas: casi cerradas, con la rendija en el centro -->
+  <path d="M8.6 28.6V13.4A7.4 8.4 0 0 1 15.4 5.4v23.2Z" fill="#000"/>
+  <path d="M23.4 28.6V13.4A7.4 8.4 0 0 0 16.6 5.4v23.2Z" fill="#000"/>
 
   <g fill="none" stroke="#ff1a25" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3.5 29.5V13a12.5 12.5 0 0 1 25 0v16.5" stroke-width="2"/>
-    <path d="M7 29V13a9 9 0 0 1 18 0v16" stroke-width="1.2" opacity=".85"/>
-    <path d="M6 13h20" stroke-width="1.2"/>
-    <path d="M8 28.4V14h4.4v14.4M24 28.4V14h-4.4v14.4" stroke-width="1.1"/>
-    <g stroke-width=".9" opacity=".8">
-      <path d="M16 13V6M16 13l5-4.9M16 13l-5-4.9"/>
+    <path d="M4 29.5V13a12 12 0 0 1 24 0v16.5" stroke-width="2"/>
+    <path d="M8 29V13a8 8 0 0 1 16 0v16" stroke-width="1.3" opacity=".85"/>
+    <path d="M8.6 28.6V13.4A7.4 8.4 0 0 1 15.4 5.4v23.2M23.4 28.6V13.4A7.4 8.4 0 0 0 16.6 5.4v23.2"
+      stroke-width="1.3"/>
+    <!-- Capiteles y umbral -->
+    <g stroke-width="1.2" opacity=".9">
+      <path d="M3 13h6M23 13h6M2.5 29.6h27"/>
+    </g>
+    <!-- Remate de la cresta -->
+    <g stroke-width="1" opacity=".9">
+      <path d="M16 4.6c2.2-.9 3.7-2.6 3.5-4.3M16 4.6c-2.2-.9-3.7-2.6-3.5-4.3"/>
     </g>
   </g>
 
+  <!-- La rendija, encima de las hojas: debajo la tapaban sus propios trazos -->
+  <rect x="15.15" y="5.8" width="1.7" height="23.4" fill="url(#fv-light)"/>
+
   <!-- Derrame en el suelo -->
-  <path d="M6 29.4h20" stroke="#ff5560" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>
+  <path d="M9 30h14" stroke="#ff8088" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>
 </svg>

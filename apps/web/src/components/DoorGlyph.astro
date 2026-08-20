@@ -1,10 +1,12 @@
 ---
 /**
  * Versión compacta de la marca para lockups pequeños (cabecera, pie,
- * favicon): mismo lenguaje que DoorMark.astro —arco de medio punto,
- * imposta, abanico y hojas entreabiertas al 50 %— reducido a lo que
- * todavía se lee a 32 px. Al pasar el ratón por la marca, la puerta se
- * abre un poco más y la luz sube.
+ * favicon): mismo lenguaje que DoorMark.astro —archivolta sobre columnas,
+ * hojas arqueadas y la rendija de luz en el centro— reducido a lo que
+ * todavía se lee a 32 px. Del logo se cae lo que a ese tamaño se convierte
+ * en suciedad: el fuste estriado, los cuarterones y casi toda la cresta,
+ * que queda en un remate de dos trazos. Al pasar el ratón, la puerta se
+ * abre y la luz sube.
  */
 interface Props {
   class?: string
@@ -24,58 +26,74 @@ const { class: className, id = 'g1' } = Astro.props
 >
   <defs>
     <linearGradient id={`dg-light-${id}`} x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#ff1a25" stop-opacity="0.35"></stop>
-      <stop offset="0.45" stop-color="#fff1ea" stop-opacity="0.95"></stop>
-      <stop offset="1" stop-color="#ff5560" stop-opacity="0.55"></stop>
+      <stop offset="0" stop-color="#ff5560" stop-opacity="0.6"></stop>
+      <stop offset="0.45" stop-color="#fff1ea" stop-opacity="1"></stop>
+      <stop offset="1" stop-color="#ff8088" stop-opacity="0.7"></stop>
     </linearGradient>
     <radialGradient id={`dg-pool-${id}`} cx="0.5" cy="0.5" r="0.5">
       <stop offset="0" stop-color="#ff5560" stop-opacity="0.75"></stop>
       <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
     </radialGradient>
     <clipPath id={`dg-clip-${id}`}>
-      <path d="M 6 34 L 6 13 A 8 8 0 0 1 22 13 L 22 34 Z"></path>
+      <path d="M 7 33 L 7 13 A 7 8 0 0 1 21 13 L 21 33 Z"></path>
     </clipPath>
   </defs>
 
   <g class="dg-light" clip-path={`url(#dg-clip-${id})`}>
-    <rect x="6" y="4" width="16" height="30" fill={`url(#dg-light-${id})`}></rect>
+    <rect x="7" y="4" width="14" height="29" fill={`url(#dg-light-${id})`}></rect>
   </g>
 
   <g class="dg-leaves" fill="#000">
-    <path class="dg-leaf dg-leaf--left" d="M 6.6 33.4 L 6.6 15 L 14 15 L 14 33.4 Z"></path>
-    <path class="dg-leaf dg-leaf--right" d="M 21.4 33.4 L 21.4 15 L 14 15 L 14 33.4 Z"></path>
+    <path class="dg-leaf dg-leaf--left" d="M 7.6 32.6 L 7.6 13.4 A 6.4 7.4 0 0 1 14 6 L 14 32.6 Z"
+    ></path>
+    <path class="dg-leaf dg-leaf--right" d="M 20.4 32.6 L 20.4 13.4 A 6.4 7.4 0 0 0 14 6 L 14 32.6 Z"
+    ></path>
   </g>
 
-  <g
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    fill="none"
-  >
-    <path d="M 2 34.5 L 2 13 A 12 12 0 0 1 26 13 L 26 34.5" stroke-width="1.2"></path>
-    <path d="M 6 34 L 6 13 A 8 8 0 0 1 22 13 L 22 34" stroke-width="0.9" opacity="0.85"></path>
-    <line x1="4.6" y1="13" x2="23.4" y2="13" stroke-width="0.9"></line>
-    <g stroke-width="0.6" opacity="0.75">
-      <line x1="14" y1="13" x2="19.66" y2="7.34"></line>
-      <line x1="14" y1="13" x2="14" y2="5"></line>
-      <line x1="14" y1="13" x2="8.34" y2="7.34"></line>
+  <g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    {/* Archivolta sobre las jambas */}
+    <path d="M 3.4 33 L 3.4 13 A 10.6 11.4 0 0 1 24.6 13 L 24.6 33" stroke-width="1.5"></path>
+    <path d="M 7 33 L 7 13 A 7 8 0 0 1 21 13 L 21 33" stroke-width="1.1" opacity="0.85"></path>
+
+    {/* Capiteles y basas: dos filetes por lado bastan para que se lea la
+        columna a 16 px; el fuste estriado del logo aquí no cabe. */}
+    <g stroke-width="1" opacity="0.9">
+      <line x1="2.4" y1="13" x2="7.6" y2="13"></line>
+      <line x1="20.4" y1="13" x2="25.6" y2="13"></line>
+      <line x1="2" y1="33.4" x2="26" y2="33.4"></line>
+    </g>
+
+    {/* Cresta: reducida a un remate, que es lo único que sobrevive a 16 px */}
+    <g stroke-width="0.9" opacity="0.9">
+      <path d="M 14 5.4 C 16 4.6 17.4 3 17.2 1.4"></path>
+      <path d="M 14 5.4 C 12 4.6 10.6 3 10.8 1.4"></path>
     </g>
   </g>
 
-  <g class="dg-leaf-lines" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.9">
-    <path class="dg-leaf dg-leaf--left" d="M 6.6 33.4 L 6.6 15 L 14 15 L 14 33.4"></path>
-    <path class="dg-leaf dg-leaf--right" d="M 21.4 33.4 L 21.4 15 L 14 15 L 14 33.4"></path>
+  <g class="dg-leaf-lines" stroke="currentColor" stroke-width="1.1" fill="none" opacity="0.95">
+    <path class="dg-leaf dg-leaf--left" d="M 7.6 32.6 L 7.6 13.4 A 6.4 7.4 0 0 1 14 6 L 14 32.6"
+    ></path>
+    <path class="dg-leaf dg-leaf--right" d="M 20.4 32.6 L 20.4 13.4 A 6.4 7.4 0 0 0 14 6 L 14 32.6"
+    ></path>
   </g>
 
-  <ellipse class="dg-pool" cx="14" cy="34" rx="10" ry="2.4" fill={`url(#dg-pool-${id})`}></ellipse>
+  {/* La rendija va ENCIMA de las hojas. Debajo la tapaban sus propios
+      trazos: a este tamaño dos strokes de 1.1 enfrentados se solapan y se
+      comen el hueco de luz, que es lo único que hay que ver. */}
+  <rect class="dg-blade" x="13.45" y="6.2" width="1.1" height="26.4" rx="0.55"
+    fill={`url(#dg-light-${id})`}></rect>
+
+  <circle cx="14" cy="1" r="0.9" fill="currentColor" stroke="none"></circle>
+
+  <ellipse class="dg-pool" cx="14" cy="33.4" rx="9" ry="2.2" fill={`url(#dg-pool-${id})`}></ellipse>
 </svg>
 
 <style>
   .doorglyph {
     overflow: visible;
     color: var(--c-accent);
-    /* Apertura de reposo: mismas hojas al 50 % que la marca grande. */
-    --dg-leaf: 0.5;
+    /* Apertura de reposo: la misma rendija que la marca grande. */
+    --dg-leaf: 0.93;
     filter: drop-shadow(0 0 3px rgb(255 26 37 / 0.45));
     transition: filter var(--dur-base) var(--ease-out);
   }
@@ -94,7 +112,16 @@ const { class: className, id = 'g1' } = Astro.props
     transform-origin: 100% 50%;
   }
 
+  /* La rendija se abre con las hojas: es el mismo gesto. */
+  .dg-blade {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    transform: scaleX(calc((1 - var(--dg-leaf)) * 9 + 1));
+    transition: transform var(--dur-base) var(--ease-door);
+  }
+
   .dg-light,
+  .dg-blade,
   .dg-pool {
     opacity: 0.9;
     transition: opacity var(--dur-base) var(--ease-out);
@@ -103,12 +130,14 @@ const { class: className, id = 'g1' } = Astro.props
   /* La apertura responde al hover del lockup completo, no solo del svg. */
   :global(a:hover) .doorglyph,
   :global(a:focus-visible) .doorglyph {
-    --dg-leaf: 0.26;
+    --dg-leaf: 0.42;
     filter: drop-shadow(0 0 6px rgb(255 26 37 / 0.75));
   }
 
   :global(a:hover) .dg-light,
   :global(a:focus-visible) .dg-light,
+  :global(a:hover) .dg-blade,
+  :global(a:focus-visible) .dg-blade,
   :global(a:hover) .dg-pool,
   :global(a:focus-visible) .dg-pool {
     opacity: 1;
@@ -118,6 +147,7 @@ const { class: className, id = 'g1' } = Astro.props
     .dg-leaf,
     .doorglyph,
     .dg-light,
+    .dg-blade,
     .dg-pool {
       transition: none;
     }

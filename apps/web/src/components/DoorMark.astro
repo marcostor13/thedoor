@@ -62,16 +62,6 @@ const motes = [
   xmlns="http://www.w3.org/2000/svg"
 >
   <defs>
-    <filter id={`dm-soft-${id}`} x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="1.4" result="b1"></feGaussianBlur>
-      <feGaussianBlur stdDeviation="4" result="b2"></feGaussianBlur>
-      <feMerge>
-        <feMergeNode in="b2"></feMergeNode>
-        <feMergeNode in="b1"></feMergeNode>
-        <feMergeNode in="SourceGraphic"></feMergeNode>
-      </feMerge>
-    </filter>
-
     <filter id={`dm-hot-${id}`} x="-70%" y="-70%" width="240%" height="240%">
       <feGaussianBlur stdDeviation="3" result="b1"></feGaussianBlur>
       <feGaussianBlur stdDeviation="10" result="b2"></feGaussianBlur>
@@ -84,12 +74,25 @@ const motes = [
       </feMerge>
     </filter>
 
+    <!-- La rendija tiene que brillar mucho y ocupar poco: con el resplandor
+         general (blurs de 3/10/24) una línea de dos píxeles se convertía en
+         una columna de luz que se comía la puerta entera. -->
+    <filter id={`dm-seam-glow-${id}`} x="-900%" y="-40%" width="1900%" height="180%">
+      <feGaussianBlur stdDeviation="1.4" result="b1"></feGaussianBlur>
+      <feGaussianBlur stdDeviation="5" result="b2"></feGaussianBlur>
+      <feGaussianBlur stdDeviation="13" result="b3"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="b3"></feMergeNode>
+        <feMergeNode in="b2"></feMergeNode>
+        <feMergeNode in="b1"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+
     <filter id={`dm-haze-${id}`} x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="9"></feGaussianBlur>
     </filter>
 
-    <!-- El haz que sale necesita menos difuminado que la calima: con 9 se
-         disolvía en un halo sin forma y dejaba de leerse como un cono. -->
     <filter id={`dm-cast-blur-${id}`} x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="4.5"></feGaussianBlur>
     </filter>
@@ -97,30 +100,30 @@ const motes = [
     <!--
       NEÓN — lo que convierte una línea roja en un tubo encendido.
 
-      Un trazo plano con un blur alrededor parece una línea con sombra, no
-      neón. Un tubo real tiene tres cosas a la vez y aquí se montan en este
-      orden: un halo de color que se derrama en el aire (tres pasadas de blur,
-      de cerca a lejos), el propio trazo, y —la que de verdad lo delata— un
-      núcleo más claro y más estrecho por dentro del trazo.
+      Un trazo plano con un blur alrededor parece una línea con sombra. Un tubo
+      real tiene tres cosas a la vez, y aquí se montan en este orden: un halo de
+      color derramado en el aire (tres pasadas de blur, de cerca a lejos), el
+      propio trazo, y —la que de verdad lo delata— un núcleo más claro y
+      estrecho por dentro del trazo.
 
       Ese núcleo no se dibuja aparte: `feMorphology` adelgaza la silueta del
       propio trazo y se tiñe de blanco caliente. Así sale gratis para toda la
-      carpintería, sin duplicar un solo path, y escala solo con el grosor —
-      en los trazos finos la erosión se los come enteros y se quedan sin
-      núcleo, que es justo lo que se quiere: los detalles no son tubos.
+      carpintería, sin duplicar un solo path, y escala solo con el grosor — en
+      los filetes finos la erosión se los come enteros y se quedan sin núcleo,
+      que es justo lo que se quiere: la ornamentación no son tubos, es dibujo.
     -->
     <filter id={`dm-neon-${id}`} x="-50%" y="-50%" width="200%" height="200%">
       <feFlood flood-color="#ff1a25" result="tint"></feFlood>
       <feComposite in="tint" in2="SourceAlpha" operator="in" result="glow"></feComposite>
 
-      <feGaussianBlur in="glow" stdDeviation="1.6" result="near"></feGaussianBlur>
-      <feGaussianBlur in="glow" stdDeviation="5" result="mid"></feGaussianBlur>
-      <feGaussianBlur in="glow" stdDeviation="13" result="far"></feGaussianBlur>
+      <feGaussianBlur in="glow" stdDeviation="1.4" result="near"></feGaussianBlur>
+      <feGaussianBlur in="glow" stdDeviation="4.5" result="mid"></feGaussianBlur>
+      <feGaussianBlur in="glow" stdDeviation="12" result="far"></feGaussianBlur>
 
-      <feMorphology in="SourceAlpha" operator="erode" radius="1" result="thin"></feMorphology>
+      <feMorphology in="SourceAlpha" operator="erode" radius="0.7" result="thin"></feMorphology>
       <feFlood flood-color="#fff4f0" result="hot"></feFlood>
       <feComposite in="hot" in2="thin" operator="in" result="core"></feComposite>
-      <feGaussianBlur in="core" stdDeviation="0.45" result="coreSoft"></feGaussianBlur>
+      <feGaussianBlur in="core" stdDeviation="0.4" result="coreSoft"></feGaussianBlur>
 
       <feMerge>
         <feMergeNode in="far"></feMergeNode>
@@ -134,27 +137,20 @@ const motes = [
     </filter>
 
     <!-- Aire encendido detrás de toda la pieza. -->
-    <radialGradient id={`dm-halo-${id}`} cx="0.5" cy="0.58" r="0.5">
-      <stop offset="0" stop-color="#ff2b36" stop-opacity="0.6"></stop>
-      <stop offset="0.45" stop-color="#c00d18" stop-opacity="0.22"></stop>
+    <radialGradient id={`dm-halo-${id}`} cx="0.5" cy="0.56" r="0.5">
+      <stop offset="0" stop-color="#ff2b36" stop-opacity="0.5"></stop>
+      <stop offset="0.45" stop-color="#c00d18" stop-opacity="0.18"></stop>
       <stop offset="1" stop-color="#000000" stop-opacity="0"></stop>
     </radialGradient>
 
     <!-- Lo que hay al otro lado: blanco al rojo. -->
-    <radialGradient id={`dm-inner-${id}`} cx="0.5" cy="0.66" r="0.62">
+    <radialGradient id={`dm-inner-${id}`} cx="0.5" cy="0.62" r="0.6">
       <stop offset="0" stop-color="#fff6f0" stop-opacity="0.95"></stop>
-      <stop offset="0.22" stop-color="#ff8a72" stop-opacity="0.8"></stop>
-      <stop offset="0.55" stop-color="#ff1a25" stop-opacity="0.45"></stop>
-      <stop offset="1" stop-color="#3d0206" stop-opacity="0.15"></stop>
+      <stop offset="0.22" stop-color="#ff8a72" stop-opacity="0.78"></stop>
+      <stop offset="0.55" stop-color="#ff1a25" stop-opacity="0.4"></stop>
+      <stop offset="1" stop-color="#3d0206" stop-opacity="0.12"></stop>
     </radialGradient>
 
-    <linearGradient id={`dm-fan-${id}`} x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#fff1e8" stop-opacity="0.85"></stop>
-      <stop offset="0.6" stop-color="#ff3a44" stop-opacity="0.42"></stop>
-      <stop offset="1" stop-color="#ff1a25" stop-opacity="0.12"></stop>
-    </linearGradient>
-
-    <!-- Barrido: la luz de dentro no está quieta. -->
     <linearGradient id={`dm-sweep-${id}`} x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#fff2ec" stop-opacity="0"></stop>
       <stop offset="0.5" stop-color="#fff2ec" stop-opacity="0.4"></stop>
@@ -167,17 +163,18 @@ const motes = [
       <stop offset="0.62" stop-color="#0b0507"></stop>
       <stop offset="1" stop-color="#2a0a0d"></stop>
     </linearGradient>
-    <linearGradient id={`dm-leaf-r-${id}`} x1="1" y1="0" x2="0" y2="0">
-      <stop offset="0" stop-color="#000000"></stop>
-      <stop offset="0.62" stop-color="#0b0507"></stop>
-      <stop offset="1" stop-color="#2a0a0d"></stop>
-    </linearGradient>
 
+    <!--
+      LA RENDIJA. En el logo es la pieza protagonista: una franja vertical
+      blanca al rojo entre las dos hojas, más brillante que ninguna otra cosa
+      del dibujo. Todo lo demás es carpintería alrededor de esto.
+    -->
     <linearGradient id={`dm-seam-${id}`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ff2030" stop-opacity="0.05"></stop>
-      <stop offset="0.35" stop-color="#fff0ea" stop-opacity="0.95"></stop>
-      <stop offset="0.75" stop-color="#ff5560" stop-opacity="0.9"></stop>
-      <stop offset="1" stop-color="#ff2030" stop-opacity="0.15"></stop>
+      <stop offset="0" stop-color="#ff2030" stop-opacity="0.12"></stop>
+      <stop offset="0.2" stop-color="#ffdcd6" stop-opacity="0.85"></stop>
+      <stop offset="0.55" stop-color="#fff4f1" stop-opacity="0.96"></stop>
+      <stop offset="0.88" stop-color="#ff7078" stop-opacity="0.85"></stop>
+      <stop offset="1" stop-color="#ff2030" stop-opacity="0.2"></stop>
     </linearGradient>
 
     <linearGradient id={`dm-beam-${id}`} x1="0" y1="0" x2="0" y2="1">
@@ -190,17 +187,16 @@ const motes = [
       id={`dm-ray-${id}`}
       gradientUnits="userSpaceOnUse"
       x1="120"
-      y1="205"
+      y1="190"
       x2="120"
-      y2="-60"
+      y2="-70"
     >
-      <stop offset="0" stop-color="#ffd9d2" stop-opacity="0.5"></stop>
-      <stop offset="0.4" stop-color="#ff4d58" stop-opacity="0.14"></stop>
+      <stop offset="0" stop-color="#ffd9d2" stop-opacity="0.45"></stop>
+      <stop offset="0.4" stop-color="#ff4d58" stop-opacity="0.12"></stop>
       <stop offset="0.72" stop-color="#ff1a25" stop-opacity="0"></stop>
     </linearGradient>
 
-    <!-- Luz que cruza el vano y se proyecta hacia fuera: caliente en la boca
-         de la puerta, disuelta en el aire a medida que se aleja. -->
+    <!-- Luz que cruza el vano y se proyecta hacia fuera. -->
     <linearGradient id={`dm-cast-${id}`} x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#fff6f2" stop-opacity="0.78"></stop>
       <stop offset="0.22" stop-color="#ff8478" stop-opacity="0.46"></stop>
@@ -209,8 +205,8 @@ const motes = [
     </linearGradient>
 
     <radialGradient id={`dm-floor-${id}`} cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#ffece6" stop-opacity="0.75"></stop>
-      <stop offset="0.4" stop-color="#ff1a25" stop-opacity="0.34"></stop>
+      <stop offset="0" stop-color="#ffece6" stop-opacity="0.8"></stop>
+      <stop offset="0.4" stop-color="#ff1a25" stop-opacity="0.32"></stop>
       <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
     </radialGradient>
 
@@ -218,28 +214,25 @@ const motes = [
       <rect x="-70" y="-50" width="380" height="450"></rect>
     </clipPath>
 
+    <!-- Silueta del vano: arco peraltado sobre las jambas. -->
     <clipPath id={`dm-clip-${id}`}>
-      <path d="M 46 296 L 46 132 A 74 74 0 0 1 194 132 L 194 296 Z"></path>
+      <path d="M 76 300 L 76 100 A 44 52 0 0 1 164 100 L 164 300 Z"></path>
     </clipPath>
   </defs>
 
   <!-- 1 · Aire ------------------------------------------------------------ -->
   <g class="dm-halo-in">
-    <ellipse class="dm-halo" cx="120" cy="190" rx="150" ry="170" fill={`url(#dm-halo-${id})`}
+    <ellipse class="dm-halo" cx="120" cy="180" rx="132" ry="176" fill={`url(#dm-halo-${id})`}
     ></ellipse>
   </g>
 
   <!-- 2 · Lo que hay detrás de la puerta ---------------------------------- -->
   <g class="dm-inside-in">
     <g class="dm-inside" clip-path={`url(#dm-clip-${id})`}>
-      <rect x="46" y="52" width="148" height="248" fill={`url(#dm-inner-${id})`}></rect>
-      <path
-        class="dm-fanlight-fill"
-        d="M 46 132 A 74 74 0 0 1 194 132 Z"
-        fill={`url(#dm-fan-${id})`}></path>
+      <rect x="76" y="44" width="88" height="256" fill={`url(#dm-inner-${id})`}></rect>
 
       <!-- Una onda de luz sube por el hueco cada pocos segundos. -->
-      <rect class="dm-sweep" x="46" y="250" width="148" height="56" fill={`url(#dm-sweep-${id})`}
+      <rect class="dm-sweep" x="76" y="250" width="88" height="56" fill={`url(#dm-sweep-${id})`}
       ></rect>
 
       <!-- Polvo suspendido en el haz: lo que delata que la luz es real. -->
@@ -249,20 +242,53 @@ const motes = [
     </g>
   </g>
 
-  <!-- 3 · Hojas ----------------------------------------------------------- -->
+  <!-- 3 · Hojas ------------------------------------------------------------
+       Arqueadas: el remate de cada hoja sigue el intradós, así que la puerta
+       es el arco y no hay montante fijo encima. La hoja derecha es la
+       izquierda espejada dentro de su propio grupo — la simetría sale exacta
+       y los cuarterones se escriben una sola vez.
+       -------------------------------------------------------------------- -->
   <g class="dm-leaves" stroke-linecap="round" stroke-linejoin="round">
     <g class="door-leaf door-leaf--left">
       <g class="door-leaf__swing">
         <g class="door-leaf__sway">
-          <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" fill={`url(#dm-leaf-l-${id})`}></path>
+          <path
+            d="M 78 288 L 78 100 A 42 50 0 0 1 119 50 L 119 288 Z"
+            fill={`url(#dm-leaf-l-${id})`}></path>
           <g stroke="#ff1a25" fill="none" filter={`url(#dm-neon-${id})`}>
-            <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" class="dm-w-leaf"></path>
-            <rect x="56" y="148" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
-            <rect x="60" y="152" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
-            <rect x="56" y="220" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
-            <rect x="60" y="224" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
-            <rect x="106" y="198" width="9" height="32" class="dm-w-plate" opacity="0.7"></rect>
-            <circle cx="110.5" cy="214" r="3" class="dm-w-knob"></circle>
+            <path class="dm-w-leaf" d="M 78 288 L 78 100 A 42 50 0 0 1 119 50 L 119 288 Z"></path>
+
+            <!-- Cuarterón alto, de remate curvo -->
+            <path class="dm-w-panel" d="M 87 174 L 87 108 A 26 42 0 0 1 111 66 L 111 174 Z"></path>
+            <path
+              class="dm-w-panel-in"
+              d="M 91 170 L 91 111 A 22 37 0 0 1 107 74 L 107 170 Z"
+              opacity="0.6"></path>
+
+            <!-- Rosetón labrado -->
+            <g class="dm-w-detail" opacity="0.9">
+              <circle cx="99" cy="194" r="9"></circle>
+              <circle cx="99" cy="194" r="4.4" opacity="0.75"></circle>
+              <g class="dm-w-hair" opacity="0.7">
+                <line x1="99" y1="185" x2="99" y2="203"></line>
+                <line x1="90" y1="194" x2="108" y2="194"></line>
+                <line x1="92.6" y1="187.6" x2="105.4" y2="200.4"></line>
+                <line x1="92.6" y1="200.4" x2="105.4" y2="187.6"></line>
+              </g>
+            </g>
+
+            <!-- Cuarterón bajo -->
+            <path class="dm-w-panel" d="M 87 216 L 111 216 L 111 276 L 87 276 Z"></path>
+            <path
+              class="dm-w-panel-in"
+              d="M 91 220 L 107 220 L 107 272 L 91 272 Z"
+              opacity="0.55"></path>
+
+            <!-- Tirador, junto a la rendija -->
+            <g class="dm-w-detail" opacity="0.85">
+              <line class="dm-w-hair" x1="115" y1="186" x2="115" y2="202"></line>
+              <circle cx="115" cy="194" r="2.2"></circle>
+            </g>
           </g>
         </g>
       </g>
@@ -271,34 +297,60 @@ const motes = [
     <g class="door-leaf door-leaf--right">
       <g class="door-leaf__swing">
         <g class="door-leaf__sway">
-          <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" fill={`url(#dm-leaf-r-${id})`}></path>
-          <g stroke="#ff1a25" fill="none" filter={`url(#dm-neon-${id})`}>
-            <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" class="dm-w-leaf"></path>
-            <rect x="138" y="148" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
-            <rect x="142" y="152" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
-            <rect x="138" y="220" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
-            <rect x="142" y="224" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
-            <rect x="125" y="198" width="9" height="32" class="dm-w-plate" opacity="0.7"></rect>
-            <circle cx="129.5" cy="214" r="3" class="dm-w-knob"></circle>
+          <g transform="translate(240, 0) scale(-1, 1)">
+            <path
+              d="M 78 288 L 78 100 A 42 50 0 0 1 119 50 L 119 288 Z"
+              fill={`url(#dm-leaf-l-${id})`}></path>
+            <g stroke="#ff1a25" fill="none" filter={`url(#dm-neon-${id})`}>
+              <path class="dm-w-leaf" d="M 78 288 L 78 100 A 42 50 0 0 1 119 50 L 119 288 Z"></path>
+
+              <path class="dm-w-panel" d="M 87 174 L 87 108 A 26 42 0 0 1 111 66 L 111 174 Z"
+              ></path>
+              <path
+                class="dm-w-panel-in"
+                d="M 91 170 L 91 111 A 22 37 0 0 1 107 74 L 107 170 Z"
+                opacity="0.6"></path>
+
+              <g class="dm-w-detail" opacity="0.9">
+                <circle cx="99" cy="194" r="9"></circle>
+                <circle cx="99" cy="194" r="4.4" opacity="0.75"></circle>
+                <g class="dm-w-hair" opacity="0.7">
+                  <line x1="99" y1="185" x2="99" y2="203"></line>
+                  <line x1="90" y1="194" x2="108" y2="194"></line>
+                  <line x1="92.6" y1="187.6" x2="105.4" y2="200.4"></line>
+                  <line x1="92.6" y1="200.4" x2="105.4" y2="187.6"></line>
+                </g>
+              </g>
+
+              <path class="dm-w-panel" d="M 87 216 L 111 216 L 111 276 L 87 276 Z"></path>
+              <path
+                class="dm-w-panel-in"
+                d="M 91 220 L 107 220 L 107 272 L 91 272 Z"
+                opacity="0.55"></path>
+
+              <g class="dm-w-detail" opacity="0.85">
+                <line class="dm-w-hair" x1="115" y1="186" x2="115" y2="202"></line>
+                <circle cx="115" cy="194" r="2.2"></circle>
+              </g>
+            </g>
           </g>
         </g>
       </g>
     </g>
   </g>
 
-  <!-- 4 · Quicio encendido ------------------------------------------------- -->
-  <g class="dm-seam" filter={`url(#dm-hot-${id})`}>
-    <rect
-      class="dm-blade"
-      x="118"
-      y="136"
-      width="4"
-      height="158"
-      rx="2"
+  <!-- 4 · La rendija -------------------------------------------------------
+       La pieza más brillante del dibujo: la línea de luz entre las dos hojas.
+       -------------------------------------------------------------------- -->
+  <g class="dm-seam" filter={`url(#dm-seam-glow-${id})`}>
+    <rect class="dm-blade" x="118.9" y="52" width="2.2" height="236" rx="1.1"
       fill={`url(#dm-seam-${id})`}></rect>
   </g>
 
-  <!-- 5 · Carpintería ------------------------------------------------------ -->
+  <!-- 5 · Carpintería: columnas, archivolta y cresta ------------------------
+       La columna se dibuja una vez y se espeja: capitel labrado arriba, fuste
+       estriado, basa moldurada en el suelo.
+       -------------------------------------------------------------------- -->
   <g
     class="dm-frame"
     stroke="#ff1a25"
@@ -307,145 +359,151 @@ const motes = [
     stroke-linejoin="round"
     filter={`url(#dm-neon-${id})`}
   >
+    <!-- Archivolta: tres molduras concéntricas sobre las columnas -->
     <path
+      class="dm-draw dm-w-arch"
       pathLength="1"
-      d="M 30 304 L 30 132 A 90 90 0 0 1 210 132 L 210 304"
-      class="dm-draw dm-w-arch"></path>
+      d="M 58 100 A 62 70 0 0 1 182 100"></path>
     <path
-      pathLength="1"
-      d="M 40 298 L 40 132 A 80 80 0 0 1 200 132 L 200 298"
       class="dm-draw dm-w-arch-mid"
-      opacity="0.75"></path>
-    <path
       pathLength="1"
-      d="M 46 296 L 46 132 A 74 74 0 0 1 194 132 L 194 296"
-      class="dm-draw dm-w-arch-in"></path>
+      d="M 66 100 A 54 62 0 0 1 174 100"
+      opacity="0.8"></path>
+    <path class="dm-draw dm-w-arch-in" pathLength="1" d="M 76 100 A 44 52 0 0 1 164 100"></path>
 
-    <!-- Imposta -->
-    <line class="dm-draw dm-w-impost" pathLength="1" x1="36" y1="132" x2="204" y2="132"
-    ></line>
-    <line
-      pathLength="1"
-      x1="42"
-      y1="127"
-      x2="198"
-      y2="127"
-      class="dm-draw dm-w-hair"
-      opacity="0.6"></line>
+    {/* Cada columna: la izquierda dibujada, la derecha espejada. */}
+    {[false, true].map((mirror) => (
+      <g transform={mirror ? 'translate(240, 0) scale(-1, 1)' : undefined}>
+        {/* Ábaco y capitel labrado */}
+        <path class="dm-draw dm-w-orn" pathLength="1" d="M 54 82 L 82 82 L 82 88 L 54 88 Z"></path>
+        <g class="dm-w-orn" opacity="0.9">
+          <path d="M 57 88 C 58.5 93 60 96.5 60 100"></path>
+          <path d="M 79 88 C 77.5 93 76 96.5 76 100"></path>
+          <path d="M 63 88 C 64 92.5 65.5 96 66 100" opacity="0.75"></path>
+          <path d="M 73 88 C 72 92.5 70.5 96 70 100" opacity="0.75"></path>
+        </g>
+        <g class="dm-w-hair" opacity="0.7">
+          <path d="M 58 89.5 C 61 92 63.5 91 63.5 87.5"></path>
+          <path d="M 78 89.5 C 75 92 72.5 91 72.5 87.5"></path>
+        </g>
 
-    <!-- Abanico -->
-    <g class="dm-fan dm-w-fan" opacity="0.9">
-      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="184.1" y2="95"></line>
-      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="157" y2="67.9"></line>
-      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="120" y2="58"></line>
-      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="83" y2="67.9"></line>
-      <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="55.9" y2="95"></line>
-      <path pathLength="1" d="M 94 132 A 26 26 0 0 1 146 132" class="dm-draw dm-w-fan-arc"
-      ></path>
-    </g>
+        {/* Fuste estriado */}
+        <line class="dm-draw dm-w-col" pathLength="1" x1="60" y1="100" x2="60" y2="286"></line>
+        <line class="dm-draw dm-w-col" pathLength="1" x1="76" y1="100" x2="76" y2="286"></line>
+        <g class="dm-w-hair" opacity="0.55">
+          <line x1="64.5" y1="106" x2="64.5" y2="280"></line>
+          <line x1="68" y1="106" x2="68" y2="280"></line>
+          <line x1="71.5" y1="106" x2="71.5" y2="280"></line>
+        </g>
+        <line class="dm-w-hair" x1="58" y1="100" x2="78" y2="100" opacity="0.8"></line>
 
-    <!-- Goznes -->
-    <g class="dm-hinges dm-w-detail" opacity="0.7">
-      <rect x="42" y="162" width="8" height="13"></rect>
-      <rect x="42" y="208" width="8" height="13"></rect>
-      <rect x="42" y="254" width="8" height="13"></rect>
-      <rect x="190" y="162" width="8" height="13"></rect>
-      <rect x="190" y="208" width="8" height="13"></rect>
-      <rect x="190" y="254" width="8" height="13"></rect>
-    </g>
-
-    <!-- Clave del arco -->
-    <path pathLength="1" d="M 111 52 L 129 52 L 132 30 L 108 30 Z" class="dm-draw dm-w-key"
-    ></path>
+        {/* Basa moldurada */}
+        <g class="dm-w-orn">
+          <path class="dm-draw" pathLength="1" d="M 58 286 L 78 286 L 78 291 L 58 291 Z"></path>
+          <path class="dm-draw" pathLength="1" d="M 56 291 L 80 291 L 80 297 L 56 297 Z"
+            opacity="0.85"></path>
+          <path class="dm-draw" pathLength="1" d="M 53 297 L 83 297 L 83 306 L 53 306 Z"></path>
+        </g>
+      </g>
+    ))}
 
     <!-- Umbral -->
-    <line class="dm-draw dm-w-sill" pathLength="1" x1="22" y1="296" x2="218" y2="296"></line>
-    <line
-      pathLength="1"
-      x1="28"
-      y1="302"
-      x2="212"
-      y2="302"
-      class="dm-draw dm-w-hair"
-      opacity="0.55"></line>
+    <line class="dm-draw dm-w-sill" pathLength="1" x1="46" y1="306" x2="194" y2="306"></line>
+    <line class="dm-w-hair" x1="52" y1="311" x2="188" y2="311" opacity="0.5"></line>
   </g>
 
-  <!-- 6 · La luz de encima de la puerta ------------------------------------ -->
+  <!-- 6 · Cresta -----------------------------------------------------------
+       El remate barroco sobre la clave: cartucho, palmeta y volutas. Es el
+       rasgo que hace reconocible a la marca de un vistazo, y por eso hereda
+       el pulso de luz que antes tenía la estrella.
+       -------------------------------------------------------------------- -->
   <g class="dm-star-in">
-    <g class="dm-star" filter={`url(#dm-hot-${id})`} stroke="#ff5560" fill="none">
-      <path
-        d="M 120 4 L 124.5 16 L 120 28 L 115.5 16 Z"
-        stroke-width="0.7"
-        fill="#ff8a90"
-        fill-opacity="0.25"></path>
-      <line x1="105" y1="16" x2="135" y2="16" stroke-width="0.5" opacity="0.75"></line>
-      <circle cx="120" cy="16" r="1.6" fill="#fff2ec" stroke="none"></circle>
+    <g
+      class="dm-star"
+      filter={`url(#dm-neon-${id})`}
+      stroke="#ff1a25"
+      fill="none"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      {[false, true].map((mirror) => (
+        <g
+          transform={`translate(120, 34) scale(1.1) translate(-120, -34)${
+            mirror ? ' translate(240, 0) scale(-1, 1)' : ''
+          }`}
+        >
+          <g class="dm-w-orn">
+            {/* Cartucho: el cuerpo del que arranca todo lo demás */}
+            <path d="M 120 34 C 126 34 129 31 129 27 C 129 23 126 21 120 21"></path>
+            {/* Voluta: una sola espiral por lado, que muerde y enrolla */}
+            <path d="M 120.5 30 C 127 30.5 132 27.5 133.5 22.5 C 135 17.5 131.5 14 128 15.5 C 125 16.8 124.5 20.5 127 21.8 C 129 22.8 131 21.4 130.6 19.4"></path>
+            {/* Palmeta */}
+            <path d="M 120 22 C 123.5 18 125.5 12 125 6"></path>
+          </g>
+          <g class="dm-w-hair" opacity="0.75">
+            {/* Ala exterior, que devuelve la línea al arco */}
+            <path d="M 131 27.5 C 135.5 28.5 139.5 26 140.5 22"></path>
+            {/* Nervio de la palmeta */}
+            <path d="M 120 27 C 122.5 24.5 124 21 124.2 17.5"></path>
+          </g>
+        </g>
+      ))}
+      {/* Remate: se posa justo donde se juntan las dos palmetas, no flotando
+          por encima — en el logo la cresta acaba en sí misma. */}
+      <circle cx="120" cy="3.4" r="1.7" fill="#fff2ec" stroke="none"></circle>
     </g>
   </g>
 
-  <!-- 7 · Volumen: rayos, columna y derrame -------------------------------- -->
+  <!-- 7 · Volumen: rayos, haz que sale y derrame ---------------------------- -->
   <g class="dm-rays-in">
     <g class="dm-rays" filter={`url(#dm-haze-${id})`} clip-path={`url(#dm-bounds-${id})`}>
-      <path d="M 120 205 L 102 -60 L 136 -60 Z" fill={`url(#dm-ray-${id})`}></path>
-      <path
-        d="M 120 205 L 102 -60 L 136 -60 Z"
-        fill={`url(#dm-ray-${id})`}
-        transform="rotate(-38 120 205)"></path>
-      <path
-        d="M 120 205 L 102 -60 L 136 -60 Z"
-        fill={`url(#dm-ray-${id})`}
-        transform="rotate(38 120 205)"></path>
-      <path
-        d="M 120 205 L 106 -60 L 132 -60 Z"
-        fill={`url(#dm-ray-${id})`}
-        transform="rotate(-61 120 205)"></path>
-      <path
-        d="M 120 205 L 106 -60 L 132 -60 Z"
-        fill={`url(#dm-ray-${id})`}
-        transform="rotate(61 120 205)"></path>
+      <path d="M 120 190 L 108 -70 L 132 -70 Z" fill={`url(#dm-ray-${id})`}></path>
+      <path d="M 120 190 L 108 -70 L 132 -70 Z" fill={`url(#dm-ray-${id})`}
+        transform="rotate(-34 120 190)"></path>
+      <path d="M 120 190 L 108 -70 L 132 -70 Z" fill={`url(#dm-ray-${id})`}
+        transform="rotate(34 120 190)"></path>
+      <path d="M 120 190 L 111 -70 L 129 -70 Z" fill={`url(#dm-ray-${id})`}
+        transform="rotate(-58 120 190)"></path>
+      <path d="M 120 190 L 111 -70 L 129 -70 Z" fill={`url(#dm-ray-${id})`}
+        transform="rotate(58 120 190)"></path>
     </g>
   </g>
 
   <!-- 8 · La luz que SALE por el vano --------------------------------------
-       Hasta aquí la marca tenía luz dentro y un derrame en el suelo, pero
-       nada que cruzara el umbral: la puerta se abría y el resplandor se
-       quedaba al otro lado. Esto es el haz que atraviesa el hueco y se
-       proyecta hacia fuera, y por eso va DELANTE de las hojas: la luz
-       volumétrica se lee porque pasa por encima de lo que ilumina.
-
-       En reposo va estrecho y contenido —la puerta solo está entreabierta—;
-       al abrirse de par en par se ensancha y sube de intensidad. Ese cambio
-       ES la apertura, más que el giro de las hojas.
+       El haz que atraviesa el hueco y se proyecta hacia fuera. Va DELANTE de
+       las hojas: la luz volumétrica se lee porque pasa por encima de lo que
+       ilumina. Se mide en scaleX desde la boca de la puerta, así que abrir la
+       puerta y ensanchar el haz son el mismo gesto.
        -------------------------------------------------------------------- -->
   <g class="dm-cast-in">
     <g class="dm-cast" clip-path={`url(#dm-bounds-${id})`} filter={`url(#dm-cast-blur-${id})`}>
-      <path class="dm-cast-core" d="M 62 146 L 178 146 L 292 392 L -52 392 Z"
+      <path class="dm-cast-core" d="M 104 120 L 136 120 L 268 396 L -28 396 Z"
         fill={`url(#dm-cast-${id})`}></path>
-      <path class="dm-cast-fin" d="M 62 146 L 112 146 L 44 392 L -66 392 Z"
-        fill={`url(#dm-cast-${id})`} opacity="0.45"></path>
-      <path class="dm-cast-fin" d="M 128 146 L 178 146 L 306 392 L 196 392 Z"
-        fill={`url(#dm-cast-${id})`} opacity="0.45"></path>
+      <path class="dm-cast-fin" d="M 104 120 L 118 120 L 30 396 L -60 396 Z"
+        fill={`url(#dm-cast-${id})`} opacity="0.5"></path>
+      <path class="dm-cast-fin" d="M 122 120 L 136 120 L 300 396 L 210 396 Z"
+        fill={`url(#dm-cast-${id})`} opacity="0.5"></path>
     </g>
   </g>
 
   <g class="dm-spill">
     <path
       class="dm-beam"
-      d="M 84 290 L 156 290 L 236 344 L 4 344 Z"
+      d="M 106 300 L 134 300 L 214 350 L 26 350 Z"
       fill={`url(#dm-beam-${id})`}
       filter={`url(#dm-haze-${id})`}></path>
-    <ellipse class="dm-pool" cx="120" cy="297" rx="98" ry="16" fill={`url(#dm-floor-${id})`}
+    <ellipse class="dm-pool" cx="120" cy="308" rx="86" ry="15" fill={`url(#dm-floor-${id})`}
     ></ellipse>
     <!-- Donde el haz muerde el umbral: la línea más caliente de la marca. -->
     <rect
       class="dm-threshold"
-      x="86"
-      y="294.5"
-      width="68"
-      height="1.6"
-      rx="0.8"
+      x="106"
+      y="304.6"
+      width="28"
+      height="1.8"
+      rx="0.9"
       fill="#ffe3d9"
-      opacity="0.75"
+      opacity="0.85"
       filter={`url(#dm-hot-${id})`}></rect>
   </g>
 </svg>
@@ -453,8 +511,11 @@ const motes = [
 <style>
   .doormark {
     overflow: visible;
-    /* Apertura de reposo: 0.5 ≈ hoja girada 60° vista de frente. */
-    --leaf: 0.5;
+    /* Apertura de reposo. En el logo la puerta está casi cerrada: lo único
+       que la cruza es una rendija de luz, y esa rendija ES la marca. Con la
+       hoja al 50 % el hueco se abría tanto que la pieza dejaba de leerse como
+       una puerta cerrada con luz detrás y pasaba a ser un portal abierto. */
+    --leaf: 0.94;
 
     /* -----------------------------------------------------------------------
        GROSORES — el carácter de la marca vive aquí.
@@ -465,40 +526,37 @@ const motes = [
        veces más fina, y a tamaño de hero se leía como un plano técnico en vez
        de como un letrero encendido.
 
+       El equilibrio es delicado: demasiado fino y deja de ser un letrero;
+       demasiado grueso y el tubo se come la ornamentación —cresta, capiteles,
+       rosetones—, que es justo lo que hace reconocible a la marca. Los
+       maestros pesan, el ornamento dibuja.
+
        Todos los trazos se miden contra el viewBox de 240, y van juntos: si se
        sube uno hay que subir el resto o la jerarquía se rompe. Por eso están
-       aquí y no repartidos en treinta atributos del markup.
+       aquí y no repartidos en cuarenta atributos del markup.
        -------------------------------------------------------------------- */
-    --dm-w-arch: 5;
-    --dm-w-arch-mid: 2.6;
-    --dm-w-arch-in: 3.8;
-    --dm-w-impost: 3.8;
-    --dm-w-fan: 2.4;
-    --dm-w-fan-arc: 3;
-    --dm-w-key: 3.2;
-    --dm-w-sill: 4.4;
-    --dm-w-leaf: 4;
-    --dm-w-panel: 2.4;
-    --dm-w-panel-in: 1.5;
-    --dm-w-plate: 2;
-    --dm-w-knob: 2.8;
-    --dm-w-detail: 2.2;
-    --dm-w-hair: 1.6;
+    --dm-w-arch: 3;
+    --dm-w-arch-mid: 2;
+    --dm-w-arch-in: 2.6;
+    --dm-w-col: 2.6;
+    --dm-w-sill: 3;
+    --dm-w-leaf: 2.6;
+    --dm-w-panel: 1.8;
+    --dm-w-panel-in: 1.2;
+    --dm-w-orn: 1.7;
+    --dm-w-detail: 1.4;
+    --dm-w-hair: 1;
   }
 
   .dm-w-arch { stroke-width: var(--dm-w-arch); }
   .dm-w-arch-mid { stroke-width: var(--dm-w-arch-mid); }
   .dm-w-arch-in { stroke-width: var(--dm-w-arch-in); }
-  .dm-w-impost { stroke-width: var(--dm-w-impost); }
-  .dm-w-fan { stroke-width: var(--dm-w-fan); }
-  .dm-w-fan-arc { stroke-width: var(--dm-w-fan-arc); }
-  .dm-w-key { stroke-width: var(--dm-w-key); }
+  .dm-w-col { stroke-width: var(--dm-w-col); }
   .dm-w-sill { stroke-width: var(--dm-w-sill); }
   .dm-w-leaf { stroke-width: var(--dm-w-leaf); }
   .dm-w-panel { stroke-width: var(--dm-w-panel); }
   .dm-w-panel-in { stroke-width: var(--dm-w-panel-in); }
-  .dm-w-plate { stroke-width: var(--dm-w-plate); }
-  .dm-w-knob { stroke-width: var(--dm-w-knob); }
+  .dm-w-orn { stroke-width: var(--dm-w-orn); }
   .dm-w-detail { stroke-width: var(--dm-w-detail); }
   .dm-w-hair { stroke-width: var(--dm-w-hair); }
 
@@ -641,10 +699,10 @@ const motes = [
       transform: scaleX(1);
     }
     38% {
-      transform: scaleX(0.84);
+      transform: scaleX(0.972);
     }
     64% {
-      transform: scaleX(0.93);
+      transform: scaleX(0.988);
     }
   }
 
@@ -844,8 +902,11 @@ const motes = [
     animation: dm-draw-on 1400ms var(--ease-in-out) 200ms forwards;
   }
 
-  .doormark--staged.dm-enter .dm-fan .dm-draw {
-    animation-delay: 850ms;
+  /* La basa se dibuja después que el resto: el trazo baja por la columna y
+     asienta al llegar al suelo, en vez de aparecer toda la pieza a la vez. */
+  .doormark--staged.dm-enter .dm-w-orn .dm-draw,
+  .doormark--staged.dm-enter .dm-draw.dm-w-sill {
+    animation-delay: 900ms;
     animation-duration: 1000ms;
   }
 
