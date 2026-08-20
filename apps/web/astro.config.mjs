@@ -10,7 +10,11 @@ export default defineConfig({
   // API por fetch. Si el contenido pasa a servirse desde el backend, cambiar a
   // output: 'server' con @astrojs/node — el Dockerfile ya contempla ese caso.
   output: 'static',
-  integrations: [sitemap()],
+  integrations: [
+    // La landing de invitación se reparte a mano (WhatsApp, correo) y va
+    // marcada `noindex`: tampoco tiene por qué anunciarse en el sitemap.
+    sitemap({ filter: (page) => !page.includes('/invitacion') }),
+  ],
   build: {
     inlineStylesheets: 'auto',
   },
