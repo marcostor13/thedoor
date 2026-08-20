@@ -28,7 +28,16 @@ export function initHeroDoor(): void {
   const play = (state: IntroState): void => {
     if (started) return
     started = true
-    mark.classList.add(state === 'played' ? 'dm-settle' : 'dm-enter')
+
+    const full = state !== 'played'
+    mark.classList.add(full ? 'dm-enter' : 'dm-settle')
+
+    // La sección que contiene la marca entra en escena con ella: el wordmark,
+    // el filete y el texto se escalonan DETRÁS de la puerta, para que el hero
+    // se lea como una sola pieza y no como una puerta más un fundido genérico.
+    mark.closest<HTMLElement>('[data-door-scene]')?.classList.add(
+      full ? 'scene--enter' : 'scene--settle',
+    )
   }
 
   // Con movimiento reducido el CSS anula las animaciones; la clase se pone

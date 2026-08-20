@@ -689,62 +689,85 @@ const motes = [
     animation: dm-mark-in 600ms var(--ease-out) both;
   }
 
-  /* --- Apertura completa: no hubo intro que la contara -------------------- */
+  /* --- Apertura completa: no hubo intro que la contara --------------------
+     Cuatro actos, ~4,8 s. Los tiempos están escritos para leerse como partitura:
+       0,0 – 2,0 s  SE DIBUJA   la carpintería aparece trazo a trazo
+       1,7 – 2,9 s  PRENDE      la luz de encima y una cuchilla en el quicio
+       2,3 – 3,0 s  LLAMA       dos golpes: la puerta se anuncia antes de abrirse
+       2,8 – 4,4 s  ABRE        las hojas giran y la luz inunda por etapas
+       4,4 – 4,8 s  ASIENTA     el vaivén y el zumbido toman el relevo
+     ---------------------------------------------------------------------- */
+
+  /* Movimiento de conjunto: entra ligeramente sobredimensionada y se asienta,
+     con dos golpes secos en medio — la marca «llama a la puerta» antes de
+     abrirla. Opacidad y transform son animaciones distintas y no se pisan. */
+  .doormark--staged.dm-enter {
+    animation:
+      dm-mark-in 800ms var(--ease-out) both,
+      dm-entrance-move 4800ms var(--ease-out) both;
+  }
 
   .doormark--staged.dm-enter .dm-draw {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: dm-draw-on 950ms var(--ease-in-out) 80ms forwards;
+    animation: dm-draw-on 1400ms var(--ease-in-out) 200ms forwards;
   }
 
   .doormark--staged.dm-enter .dm-fan .dm-draw {
-    animation-delay: 520ms;
-    animation-duration: 800ms;
+    animation-delay: 850ms;
+    animation-duration: 1000ms;
+  }
+
+  /* El neón gana cuerpo a medida que el trazo se completa, y al terminar cede
+     el testigo al zumbido ambiental — que si no, quedaría anulado por esta
+     misma declaración. */
+  .doormark--staged.dm-enter .dm-frame {
+    animation:
+      dm-frame-charge 1900ms var(--ease-out) 200ms both,
+      dm-neon 8s linear 4700ms infinite;
   }
 
   .doormark--staged.dm-enter .dm-hinges {
-    animation: dm-mark-in 700ms var(--ease-out) 700ms both;
+    animation: dm-mark-in 700ms var(--ease-out) 1400ms both;
   }
 
   .doormark--staged.dm-enter .dm-halo-in {
-    animation: dm-halo-in 1800ms var(--ease-out) 150ms both;
-  }
-
-  .doormark--staged.dm-enter .dm-blade {
-    animation: dm-blade-in 1500ms var(--ease-door) 620ms both;
-  }
-
-  .doormark--staged.dm-enter .door-leaf__swing {
-    animation: dm-swing-open 1250ms var(--ease-door) 900ms both;
-  }
-
-  .doormark--staged.dm-enter .dm-inside-in {
-    animation: dm-inside-in 1400ms var(--ease-out) 940ms both;
+    animation: dm-halo-in 2400ms var(--ease-out) 150ms both;
   }
 
   .doormark--staged.dm-enter .dm-star-in {
-    animation: dm-star-in 1000ms var(--ease-out) 1150ms both;
+    animation: dm-star-in 1000ms var(--ease-out) 1750ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-blade {
+    animation:
+      dm-blade-in 2000ms var(--ease-door) 1900ms both,
+      dm-blade-knock 900ms var(--ease-in-out) 2300ms;
+  }
+
+  .doormark--staged.dm-enter .door-leaf__swing {
+    animation: dm-swing-open 1600ms var(--ease-door) 2800ms both;
+  }
+
+  .doormark--staged.dm-enter .dm-inside-in {
+    animation: dm-inside-in 1500ms var(--ease-out) 2850ms both;
   }
 
   .doormark--staged.dm-enter .dm-rays-in {
-    animation: dm-rays-in 1500ms var(--ease-out) 1280ms both;
+    animation: dm-rays-in 1600ms var(--ease-out) 3200ms both;
   }
 
   .doormark--staged.dm-enter .dm-spill {
     transform-box: fill-box;
     transform-origin: 50% 0%;
-    animation: dm-spill-in 1300ms var(--ease-out) 1350ms both;
+    animation: dm-spill-in 1400ms var(--ease-out) 3350ms both;
   }
 
   /* El vaivén y el zumbido esperan a que la puerta llegue a su sitio: si no,
      ensucian el gesto de apertura. */
   .doormark--staged.dm-enter .door-leaf__sway,
   .doormark--staged.dm-enter .door-leaf--right .door-leaf__sway {
-    animation-delay: 2250ms;
-  }
-
-  .doormark--staged.dm-enter .dm-frame {
-    animation-delay: 2400ms;
+    animation-delay: 4600ms;
   }
 
   /* --- Solo asentarse: el intro ya enseñó la apertura --------------------- */
@@ -859,6 +882,67 @@ const motes = [
     }
   }
 
+  /* Sobredimensión que se asienta, con dos golpes antes de abrir. */
+  @keyframes dm-entrance-move {
+    0% {
+      transform: scale(1.035);
+    }
+    46% {
+      transform: scale(1.014);
+    }
+    50% {
+      transform: scale(1.026);
+    }
+    54% {
+      transform: scale(1.012);
+    }
+    58% {
+      transform: scale(1.022);
+    }
+    62% {
+      transform: scale(1.009);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* El tubo de neón cogiendo carga mientras se dibuja. */
+  @keyframes dm-frame-charge {
+    0% {
+      opacity: 0.45;
+      filter: brightness(0.5);
+    }
+    70% {
+      opacity: 1;
+      filter: brightness(1.35);
+    }
+    100% {
+      opacity: 1;
+      filter: brightness(1);
+    }
+  }
+
+  /* Los dos golpes, vistos desde la rendija de luz. */
+  @keyframes dm-blade-knock {
+    0%,
+    100% {
+      filter: brightness(1);
+    }
+    18% {
+      filter: brightness(2.1);
+    }
+    34% {
+      filter: brightness(0.9);
+    }
+    52% {
+      filter: brightness(1.9);
+    }
+    70% {
+      filter: brightness(1);
+    }
+  }
+
   @keyframes dm-mark-in {
     from {
       opacity: 0;
@@ -909,12 +993,16 @@ const motes = [
       opacity: 0;
       transform: scaleX(0.15) scaleY(0.28);
     }
-    20% {
+    14% {
       opacity: 1;
       transform: scaleX(0.45) scaleY(1);
     }
-    55% {
-      transform: scaleX(1.6) scaleY(1);
+    /* Se queda fina mientras suenan los golpes: la puerta aún no cede. */
+    45% {
+      transform: scaleX(0.5) scaleY(1);
+    }
+    72% {
+      transform: scaleX(2.2) scaleY(1);
     }
     100% {
       opacity: 1;
