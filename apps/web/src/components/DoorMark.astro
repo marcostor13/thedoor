@@ -88,6 +88,51 @@ const motes = [
       <feGaussianBlur stdDeviation="9"></feGaussianBlur>
     </filter>
 
+    <!-- El haz que sale necesita menos difuminado que la calima: con 9 se
+         disolvía en un halo sin forma y dejaba de leerse como un cono. -->
+    <filter id={`dm-cast-blur-${id}`} x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4.5"></feGaussianBlur>
+    </filter>
+
+    <!--
+      NEÓN — lo que convierte una línea roja en un tubo encendido.
+
+      Un trazo plano con un blur alrededor parece una línea con sombra, no
+      neón. Un tubo real tiene tres cosas a la vez y aquí se montan en este
+      orden: un halo de color que se derrama en el aire (tres pasadas de blur,
+      de cerca a lejos), el propio trazo, y —la que de verdad lo delata— un
+      núcleo más claro y más estrecho por dentro del trazo.
+
+      Ese núcleo no se dibuja aparte: `feMorphology` adelgaza la silueta del
+      propio trazo y se tiñe de blanco caliente. Así sale gratis para toda la
+      carpintería, sin duplicar un solo path, y escala solo con el grosor —
+      en los trazos finos la erosión se los come enteros y se quedan sin
+      núcleo, que es justo lo que se quiere: los detalles no son tubos.
+    -->
+    <filter id={`dm-neon-${id}`} x="-50%" y="-50%" width="200%" height="200%">
+      <feFlood flood-color="#ff1a25" result="tint"></feFlood>
+      <feComposite in="tint" in2="SourceAlpha" operator="in" result="glow"></feComposite>
+
+      <feGaussianBlur in="glow" stdDeviation="1.6" result="near"></feGaussianBlur>
+      <feGaussianBlur in="glow" stdDeviation="5" result="mid"></feGaussianBlur>
+      <feGaussianBlur in="glow" stdDeviation="13" result="far"></feGaussianBlur>
+
+      <feMorphology in="SourceAlpha" operator="erode" radius="1" result="thin"></feMorphology>
+      <feFlood flood-color="#fff4f0" result="hot"></feFlood>
+      <feComposite in="hot" in2="thin" operator="in" result="core"></feComposite>
+      <feGaussianBlur in="core" stdDeviation="0.45" result="coreSoft"></feGaussianBlur>
+
+      <feMerge>
+        <feMergeNode in="far"></feMergeNode>
+        <feMergeNode in="far"></feMergeNode>
+        <feMergeNode in="mid"></feMergeNode>
+        <feMergeNode in="mid"></feMergeNode>
+        <feMergeNode in="near"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+        <feMergeNode in="coreSoft"></feMergeNode>
+      </feMerge>
+    </filter>
+
     <!-- Aire encendido detrás de toda la pieza. -->
     <radialGradient id={`dm-halo-${id}`} cx="0.5" cy="0.58" r="0.5">
       <stop offset="0" stop-color="#ff2b36" stop-opacity="0.6"></stop>
@@ -154,6 +199,15 @@ const motes = [
       <stop offset="0.72" stop-color="#ff1a25" stop-opacity="0"></stop>
     </linearGradient>
 
+    <!-- Luz que cruza el vano y se proyecta hacia fuera: caliente en la boca
+         de la puerta, disuelta en el aire a medida que se aleja. -->
+    <linearGradient id={`dm-cast-${id}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6f2" stop-opacity="0.78"></stop>
+      <stop offset="0.22" stop-color="#ff8478" stop-opacity="0.46"></stop>
+      <stop offset="0.58" stop-color="#ff2a35" stop-opacity="0.19"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
+    </linearGradient>
+
     <radialGradient id={`dm-floor-${id}`} cx="0.5" cy="0.5" r="0.5">
       <stop offset="0" stop-color="#ffece6" stop-opacity="0.75"></stop>
       <stop offset="0.4" stop-color="#ff1a25" stop-opacity="0.34"></stop>
@@ -201,14 +255,14 @@ const motes = [
       <g class="door-leaf__swing">
         <g class="door-leaf__sway">
           <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" fill={`url(#dm-leaf-l-${id})`}></path>
-          <g stroke="#ff1a25" fill="none" filter={`url(#dm-soft-${id})`}>
-            <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" stroke-width="1"></path>
-            <rect x="56" y="148" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
-            <rect x="60" y="152" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
-            <rect x="56" y="220" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
-            <rect x="60" y="224" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
-            <rect x="106" y="198" width="9" height="32" stroke-width="0.5" opacity="0.7"></rect>
-            <circle cx="110.5" cy="214" r="3" stroke-width="0.8"></circle>
+          <g stroke="#ff1a25" fill="none" filter={`url(#dm-neon-${id})`}>
+            <path d="M 48 294 L 48 136 L 118 136 L 118 294 Z" class="dm-w-leaf"></path>
+            <rect x="56" y="148" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
+            <rect x="60" y="152" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
+            <rect x="56" y="220" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
+            <rect x="60" y="224" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
+            <rect x="106" y="198" width="9" height="32" class="dm-w-plate" opacity="0.7"></rect>
+            <circle cx="110.5" cy="214" r="3" class="dm-w-knob"></circle>
           </g>
         </g>
       </g>
@@ -218,14 +272,14 @@ const motes = [
       <g class="door-leaf__swing">
         <g class="door-leaf__sway">
           <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" fill={`url(#dm-leaf-r-${id})`}></path>
-          <g stroke="#ff1a25" fill="none" filter={`url(#dm-soft-${id})`}>
-            <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" stroke-width="1"></path>
-            <rect x="138" y="148" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
-            <rect x="142" y="152" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
-            <rect x="138" y="220" width="46" height="60" stroke-width="0.6" opacity="0.75"></rect>
-            <rect x="142" y="224" width="38" height="52" stroke-width="0.4" opacity="0.4"></rect>
-            <rect x="125" y="198" width="9" height="32" stroke-width="0.5" opacity="0.7"></rect>
-            <circle cx="129.5" cy="214" r="3" stroke-width="0.8"></circle>
+          <g stroke="#ff1a25" fill="none" filter={`url(#dm-neon-${id})`}>
+            <path d="M 192 294 L 192 136 L 122 136 L 122 294 Z" class="dm-w-leaf"></path>
+            <rect x="138" y="148" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
+            <rect x="142" y="152" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
+            <rect x="138" y="220" width="46" height="60" class="dm-w-panel" opacity="0.75"></rect>
+            <rect x="142" y="224" width="38" height="52" class="dm-w-panel-in" opacity="0.4"></rect>
+            <rect x="125" y="198" width="9" height="32" class="dm-w-plate" opacity="0.7"></rect>
+            <circle cx="129.5" cy="214" r="3" class="dm-w-knob"></circle>
           </g>
         </g>
       </g>
@@ -251,51 +305,47 @@ const motes = [
     fill="none"
     stroke-linecap="round"
     stroke-linejoin="round"
-    filter={`url(#dm-soft-${id})`}
+    filter={`url(#dm-neon-${id})`}
   >
     <path
-      class="dm-draw"
       pathLength="1"
       d="M 30 304 L 30 132 A 90 90 0 0 1 210 132 L 210 304"
-      stroke-width="1.1"></path>
+      class="dm-draw dm-w-arch"></path>
     <path
-      class="dm-draw"
       pathLength="1"
       d="M 40 298 L 40 132 A 80 80 0 0 1 200 132 L 200 298"
-      stroke-width="0.6"
+      class="dm-draw dm-w-arch-mid"
       opacity="0.75"></path>
     <path
-      class="dm-draw"
       pathLength="1"
       d="M 46 296 L 46 132 A 74 74 0 0 1 194 132 L 194 296"
-      stroke-width="0.9"></path>
+      class="dm-draw dm-w-arch-in"></path>
 
     <!-- Imposta -->
-    <line class="dm-draw" pathLength="1" x1="36" y1="132" x2="204" y2="132" stroke-width="0.9"
+    <line class="dm-draw dm-w-impost" pathLength="1" x1="36" y1="132" x2="204" y2="132"
     ></line>
     <line
-      class="dm-draw"
       pathLength="1"
       x1="42"
       y1="127"
       x2="198"
       y2="127"
-      stroke-width="0.5"
+      class="dm-draw dm-w-hair"
       opacity="0.6"></line>
 
     <!-- Abanico -->
-    <g class="dm-fan" stroke-width="0.6" opacity="0.9">
+    <g class="dm-fan dm-w-fan" opacity="0.9">
       <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="184.1" y2="95"></line>
       <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="157" y2="67.9"></line>
       <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="120" y2="58"></line>
       <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="83" y2="67.9"></line>
       <line class="dm-draw" pathLength="1" x1="120" y1="132" x2="55.9" y2="95"></line>
-      <path class="dm-draw" pathLength="1" d="M 94 132 A 26 26 0 0 1 146 132" stroke-width="0.8"
+      <path pathLength="1" d="M 94 132 A 26 26 0 0 1 146 132" class="dm-draw dm-w-fan-arc"
       ></path>
     </g>
 
     <!-- Goznes -->
-    <g class="dm-hinges" stroke-width="0.6" opacity="0.7">
+    <g class="dm-hinges dm-w-detail" opacity="0.7">
       <rect x="42" y="162" width="8" height="13"></rect>
       <rect x="42" y="208" width="8" height="13"></rect>
       <rect x="42" y="254" width="8" height="13"></rect>
@@ -305,19 +355,18 @@ const motes = [
     </g>
 
     <!-- Clave del arco -->
-    <path class="dm-draw" pathLength="1" d="M 111 52 L 129 52 L 132 30 L 108 30 Z" stroke-width="0.8"
+    <path pathLength="1" d="M 111 52 L 129 52 L 132 30 L 108 30 Z" class="dm-draw dm-w-key"
     ></path>
 
     <!-- Umbral -->
-    <line class="dm-draw" pathLength="1" x1="22" y1="296" x2="218" y2="296" stroke-width="1"></line>
+    <line class="dm-draw dm-w-sill" pathLength="1" x1="22" y1="296" x2="218" y2="296"></line>
     <line
-      class="dm-draw"
       pathLength="1"
       x1="28"
       y1="302"
       x2="212"
       y2="302"
-      stroke-width="0.5"
+      class="dm-draw dm-w-hair"
       opacity="0.55"></line>
   </g>
 
@@ -357,6 +406,28 @@ const motes = [
     </g>
   </g>
 
+  <!-- 8 · La luz que SALE por el vano --------------------------------------
+       Hasta aquí la marca tenía luz dentro y un derrame en el suelo, pero
+       nada que cruzara el umbral: la puerta se abría y el resplandor se
+       quedaba al otro lado. Esto es el haz que atraviesa el hueco y se
+       proyecta hacia fuera, y por eso va DELANTE de las hojas: la luz
+       volumétrica se lee porque pasa por encima de lo que ilumina.
+
+       En reposo va estrecho y contenido —la puerta solo está entreabierta—;
+       al abrirse de par en par se ensancha y sube de intensidad. Ese cambio
+       ES la apertura, más que el giro de las hojas.
+       -------------------------------------------------------------------- -->
+  <g class="dm-cast-in">
+    <g class="dm-cast" clip-path={`url(#dm-bounds-${id})`} filter={`url(#dm-cast-blur-${id})`}>
+      <path class="dm-cast-core" d="M 62 146 L 178 146 L 292 392 L -52 392 Z"
+        fill={`url(#dm-cast-${id})`}></path>
+      <path class="dm-cast-fin" d="M 62 146 L 112 146 L 44 392 L -66 392 Z"
+        fill={`url(#dm-cast-${id})`} opacity="0.45"></path>
+      <path class="dm-cast-fin" d="M 128 146 L 178 146 L 306 392 L 196 392 Z"
+        fill={`url(#dm-cast-${id})`} opacity="0.45"></path>
+    </g>
+  </g>
+
   <g class="dm-spill">
     <path
       class="dm-beam"
@@ -384,6 +455,66 @@ const motes = [
     overflow: visible;
     /* Apertura de reposo: 0.5 ≈ hoja girada 60° vista de frente. */
     --leaf: 0.5;
+
+    /* -----------------------------------------------------------------------
+       GROSORES — el carácter de la marca vive aquí.
+
+       La marca es un rótulo de neón, y un tubo de neón es grueso: la marca
+       pequeña (DoorGlyph, favicon) siempre lo fue —su arco exterior pesa un
+       4 % del ancho— pero esta grande se había quedado en un 0,46 %, nueve
+       veces más fina, y a tamaño de hero se leía como un plano técnico en vez
+       de como un letrero encendido.
+
+       Todos los trazos se miden contra el viewBox de 240, y van juntos: si se
+       sube uno hay que subir el resto o la jerarquía se rompe. Por eso están
+       aquí y no repartidos en treinta atributos del markup.
+       -------------------------------------------------------------------- */
+    --dm-w-arch: 5;
+    --dm-w-arch-mid: 2.6;
+    --dm-w-arch-in: 3.8;
+    --dm-w-impost: 3.8;
+    --dm-w-fan: 2.4;
+    --dm-w-fan-arc: 3;
+    --dm-w-key: 3.2;
+    --dm-w-sill: 4.4;
+    --dm-w-leaf: 4;
+    --dm-w-panel: 2.4;
+    --dm-w-panel-in: 1.5;
+    --dm-w-plate: 2;
+    --dm-w-knob: 2.8;
+    --dm-w-detail: 2.2;
+    --dm-w-hair: 1.6;
+  }
+
+  .dm-w-arch { stroke-width: var(--dm-w-arch); }
+  .dm-w-arch-mid { stroke-width: var(--dm-w-arch-mid); }
+  .dm-w-arch-in { stroke-width: var(--dm-w-arch-in); }
+  .dm-w-impost { stroke-width: var(--dm-w-impost); }
+  .dm-w-fan { stroke-width: var(--dm-w-fan); }
+  .dm-w-fan-arc { stroke-width: var(--dm-w-fan-arc); }
+  .dm-w-key { stroke-width: var(--dm-w-key); }
+  .dm-w-sill { stroke-width: var(--dm-w-sill); }
+  .dm-w-leaf { stroke-width: var(--dm-w-leaf); }
+  .dm-w-panel { stroke-width: var(--dm-w-panel); }
+  .dm-w-panel-in { stroke-width: var(--dm-w-panel-in); }
+  .dm-w-plate { stroke-width: var(--dm-w-plate); }
+  .dm-w-knob { stroke-width: var(--dm-w-knob); }
+  .dm-w-detail { stroke-width: var(--dm-w-detail); }
+  .dm-w-hair { stroke-width: var(--dm-w-hair); }
+
+  /* =========================================================================
+     HAZ PROYECTADO — la luz que cruza el umbral
+     ====================================================================== */
+
+  /* Se mide en scaleX desde la boca de la puerta: el haz es tan ancho como el
+     hueco que lo deja pasar, así que abrir la puerta y ensanchar el haz son
+     el mismo gesto. `--cast` acompaña a `--leaf`. */
+  .dm-cast {
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+    transform: scaleX(var(--cast, 0.5));
+    opacity: var(--cast-lit, 0.45);
+    will-change: transform, opacity;
   }
 
   /* =========================================================================
@@ -757,6 +888,18 @@ const motes = [
     animation: dm-rays-in 1600ms var(--ease-out) 3200ms both;
   }
 
+  /* El haz entra con la apertura, no antes: mientras las hojas están cerradas
+     no hay hueco por el que salga nada. */
+  .doormark--staged .dm-cast-in {
+    opacity: 0;
+  }
+
+  .doormark--staged.dm-enter .dm-cast-in,
+  .doormark--staged.dm-settle .dm-cast-in,
+  .doormark--staged.dm-opened .dm-cast-in {
+    animation: dm-cast-in 1400ms var(--ease-out) 900ms both;
+  }
+
   .doormark--staged.dm-enter .dm-spill {
     transform-box: fill-box;
     transform-origin: 50% 0%;
@@ -832,6 +975,37 @@ const motes = [
     transform-box: fill-box;
     transform-origin: 50% 0%;
     animation: dm-spill-wide 1600ms var(--ease-out) 120ms both;
+  }
+
+  /* La recompensa: el hueco se abre entero y la luz sale de golpe. Va con el
+     mismo retardo que el giro de las hojas, para que se lea como una sola
+     cosa —la puerta abriéndose— y no como dos animaciones a la vez. */
+  .doormark--staged.dm-opened .dm-cast {
+    animation: dm-cast-wide 1700ms var(--ease-out) 140ms both;
+  }
+
+  @keyframes dm-cast-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes dm-cast-wide {
+    0% {
+      transform: scaleX(0.5);
+      opacity: 0.45;
+    }
+    52% {
+      transform: scaleX(1.06);
+      opacity: 1;
+    }
+    100% {
+      transform: scaleX(1);
+      opacity: 0.92;
+    }
   }
 
   @keyframes dm-swing-wide {
@@ -1103,6 +1277,14 @@ const motes = [
     .doormark,
     .doormark * {
       animation: none !important;
+    }
+
+    /* El haz nace invisible y lo enciende una animación. Sin animaciones esa
+       regla no se levanta nunca y la puerta se queda sin luz: aquí se le da
+       el estado final a mano. Quien pide menos movimiento pide eso, no
+       perderse la mitad de la marca. */
+    .doormark--staged .dm-cast-in {
+      opacity: 1;
     }
   }
 </style>

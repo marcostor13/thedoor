@@ -96,7 +96,10 @@ describe('MailService', () => {
       SITE_URL: 'https://thedoorpr.com',
     })
 
-    const sendMail = mock(() => Promise.resolve({ messageId: '1' }))
+    // El mock declara su parámetro: sin él, `mock.calls` se infiere como
+    // tuplas vacías y leer el primer argumento no compila.
+    type SentMail = Record<string, unknown>
+    const sendMail = mock((_options: SentMail) => Promise.resolve({ messageId: '1' }))
     const service = new MailService()
     service.onModuleInit()
     ;(service as unknown as { transporter: { sendMail: unknown } }).transporter = { sendMail }
@@ -105,7 +108,7 @@ describe('MailService', () => {
       service.sendSignupConfirmation('ana@example.com', { name: 'Ana', kind: 'guest' }),
     ).resolves.toBe(true)
 
-    const sent = sendMail.mock.calls[0][0] as Record<string, unknown>
+    const sent: SentMail = sendMail.mock.calls[0][0]
     expect(sent.to).toBe('ana@example.com')
     expect(sent.subject).toBe('Estás en la lista — The Door PR')
     expect(sent.replyTo).toBe('The Door PR <hola@thedoorpr.com>')
