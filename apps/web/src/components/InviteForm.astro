@@ -1,0 +1,329 @@
+---
+/**
+ * Formulario de la landing de invitación. Habla con el mismo `POST /signup`
+ * que el registro de la web, pero con un solo público y tres campos.
+ *
+ * Frente a SignupForm.astro: aquí no hay selector de público —quien abre este
+ * enlace quiere estar en la lista, no programar un local—, ni referencia, ni
+ * ciudad. `kind` va fijo a `guest` en un campo oculto; el backend acepta el
+ * resto de campos como opcionales, así que no hace falta tocarlo.
+ *
+ * Al aceptarse el alta emite `thedoor:signup-done`, el mismo evento que usa el
+ * registro, para que la puerta de la página se abra de par en par.
+ */
+import { INVITE } from '../data/invite'
+
+interface Props {
+  /**
+   * Nombre de la anfitriona que reparte este enlace. Viaja en `reference`,
+   * que para un `guest` ya significa «quién te refiere», así que el registro
+   * queda atribuido sin tocar el API.
+   */
+  host?: string
+}
+
+const { host } = Astro.props
+
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
+---
+
+<div class="invite-form">
+  <form class="invite-form__form" id="invite-form" data-api={apiUrl} novalidate>
+    <input type="hidden" name="kind" value="guest" />
+    {host && <input type="hidden" name="reference" value={host} />}
+
+    <div class="invite-form__field">
+      <label class="invite-form__label" for="invite-name">Nombre</label>
+      <input
+        class="invite-form__input"
+        id="invite-name"
+        name="name"
+        type="text"
+        required
+        minlength="2"
+        maxlength="120"
+        autocomplete="name"
+        placeholder="Nombre y apellido"
+      />
+    </div>
+
+    <div class="invite-form__field">
+      <label class="invite-form__label" for="invite-email">Email</label>
+      <input
+        class="invite-form__input"
+        id="invite-email"
+        name="email"
+        type="email"
+        required
+        maxlength="180"
+        autocomplete="email"
+        inputmode="email"
+        placeholder="tu@correo.com"
+      />
+    </div>
+
+    <div class="invite-form__field">
+      <label class="invite-form__label" for="invite-phone">
+        WhatsApp <span class="invite-form__optional">— opcional</span>
+      </label>
+      <input
+        class="invite-form__input"
+        id="invite-phone"
+        name="phone"
+        type="tel"
+        maxlength="40"
+        autocomplete="tel"
+        inputmode="tel"
+        placeholder="+51 999 999 999"
+      />
+    </div>
+
+    {/* Trampa para bots: un campo que una persona nunca rellena. El backend
+        descarta el envío si llega con contenido. */}
+    <div class="invite-form__honeypot" aria-hidden="true">
+      <label for="invite-company">No rellenar</label>
+      <input id="invite-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <button class="invite-form__submit" type="submit">
+      {INVITE.cta} <span aria-hidden="true">→</span>
+    </button>
+
+    <p class="invite-form__status" id="invite-status" role="status" aria-live="polite"></p>
+  </form>
+
+  <div class="invite-form__done" id="invite-done" hidden>
+    {/* Toma el relevo del `h1` de la página, que se oculta al confirmarse: en el
+        árbol de accesibilidad solo hay un titular de nivel 1 en cada estado. */}
+    <h1 class="invite-form__done-title" id="invite-done-title" tabindex="-1">Estás en la lista.</h1>
+    <p class="invite-form__done-text" id="invite-done-text">
+      Te llega la invitación por correo en cuanto se abra la puerta.
+    </p>
+  </div>
+</div>
+
+<style>
+  .invite-form {
+    width: 100%;
+  }
+
+  .invite-form__form {
+    display: grid;
+    gap: var(--sp-sm);
+  }
+
+  .invite-form__form[hidden] {
+    display: none;
+  }
+
+  .invite-form__field {
+    display: grid;
+    gap: var(--sp-3xs);
+    text-align: start;
+  }
+
+  .invite-form__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .invite-form__optional {
+    letter-spacing: var(--ls-normal);
+    text-transform: none;
+    opacity: 0.65;
+  }
+
+  .invite-form__input {
+    width: 100%;
+    padding: var(--sp-xs) var(--sp-sm);
+    color: var(--c-fg);
+    background: var(--c-bg-elevated);
+    border: 1px solid var(--c-border);
+    border-radius: 0;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .invite-form__input::placeholder {
+    color: var(--c-fg-muted);
+    opacity: 0.45;
+  }
+
+  .invite-form__input:focus-visible {
+    border-color: var(--c-accent);
+  }
+
+  .invite-form__honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* El botón ocupa todo el ancho: es la única acción de la página, no una
+     opción entre varias. */
+  .invite-form__submit {
+    width: 100%;
+    padding: var(--sp-sm) var(--sp-lg);
+    margin-block-start: var(--sp-2xs);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-ink);
+    cursor: pointer;
+    background: var(--c-accent);
+    border: 1px solid var(--c-accent);
+    border-radius: 0;
+    box-shadow: var(--glow-accent);
+    transition: 0.2s;
+  }
+
+  .invite-form__submit:hover:not(:disabled) {
+    background: var(--c-accent-soft);
+    border-color: var(--c-accent-soft);
+  }
+
+  .invite-form__submit:disabled {
+    cursor: progress;
+    opacity: 0.55;
+  }
+
+  .invite-form__status:empty {
+    display: none;
+  }
+
+  .invite-form__status {
+    font-size: var(--fs-sm);
+    color: var(--c-fg-muted);
+  }
+
+  .invite-form__status[data-tone='error'] {
+    color: var(--c-accent-soft);
+  }
+
+  /* --- Confirmación --------------------------------------------------------- */
+
+  .invite-form__done[hidden] {
+    display: none;
+  }
+
+  .invite-form__done {
+    display: grid;
+    gap: var(--sp-2xs);
+    margin-block-start: var(--sp-2xs);
+    animation: invite-done-in var(--dur-slow) var(--ease-out) both;
+  }
+
+  .invite-form__done-title {
+    font-size: var(--fs-2xl);
+  }
+
+  .invite-form__done-title:focus-visible {
+    outline: none;
+  }
+
+  .invite-form__done-text {
+    color: var(--c-fg-muted);
+  }
+
+  @keyframes invite-done-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .invite-form__done {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  interface SignupResponse {
+    registered: true
+    duplicate: boolean
+  }
+
+  function initInviteForm(): void {
+    const form = document.getElementById('invite-form') as HTMLFormElement | null
+    const status = document.getElementById('invite-status')
+    const done = document.getElementById('invite-done')
+    if (!form || !status || !done) return
+
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
+    const doneTitle = document.getElementById('invite-done-title')!
+    const doneText = document.getElementById('invite-done-text')!
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+
+      // Validación nativa antes de tocar la red.
+      if (!form.checkValidity()) {
+        form.reportValidity()
+        return
+      }
+
+      submit.disabled = true
+      status.dataset.tone = 'info'
+      status.textContent = 'Apuntándote…'
+
+      const entries = Object.fromEntries(new FormData(form).entries()) as Record<string, string>
+
+      // Los opcionales vacíos no se mandan: el DTO los valida solo si vienen,
+      // y una cadena vacía haría fallar la validación de longitud.
+      const payload = Object.fromEntries(
+        Object.entries(entries).filter(([, value]) => value.trim() !== ''),
+      )
+
+      try {
+        const response = await fetch(`${form.dataset.api}/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (response.status === 429) {
+          status.dataset.tone = 'error'
+          status.textContent = 'Has enviado demasiadas veces. Prueba dentro de unos minutos.'
+          return
+        }
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+        const result = (await response.json()) as SignupResponse
+
+        doneTitle.textContent = result.duplicate ? 'Ya estabas en la lista.' : 'Estás en la lista.'
+        doneText.textContent = result.duplicate
+          ? 'Ese correo ya estaba apuntado, así que no hemos duplicado nada.'
+          : 'Te llega la invitación por correo en cuanto se abra la puerta.'
+
+        status.textContent = ''
+        form.hidden = true
+        done.hidden = false
+        doneTitle.focus()
+
+        document.dispatchEvent(
+          new CustomEvent('thedoor:signup-done', { detail: { duplicate: result.duplicate } }),
+        )
+      } catch {
+        status.dataset.tone = 'error'
+        status.textContent = 'No hemos podido apuntarte. Inténtalo de nuevo en unos minutos.'
+      } finally {
+        submit.disabled = false
+      }
+    })
+  }
+
+  initInviteForm()
+  document.addEventListener('astro:after-swap', initInviteForm)
+</script>

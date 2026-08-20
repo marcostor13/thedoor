@@ -1,0 +1,198 @@
+---
+/**
+ * Landing de invitación — el enlace que se manda por WhatsApp o correo.
+ *
+ * No es el registro de la web (/registro) y no debe parecerlo: allí conviven
+ * dos públicos, tres pasos y la navegación del sitio; aquí hay una frase, un
+ * formulario y nada más. Quien abre este enlace ya viene invitado — lo único
+ * que le falta es dejar su correo.
+ *
+ * Sin cabecera ni pie (`chrome={false}`) y sin indexar (`noindex`): se reparte
+ * a mano, no se busca en Google.
+ *
+ * El cuerpo vive aquí y no en la página porque hay dos rutas que lo pintan
+ * igual: la genérica (/invitacion) y la de cada anfitriona
+ * (/invitacion/<slug>). Lo único que cambia entre ellas es `host`.
+ */
+import Layout from '../layouts/Layout.astro'
+import DoorMark from './DoorMark.astro'
+import Logo from './Logo.astro'
+import InviteForm from './InviteForm.astro'
+import { INVITE, INVITE_EVENT, hasEventDetails, type InviteHost } from '../data/invite'
+import { SITE } from '../data/navigation'
+
+interface Props {
+  /** Quién reparte este enlace. Sin ella es la invitación genérica. */
+  host?: InviteHost
+}
+
+const { host } = Astro.props
+
+// Lugar y fecha solo se anuncian cuando existen. Mientras no haya flyer, la
+// línea entera desaparece en vez de dejar un hueco o un «por confirmar».
+const eventLine = [INVITE_EVENT.name, INVITE_EVENT.date, INVITE_EVENT.place]
+  .filter(Boolean)
+  .join(' · ')
+
+// El antetítulo es el único sitio donde se nota de quién viene el enlace: dice
+// quién invita en vez de la etiqueta genérica, sin añadir una línea más.
+const eyebrow = host ? INVITE.hostEyebrow(host.name) : INVITE.eyebrow
+
+const description = host
+  ? `${INVITE.hostEyebrow(host.name)} a la lista de The Door PR. ${INVITE.title}.`
+  : INVITE.title
+---
+
+<Layout
+  title={`${INVITE.cta} — ${SITE.name}`}
+  description={description}
+  chrome={false}
+  noindex
+>
+  <section class="invite">
+    <div class="invite__card">
+      <DoorMark class="invite__mark" id="invite" staged entrance="full" />
+
+      <Logo class="invite__wordmark" />
+
+      {/* La petición desaparece en cuanto está hecha: al confirmarse el alta,
+          este bloque se oculta y el titular pasa a ser el del formulario. */}
+      <div class="invite__prompt" id="invite-prompt">
+        <p class="invite__eyebrow">— {eyebrow}</p>
+
+        <h1 class="invite__title">{INVITE.title}</h1>
+
+        {hasEventDetails && <p class="invite__event">{eventLine}</p>}
+      </div>
+
+      <InviteForm host={host?.name} />
+
+      <p class="invite__legal">{INVITE.legal}</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* Una sola columna centrada, del ancho de un móvil: la página se lee igual
+     en la mano y en un portátil, que es donde va a caer el enlace. */
+  .invite {
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: var(--sp-lg) var(--gutter);
+  }
+
+  .invite__card {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    max-width: 26rem;
+    gap: var(--sp-2xs);
+    text-align: center;
+  }
+
+  /* La puerta se mide por altura y el aspect-ratio deduce el ancho, para que
+     nunca desborde la pantalla. Misma regla que en la portada. */
+  :global(.invite__mark) {
+    aspect-ratio: 24 / 34;
+    width: auto;
+    height: min(22vh, 10rem);
+    max-width: 100%;
+  }
+
+  :global(.invite__wordmark) {
+    font-size: var(--fs-lg);
+  }
+
+  .invite__prompt {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+  }
+
+  .invite__prompt[hidden] {
+    display: none;
+  }
+
+  .invite__eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--c-accent);
+    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
+  }
+
+  .invite__title {
+    /* Más pequeño que un h1 del sitio: aquí el titular es una instrucción,
+       no un cartel. Sin `max-width` propio manda el ancho de la tarjeta, que
+       es lo que lo deja en tres líneas en vez de en cuatro. */
+    margin-block: var(--sp-3xs) var(--sp-sm);
+    font-size: var(--fs-2xl);
+    line-height: var(--lh-snug);
+  }
+
+  .invite__event {
+    margin-block-start: calc(var(--sp-sm) * -1);
+    margin-block-end: var(--sp-sm);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .invite__legal {
+    max-width: var(--measure-sm);
+    margin-block-start: var(--sp-md);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.7;
+    letter-spacing: var(--ls-normal);
+    color: var(--c-fg-muted);
+    opacity: 0.7;
+  }
+
+  /* Pantallas bajas —móvil apaisado, portátiles pequeños—: la puerta cede
+     altura antes que el formulario, que es lo único que hay que ver. */
+  @media (max-height: 760px) {
+    :global(.invite__mark) {
+      height: min(16vh, 7rem);
+    }
+
+    .invite__title {
+      font-size: var(--fs-xl);
+    }
+
+    .invite__legal {
+      margin-block-start: var(--sp-sm);
+    }
+  }
+</style>
+
+<script>
+  /**
+   * La recompensa del alta: cuando el registro se acepta, la puerta se abre de
+   * par en par. La animación vive en DoorMark.astro; aquí solo se le pide
+   * entrar en ese estado.
+   */
+  function initInviteDoor(): void {
+    const mark = document.querySelector<SVGElement>('.invite__mark')
+    const prompt = document.getElementById('invite-prompt')
+    if (!mark) return
+
+    document.addEventListener(
+      'thedoor:signup-done',
+      () => {
+        mark.classList.add('dm-opened')
+        // «Regístrate aquí» ya no le habla a nadie una vez registrado: se va
+        // para que el único titular de la página sea la confirmación.
+        if (prompt) prompt.hidden = true
+      },
+      { once: true },
+    )
+  }
+
+  initInviteDoor()
+  document.addEventListener('astro:after-swap', initInviteDoor)
+</script>

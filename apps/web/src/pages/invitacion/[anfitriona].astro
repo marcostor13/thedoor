@@ -1,0 +1,23 @@
+---
+/**
+ * Un enlace por anfitriona: `/invitacion/sandra`, `/invitacion/ximena`…
+ *
+ * Es la misma landing; lo único que cambia es que el alta llega firmada con su
+ * nombre, así que la lista de registros dice sola quién invitó a quién. Las
+ * rutas salen de INVITE_HOSTS en el build: añadir una anfitriona es añadir una
+ * línea a esa lista.
+ */
+import InvitePage from '../../components/InvitePage.astro'
+import { INVITE_HOSTS } from '../../data/invite'
+
+export function getStaticPaths() {
+  return INVITE_HOSTS.map((host) => ({
+    params: { anfitriona: host.slug },
+    props: { host },
+  }))
+}
+
+const { host } = Astro.props
+---
+
+<InvitePage host={host} />

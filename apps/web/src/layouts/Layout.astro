@@ -10,12 +10,22 @@ interface Props {
   description?: string
   /** La animación de entrada solo se muestra en la portada. */
   intro?: boolean
+  /**
+   * Cabecera y pie del sitio. Las landings de campaña —el enlace que se
+   * reparte por WhatsApp o correo— se sirven sin ellos: si hay navegación,
+   * la página deja de ser una invitación y vuelve a ser la web.
+   */
+  chrome?: boolean
+  /** Un enlace que se reparte a mano no se anuncia en buscadores. */
+  noindex?: boolean
 }
 
 const {
   title,
   description = 'The Door PR — casa de relaciones públicas para hospitalidad, vida nocturna y la gente que llena las salas. Lima, Perú.',
   intro = false,
+  chrome = true,
+  noindex = false,
 } = Astro.props
 
 const canonical = new URL(Astro.url.pathname, Astro.site)
@@ -29,6 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="mask-icon" href="/favicon.svg" color="#ff1a25" />
     <meta name="theme-color" content="#000000" />
@@ -56,17 +67,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
   </head>
 
   <body>
-    <a class="skip-link" href="#main">Saltar al contenido</a>
+    {chrome && <a class="skip-link" href="#main">Saltar al contenido</a>}
 
     {intro && <Intro />}
 
-    <Header />
+    {chrome && <Header />}
 
     <main id="main">
       <slot />
     </main>
 
-    <Footer />
+    {chrome && <Footer />}
 
     <script>
       import { initReveal } from '../scripts/reveal'
