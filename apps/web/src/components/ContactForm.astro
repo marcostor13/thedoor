@@ -34,6 +34,9 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
   .form {
     display: grid;
     gap: var(--sp-md);
+    /* A sangre el formulario podría estirarse media pantalla: los campos
+       dejan de leerse como una unidad pasada esta medida. */
+    max-width: var(--measure-md);
     margin-block-start: var(--sp-lg);
   }
 

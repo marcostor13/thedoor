@@ -46,20 +46,20 @@ docs/     Documentación de operaciones
 
 ## Requisitos
 
-- Node.js 22 o superior
+- Bun 1.3 o superior
 - Una instancia de MongoDB accesible (Atlas o local) para el backend
 
 ## Puesta en marcha
 
 ```bash
-npm install
+bun install
 cp .env.example .env    # y rellenar los valores
 ```
 
 ```bash
-npm run dev             # frontend y backend a la vez
-npm run dev:web         # solo Astro   → http://localhost:4321
-npm run dev:api         # solo NestJS  → http://localhost:3000
+bun run dev             # frontend y backend a la vez
+bun run dev:web         # solo Astro   → http://localhost:4321
+bun run dev:api         # solo NestJS  → http://localhost:3000
 ```
 
 El backend no arranca sin `MONGO_URI`: falla de forma explícita en el arranque
@@ -69,10 +69,10 @@ en lugar de quedarse a medias.
 
 | Comando | Qué hace |
 |---|---|
-| `npm run build` | Compila ambas aplicaciones |
-| `npm test` | Tests de todos los workspaces |
-| `npm run deploy -- --list` | Lista proyectos y aplicaciones de Coolify |
-| `npm run dns -- --dry-run` | Muestra los cambios de DNS sin aplicarlos |
+| `bun run build` | Compila ambas aplicaciones |
+| `bun run test` | Tests de todos los workspaces |
+| `bun run deploy --list` | Lista proyectos y aplicaciones de Coolify |
+| `bun run dns --dry-run` | Muestra los cambios de DNS sin aplicarlos |
 
 ## API
 

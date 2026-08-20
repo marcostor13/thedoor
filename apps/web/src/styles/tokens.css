@@ -76,10 +76,19 @@
   --sp-2xl: 6rem;
   --sp-3xl: 9rem;
 
-  /* --- Layout ------------------------------------------------------------- */
-  --container-max: 84rem;
+  /* --- Layout ---------------------------------------------------------------
+     El sitio es a sangre: el contenedor no recorta el ancho de la pantalla,
+     solo garantiza aire lateral. Quien controla la legibilidad es cada bloque
+     de texto con su propio max-width (--measure-*), no el contenedor.
+  ------------------------------------------------------------------------- */
+  --container-max: 100%;
   --container-narrow: 48rem;
-  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --gutter: clamp(1.25rem, 4.5vw, 5.5rem);
+
+  /* Medidas de lectura: ningún párrafo debe cruzar una pantalla ancha. */
+  --measure-sm: 34rem;
+  --measure-md: 46rem;
+  --measure-lg: 62rem;
 
   /* --- Bordes y sombras --------------------------------------------------- */
   --radius-sm: 2px;
@@ -99,10 +108,12 @@
   ------------------------------------------------------------------------- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Batiente: arranca perezoso, gana peso y asienta con un punto de rebote. */
+  --ease-door: cubic-bezier(0.62, 0.02, 0.2, 1.06);
   --dur-fast: 200ms;
   --dur-base: 400ms;
   --dur-slow: 700ms;
-  --dur-intro: 1900ms;
+  --dur-intro: 3650ms;
 
   /* --- Capas -------------------------------------------------------------- */
   --z-base: 0;

@@ -30,6 +30,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="mask-icon" href="/favicon.svg" color="#ff1a25" />
+    <meta name="theme-color" content="#000000" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -68,8 +70,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
 
     <script>
       import { initReveal } from '../scripts/reveal'
+      import { initHeroDoor } from '../scripts/door'
+
       initReveal()
-      document.addEventListener('astro:after-swap', initReveal)
+      initHeroDoor()
+
+      document.addEventListener('astro:after-swap', () => {
+        initReveal()
+        initHeroDoor()
+      })
     </script>
   </body>
 </html>

@@ -1,12 +1,18 @@
 ---
 import Logo from './Logo.astro'
+import DoorGlyph from './DoorGlyph.astro'
 import { NAV_LINKS, SITE } from '../data/navigation'
 ---
 
 <header class="header">
   <div class="container header__inner">
     <a class="header__brand" href="/#top" aria-label={`${SITE.name} — inicio`}>
-      <Logo />
+      <DoorGlyph class="header__glyph" id="header" />
+      <span class="header__rule" aria-hidden="true"></span>
+      <span class="header__brand-text">
+        <Logo class="header__wordmark" />
+        <span class="header__kicker">PR House — Lima</span>
+      </span>
     </a>
 
     <nav class="header__nav" aria-label="Navegación principal">
@@ -30,7 +36,7 @@ import { NAV_LINKS, SITE } from '../data/navigation'
         <button type="button" class="lang-toggle__btn" aria-pressed="false">EN</button>
       </div>
 
-      <a class="header__cta" href="/#apply">{SITE.cta} →</a>
+      <a class="header__cta" href="/registro/">{SITE.cta} →</a>
     </div>
   </div>
 </header>
@@ -50,12 +56,63 @@ import { NAV_LINKS, SITE } from '../data/navigation'
     gap: var(--sp-md);
     align-items: center;
     justify-content: space-between;
-    min-height: 4.5rem;
+    min-height: 4.75rem;
   }
 
+  /* Lockup: glifo · filete · wordmark sobre kicker. El filete alinea las dos
+     mitades y le da al conjunto el aire editorial del resto del sitio. */
   .header__brand {
-    display: block;
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 0.625rem;
+    align-items: center;
     text-decoration: none;
+  }
+
+  /* El glifo se mide contra la altura de la caja de texto del lockup, no
+     contra la cabecera: a 2.25rem competía con el wordmark en vez de
+     acompañarlo. */
+  :global(.header__glyph) {
+    width: auto;
+    height: 1.6rem;
+  }
+
+  .header__rule {
+    width: 1px;
+    height: 1.4rem;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--c-border-strong) 25%,
+      var(--c-border-strong) 75%,
+      transparent
+    );
+  }
+
+  .header__brand-text {
+    display: grid;
+    gap: 4px;
+  }
+
+  :global(.header__wordmark) {
+    font-size: var(--fs-lg);
+    line-height: 1;
+  }
+
+  .header__kicker {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    line-height: 1;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  @media (max-width: 420px) {
+    .header__rule,
+    .header__kicker {
+      display: none;
+    }
   }
 
   .header__nav {

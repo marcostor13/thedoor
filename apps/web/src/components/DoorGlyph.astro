@@ -1,0 +1,125 @@
+---
+/**
+ * Versión compacta de la marca para lockups pequeños (cabecera, pie,
+ * favicon): mismo lenguaje que DoorMark.astro —arco de medio punto,
+ * imposta, abanico y hojas entreabiertas al 50 %— reducido a lo que
+ * todavía se lee a 32 px. Al pasar el ratón por la marca, la puerta se
+ * abre un poco más y la luz sube.
+ */
+interface Props {
+  class?: string
+  id?: string
+}
+
+const { class: className, id = 'g1' } = Astro.props
+---
+
+<svg
+  class={`doorglyph ${className ?? ''}`}
+  viewBox="0 0 28 36"
+  role="presentation"
+  aria-hidden="true"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id={`dg-light-${id}`} x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ff1a25" stop-opacity="0.35"></stop>
+      <stop offset="0.45" stop-color="#fff1ea" stop-opacity="0.95"></stop>
+      <stop offset="1" stop-color="#ff5560" stop-opacity="0.55"></stop>
+    </linearGradient>
+    <radialGradient id={`dg-pool-${id}`} cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff5560" stop-opacity="0.75"></stop>
+      <stop offset="1" stop-color="#ff1a25" stop-opacity="0"></stop>
+    </radialGradient>
+    <clipPath id={`dg-clip-${id}`}>
+      <path d="M 6 34 L 6 13 A 8 8 0 0 1 22 13 L 22 34 Z"></path>
+    </clipPath>
+  </defs>
+
+  <g class="dg-light" clip-path={`url(#dg-clip-${id})`}>
+    <rect x="6" y="4" width="16" height="30" fill={`url(#dg-light-${id})`}></rect>
+  </g>
+
+  <g class="dg-leaves" fill="#000">
+    <path class="dg-leaf dg-leaf--left" d="M 6.6 33.4 L 6.6 15 L 14 15 L 14 33.4 Z"></path>
+    <path class="dg-leaf dg-leaf--right" d="M 21.4 33.4 L 21.4 15 L 14 15 L 14 33.4 Z"></path>
+  </g>
+
+  <g
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  >
+    <path d="M 2 34.5 L 2 13 A 12 12 0 0 1 26 13 L 26 34.5" stroke-width="1.2"></path>
+    <path d="M 6 34 L 6 13 A 8 8 0 0 1 22 13 L 22 34" stroke-width="0.9" opacity="0.85"></path>
+    <line x1="4.6" y1="13" x2="23.4" y2="13" stroke-width="0.9"></line>
+    <g stroke-width="0.6" opacity="0.75">
+      <line x1="14" y1="13" x2="19.66" y2="7.34"></line>
+      <line x1="14" y1="13" x2="14" y2="5"></line>
+      <line x1="14" y1="13" x2="8.34" y2="7.34"></line>
+    </g>
+  </g>
+
+  <g class="dg-leaf-lines" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.9">
+    <path class="dg-leaf dg-leaf--left" d="M 6.6 33.4 L 6.6 15 L 14 15 L 14 33.4"></path>
+    <path class="dg-leaf dg-leaf--right" d="M 21.4 33.4 L 21.4 15 L 14 15 L 14 33.4"></path>
+  </g>
+
+  <ellipse class="dg-pool" cx="14" cy="34" rx="10" ry="2.4" fill={`url(#dg-pool-${id})`}></ellipse>
+</svg>
+
+<style>
+  .doorglyph {
+    overflow: visible;
+    color: var(--c-accent);
+    /* Apertura de reposo: mismas hojas al 50 % que la marca grande. */
+    --dg-leaf: 0.5;
+    filter: drop-shadow(0 0 3px rgb(255 26 37 / 0.45));
+    transition: filter var(--dur-base) var(--ease-out);
+  }
+
+  .dg-leaf {
+    transform-box: fill-box;
+    transform: scaleX(var(--dg-leaf));
+    transition: transform var(--dur-base) var(--ease-door);
+  }
+
+  .dg-leaf--left {
+    transform-origin: 0% 50%;
+  }
+
+  .dg-leaf--right {
+    transform-origin: 100% 50%;
+  }
+
+  .dg-light,
+  .dg-pool {
+    opacity: 0.9;
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+
+  /* La apertura responde al hover del lockup completo, no solo del svg. */
+  :global(a:hover) .doorglyph,
+  :global(a:focus-visible) .doorglyph {
+    --dg-leaf: 0.26;
+    filter: drop-shadow(0 0 6px rgb(255 26 37 / 0.75));
+  }
+
+  :global(a:hover) .dg-light,
+  :global(a:focus-visible) .dg-light,
+  :global(a:hover) .dg-pool,
+  :global(a:focus-visible) .dg-pool {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dg-leaf,
+    .doorglyph,
+    .dg-light,
+    .dg-pool {
+      transition: none;
+    }
+  }
+</style>

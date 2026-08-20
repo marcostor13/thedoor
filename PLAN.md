@@ -64,8 +64,47 @@ thedoor/
 └── .env.example        Claves sin valores
 ```
 
-npm workspaces, Node 22. Se eligió npm porque es lo que ya usa el runner y
-evita añadir un gestor de paquetes más a la cadena de despliegue.
+Bun workspaces, Bun 1.3 como gestor de paquetes, ejecutor de scripts y runtime
+en producción. Un único binario cubre instalación, tests y arranque, así que la
+cadena de despliegue no depende de Node ni de npm en ningún punto.
+
+La API se sigue compilando con `nest build` (tsc) y no con el bundler de Bun:
+Nest resuelve las dependencias a partir de los metadatos que emite
+`emitDecoratorMetadata`, y tsc es la referencia para emitirlos. Bun ejecuta el
+`dist/` resultante.
+
+### Salvedades de Bun 1.3 encontradas al migrar
+
+**1. mongoose no carga.** `bson@7` llama sin protección a
+`v8.startupSnapshot.isBuildingSnapshot()`, que Bun aún no implementa, dentro de
+un bloque `static {}`. `apps/api/src/bun-compat.ts` rellena el método solo
+cuando la llamada real falla, y se importa antes que nada en `main.ts`.
+
+**2. Los CLI traen shebang de node.** Los binarios de Astro y del CLI de Nest
+empiezan por `#!/usr/bin/env node`. `bun run` a secas los lanza con node de
+verdad, y la imagen `oven/bun` no incluye node. Por eso los scripts `build*` de
+la raíz llevan `--bun`, que hace que los ejecute Bun. Comprobado quitando node
+del PATH: los dos builds pasan.
+
+**3. El CLI de Nest en watch revienta bajo Bun.** `nest start --watch` ejecutado
+por Bun termina en segfault. En dev el CLI se queda por tanto en node y solo la
+aplicación corre en Bun, vía `nest start --watch --exec bun`. No afecta a
+producción: allí no interviene el CLI, se ejecuta el `dist/` ya compilado.
+
+**4. Ejecutar el TypeScript directo no es viable todavía.** `bun --watch
+src/main.ts` evitaría el CLI, pero Bun evalúa el grafo CommonJS antes que los
+imports ESM con efecto lateral (el shim llega tarde) y su interop de exports
+nombrados falla con mongoose (`Export named 'Connection' not found`). El
+`dist/` compilado, al ser CJS, no tiene ninguno de los dos problemas.
+
+Reparto de runtimes que resulta de todo lo anterior:
+
+| Proceso | Dev | Producción |
+|---|---|---|
+| Aplicación NestJS | Bun | Bun |
+| CLI de Nest (compilar) | node | Bun (`--bun`) |
+| CLI de Astro | node | Bun (`--bun`) |
+| Sitio Astro servido | — | nginx, estático (sin runtime JS) |
 
 ---
 

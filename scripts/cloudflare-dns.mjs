@@ -1,20 +1,26 @@
 #!/usr/bin/env node
 /**
- * Crea (o actualiza) los registros DNS A del frontend y del backend en
- * Cloudflare, apuntando a la IP del servidor de Coolify.
+ * Crea (o actualiza) los registros DNS del frontend y del backend en
+ * Cloudflare, apuntando al Cloudflare Tunnel por el que Coolify publica sus
+ * aplicaciones.
  *
- * Es idempotente: si el registro ya existe con el valor correcto no hace nada,
- * y si existe con otro valor lo actualiza.
+ * Por qué un CNAME al túnel y no un registro A:
+ *   el servidor de Coolify no está expuesto por IP pública — se anuncia en
+ *   Cloudflare a través de `cloudflared`. Todos los hostnames que ya sirve
+ *   (incluido el propio panel) son CNAME a `<tunnel>.cfargotunnel.com` con el
+ *   proxy activado, que además es obligatorio: ese dominio solo resuelve desde
+ *   el borde de Cloudflare. El TLS termina ahí, así que tampoco hace falta el
+ *   desafío HTTP de Let's Encrypt contra el origen.
  *
- *   node scripts/cloudflare-dns.mjs            # aplica los cambios
- *   node scripts/cloudflare-dns.mjs --dry-run  # solo muestra qué haría
+ * Si algún día se publica directamente contra una IP, define `SERVER_IP` y
+ * el script vuelve al modelo de registros A.
  *
- * Variables necesarias: CLOUDFLARE_API_TOKEN, SERVER_IP, FRONTEND_DOMAIN,
- * BACKEND_DOMAIN. Opcional: CLOUDFLARE_ZONE_NAME (si no, se deduce del
- * dominio raíz de FRONTEND_DOMAIN).
+ *   bun scripts/cloudflare-dns.mjs            # aplica los cambios
+ *   bun scripts/cloudflare-dns.mjs --dry-run  # solo muestra qué haría
  *
- * ⚠️  Sin verificar contra la API real: api.cloudflare.com está bloqueado por
- * la política de egress de la sesión en la que se escribió este script.
+ * Variables necesarias: CLOUDFLARE_API_TOKEN, FRONTEND_DOMAIN, BACKEND_DOMAIN
+ * y una de CLOUDFLARE_TUNNEL_ID o SERVER_IP.
+ * Opcional: CLOUDFLARE_ZONE_NAME (si no, se deduce del dominio raíz).
  */
 
 import { loadEnv, requireEnv, log, fail } from './lib/env.mjs'
@@ -26,13 +32,30 @@ loadEnv()
 const dryRun = process.argv.includes('--dry-run')
 
 const token = requireEnv('CLOUDFLARE_API_TOKEN')
-const serverIp = requireEnv('SERVER_IP')
 const frontendDomain = requireEnv('FRONTEND_DOMAIN')
 const backendDomain = requireEnv('BACKEND_DOMAIN')
 
-// El dominio raíz son las dos últimas etiquetas. Vale para
-// `marcostorresalarcon.com`, pero no para sufijos de dos niveles tipo
-// `com.pe`: en ese caso hay que fijar CLOUDFLARE_ZONE_NAME a mano.
+const tunnelId = process.env.CLOUDFLARE_TUNNEL_ID?.trim()
+const serverIp = process.env.SERVER_IP?.trim()
+
+if (!tunnelId && !serverIp) {
+  fail(
+    'Define CLOUDFLARE_TUNNEL_ID (modelo actual, por Cloudflare Tunnel) o\n' +
+      '  SERVER_IP (si publicas contra la IP pública del servidor).',
+  )
+}
+
+/**
+ * Con túnel: CNAME proxied. Con IP: registro A sin proxy, para que Coolify
+ * pueda resolver el desafío HTTP de Let's Encrypt contra el origen.
+ */
+const target = tunnelId
+  ? { type: 'CNAME', content: `${tunnelId}.cfargotunnel.com`, proxied: true }
+  : { type: 'A', content: serverIp, proxied: false }
+
+// El dominio raíz son las dos últimas etiquetas. Vale para `thedoorpr.com`,
+// pero no para sufijos de dos niveles tipo `com.pe`: en ese caso hay que fijar
+// CLOUDFLARE_ZONE_NAME a mano.
 const zoneName =
   process.env.CLOUDFLARE_ZONE_NAME ?? frontendDomain.split('.').slice(-2).join('.')
 
@@ -65,52 +88,58 @@ async function resolveZoneId() {
 }
 
 async function upsertRecord(zoneId, name) {
-  const existing = await cf(
-    `/zones/${zoneId}/dns_records?type=A&name=${encodeURIComponent(name)}`,
-  )
+  // Se buscan por nombre sin filtrar por tipo: al cambiar de modelo (A ↔ CNAME)
+  // hay que ver el registro viejo aunque sea de otro tipo, o Cloudflare
+  // rechazaría el nuevo por conflicto.
+  const existing = await cf(`/zones/${zoneId}/dns_records?name=${encodeURIComponent(name)}`)
+  const conflicting = existing.filter((record) => record.type === 'A' || record.type === 'CNAME')
 
   const payload = {
-    type: 'A',
+    type: target.type,
     name,
-    content: serverIp,
+    content: target.content,
+    proxied: target.proxied,
     ttl: 1, // 1 = automático
-    // Proxy desactivado: Coolify emite y renueva los certificados vía
-    // Let's Encrypt con un desafío HTTP, que el proxy naranja rompería.
-    // Se puede activar después, con el certificado ya emitido.
-    proxied: false,
+    comment: 'Coolify',
   }
 
-  if (existing.length === 0) {
-    if (dryRun) return log(`[dry-run] crearía  A ${name} → ${serverIp}`)
-    await cf(`/zones/${zoneId}/dns_records`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
-    return log(`creado      A ${name} → ${serverIp}`)
+  const label = `${target.type} ${name} → ${target.content}`
+
+  if (conflicting.length === 0) {
+    if (dryRun) return log(`[dry-run] crearía  ${label}`)
+    await cf(`/zones/${zoneId}/dns_records`, { method: 'POST', body: JSON.stringify(payload) })
+    return log(`creado      ${label}`)
   }
 
-  const record = existing[0]
+  const [record, ...duplicates] = conflicting
 
-  if (record.content === serverIp) {
-    return log(`sin cambios A ${name} → ${serverIp}`)
+  // Un nombre con varios registros A/CNAME a la vez es una configuración rota:
+  // se avisa en lugar de elegir uno en silencio.
+  if (duplicates.length > 0) {
+    log(`⚠ ${name} tiene ${conflicting.length} registros A/CNAME. Revísalo a mano en Cloudflare.`)
+  }
+
+  if (record.type === target.type && record.content === target.content && record.proxied === target.proxied) {
+    return log(`sin cambios ${label}`)
   }
 
   if (dryRun) {
-    return log(`[dry-run] actualizaría A ${name}: ${record.content} → ${serverIp}`)
+    return log(`[dry-run] actualizaría ${name}: ${record.type} ${record.content} → ${target.type} ${target.content}`)
   }
 
   await cf(`/zones/${zoneId}/dns_records/${record.id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
-  log(`actualizado A ${name}: ${record.content} → ${serverIp}`)
+  log(`actualizado ${name}: ${record.type} ${record.content} → ${target.type} ${target.content}`)
 }
 
 const zoneId = await resolveZoneId()
 log(`Zona "${zoneName}" resuelta (${zoneId})`)
+log(`Destino: ${target.type} → ${target.content} (proxy ${target.proxied ? 'activado' : 'desactivado'})\n`)
 
 for (const domain of [frontendDomain, backendDomain]) {
   await upsertRecord(zoneId, domain)
 }
 
-log('DNS al día.')
+log('\nDNS al día.')
