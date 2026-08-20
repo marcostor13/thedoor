@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { Test } from '@nestjs/testing'
 import { getModelToken } from '@nestjs/mongoose'
 import { BadRequestException } from '@nestjs/common'
-import { SignupService } from './signup.service'
+import { SignupService, normalizeInstagram } from './signup.service'
 import { Signup } from './signup.schema'
 import { MailService } from '../mail/mail.service'
 
@@ -46,6 +46,7 @@ describe('SignupService', () => {
       name: 'Ana',
       email: 'ana@example.com',
       phone: undefined,
+      instagram: undefined,
       reference: '@ana',
       city: 'Lima',
     })
@@ -84,6 +85,14 @@ describe('SignupService', () => {
     })
 
     await expect(service.create(guest)).rejects.toThrow('conexión perdida')
+  })
+
+  it('guarda el Instagram ya normalizado', async () => {
+    await service.create({ ...guest, instagram: 'https://www.instagram.com/Ana.Torres/?igsh=abc' })
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ instagram: '@ana.torres' }),
+    )
   })
 
   it('confirma el alta por correo', async () => {
@@ -142,5 +151,44 @@ describe('SignupService', () => {
     // probablemente no es de nadie.
     expect(create).not.toHaveBeenCalled()
     expect(sendSignupConfirmation).not.toHaveBeenCalled()
+  })
+})
+
+describe('normalizeInstagram', () => {
+  it('acepta las cinco formas en que la gente lo escribe', () => {
+    // La misma cuenta, escrita como la escribe cada uno.
+    for (const entrada of [
+      '@ana.torres',
+      'ana.torres',
+      '  @Ana.Torres  ',
+      'instagram.com/ana.torres',
+      'https://www.instagram.com/ana.torres/',
+    ]) {
+      expect(normalizeInstagram(entrada)).toBe('@ana.torres')
+    }
+  })
+
+  it('descarta lo que Instagram cuelga detrás al compartir', () => {
+    expect(normalizeInstagram('https://instagram.com/ana.torres?igsh=MXY123')).toBe('@ana.torres')
+    expect(normalizeInstagram('instagram.com/ana.torres#top')).toBe('@ana.torres')
+  })
+
+  it('no se queda con un vacío disfrazado', () => {
+    expect(normalizeInstagram(undefined)).toBeUndefined()
+    expect(normalizeInstagram('   ')).toBeUndefined()
+    expect(normalizeInstagram('@')).toBeUndefined()
+    expect(normalizeInstagram('https://instagram.com/')).toBeUndefined()
+  })
+
+  it('respeta lo que no es un handle en vez de inventarse uno', () => {
+    // Es un campo opcional de un formulario público: perder el alta porque
+    // alguien escribió raro su Instagram sería mucho peor que guardarlo tal
+    // cual y que lo lea una persona.
+    expect(normalizeInstagram('no tengo')).toBe('no tengo')
+    expect(normalizeInstagram('@ana torres')).toBe('@ana torres')
+  })
+
+  it('deja el handle en minúsculas, que es como Instagram lo trata', () => {
+    expect(normalizeInstagram('@ANA_Torres')).toBe('@ana_torres')
   })
 })

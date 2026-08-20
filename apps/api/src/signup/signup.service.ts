@@ -45,6 +45,7 @@ export class SignupService {
         name: dto.name,
         email: dto.email,
         phone: dto.phone,
+        instagram: normalizeInstagram(dto.instagram),
         reference: dto.reference,
         city: dto.city,
       })
@@ -84,6 +85,39 @@ export class SignupService {
       .lean()
       .exec()
   }
+}
+
+/**
+ * Instagram, tal como lo escribe la gente, a `@usuario`.
+ *
+ * Nadie lo pone igual: unos escriben el arroba, otros no, y quien lo copia
+ * del navegador pega la URL entera con su `?igsh=…` detrás. Guardarlo crudo
+ * deja una lista donde el mismo perfil aparece de cuatro formas y no se puede
+ * ni ordenar ni buscar.
+ *
+ * Lo que no encaje como handle se guarda limpio pero tal cual: esto es un
+ * campo opcional de un formulario público, y perder un alta porque alguien
+ * escribió raro su Instagram sería un mal negocio.
+ */
+export function normalizeInstagram(value?: string): string | undefined {
+  const raw = value?.trim()
+  if (!raw) return undefined
+
+  const handle = raw
+    // URL pegada del navegador, con o sin protocolo y con o sin www.
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/^instagram\.com\//i, '')
+    // Lo que Instagram cuelga detrás al compartir.
+    .replace(/[?#].*$/, '')
+    .replace(/\/+$/, '')
+    .replace(/^@+/, '')
+    .trim()
+
+  if (!handle) return undefined
+
+  // Handle válido de Instagram: letras, números, punto y guion bajo, ≤ 30.
+  return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? `@${handle.toLowerCase()}` : raw
 }
 
 function isDuplicateKeyError(error: unknown): boolean {

@@ -62,20 +62,42 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
       />
     </div>
 
-    <div class="invite-form__field">
-      <label class="invite-form__label" for="invite-phone">
-        WhatsApp <span class="invite-form__optional">— opcional</span>
-      </label>
-      <input
-        class="invite-form__input"
-        id="invite-phone"
-        name="phone"
-        type="tel"
-        maxlength="40"
-        autocomplete="tel"
-        inputmode="tel"
-        placeholder="+51 999 999 999"
-      />
+    {/* Los dos opcionales comparten fila: por separado añadían un campo de
+        alto a una página donde la puerta ya se lleva un tercio de pantalla, y
+        pedir cuatro datos en columna parece más trabajo del que es. */}
+    <div class="invite-form__row">
+      <div class="invite-form__field">
+        <label class="invite-form__label" for="invite-phone">
+          WhatsApp <span class="invite-form__optional">— opcional</span>
+        </label>
+        <input
+          class="invite-form__input"
+          id="invite-phone"
+          name="phone"
+          type="tel"
+          maxlength="40"
+          autocomplete="tel"
+          inputmode="tel"
+          placeholder="+51 999 999 999"
+        />
+      </div>
+
+      <div class="invite-form__field">
+        <label class="invite-form__label" for="invite-instagram">
+          Instagram <span class="invite-form__optional">— opcional</span>
+        </label>
+        <input
+          class="invite-form__input"
+          id="invite-instagram"
+          name="instagram"
+          type="text"
+          maxlength="200"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="@usuario"
+        />
+      </div>
     </div>
 
     {/* Trampa para bots: un campo que una persona nunca rellena. El backend
@@ -119,7 +141,23 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
   .invite-form__field {
     display: grid;
     gap: var(--sp-3xs);
+    align-content: start;
+    min-width: 0;
     text-align: start;
+  }
+
+  .invite-form__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-xs);
+  }
+
+  /* En móviles estrechos «+51 999 999 999» y «@usuario» dejan de caber uno al
+     lado del otro y la fila se parte. */
+  @media (max-width: 380px) {
+    .invite-form__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .invite-form__label {

@@ -26,6 +26,10 @@ export class Signup {
   @Prop({ trim: true, maxlength: 40 })
   phone?: string
 
+  /** Handle de Instagram normalizado a `@usuario`. */
+  @Prop({ trim: true, maxlength: 120 })
+  instagram?: string
+
   /** Nombre del local (kind `venue`) o referencia/Instagram (kind `guest`). */
   @Prop({ trim: true, maxlength: 160 })
   reference?: string
