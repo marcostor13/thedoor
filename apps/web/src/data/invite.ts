@@ -24,8 +24,36 @@ export interface InviteEvent {
  */
 export const INVITE_EVENT: InviteEvent = {}
 
+/**
+ * Anfitrionas: cada una reparte su propio enlace (`/invitacion/<slug>`) y el
+ * alta llega marcada con su nombre, así que la lista dice quién invitó a
+ * quién sin preguntárselo a nadie.
+ *
+ * El nombre viaja en el campo `reference` del registro, que para un `guest`
+ * ya significa exactamente eso: quién te refiere. No hace falta tocar el API.
+ *
+ * El `slug` es lo que se pega en WhatsApp: corto, sin acentos y reconocible
+ * de un vistazo por quien lo reparte. Añadir una anfitriona es añadir una
+ * línea aquí; la ruta se genera sola en el build.
+ */
+export interface InviteHost {
+  /** Trozo de URL. Minúsculas, sin acentos ni espacios. */
+  slug: string
+  /** Nombre tal cual se muestra y se guarda en el registro. */
+  name: string
+}
+
+export const INVITE_HOSTS: InviteHost[] = [
+  { slug: 'sandra', name: 'Sandra Valdez' },
+  { slug: 'ximena', name: 'Ximena García Piaggio' },
+  { slug: 'daniela', name: 'Daniela Roda' },
+  { slug: 'paola', name: 'Paola Mendiola' },
+]
+
 export const INVITE = {
   eyebrow: 'Invitación',
+  /** Con anfitriona el antetítulo dice quién invita, en vez de «Invitación». */
+  hostEyebrow: (name: string): string => `Te invita ${name}`,
   title: 'Regístrate aquí para recibir una invitación',
   /** Una sola línea de apoyo. Si necesita dos, sobra. */
   note: 'Lista cerrada — Lima',

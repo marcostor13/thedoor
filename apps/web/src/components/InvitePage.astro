@@ -9,24 +9,43 @@
  *
  * Sin cabecera ni pie (`chrome={false}`) y sin indexar (`noindex`): se reparte
  * a mano, no se busca en Google.
+ *
+ * El cuerpo vive aquí y no en la página porque hay dos rutas que lo pintan
+ * igual: la genérica (/invitacion) y la de cada anfitriona
+ * (/invitacion/<slug>). Lo único que cambia entre ellas es `host`.
  */
 import Layout from '../layouts/Layout.astro'
-import DoorMark from '../components/DoorMark.astro'
-import Logo from '../components/Logo.astro'
-import InviteForm from '../components/InviteForm.astro'
-import { INVITE, INVITE_EVENT, hasEventDetails } from '../data/invite'
+import DoorMark from './DoorMark.astro'
+import Logo from './Logo.astro'
+import InviteForm from './InviteForm.astro'
+import { INVITE, INVITE_EVENT, hasEventDetails, type InviteHost } from '../data/invite'
 import { SITE } from '../data/navigation'
+
+interface Props {
+  /** Quién reparte este enlace. Sin ella es la invitación genérica. */
+  host?: InviteHost
+}
+
+const { host } = Astro.props
 
 // Lugar y fecha solo se anuncian cuando existen. Mientras no haya flyer, la
 // línea entera desaparece en vez de dejar un hueco o un «por confirmar».
 const eventLine = [INVITE_EVENT.name, INVITE_EVENT.date, INVITE_EVENT.place]
   .filter(Boolean)
   .join(' · ')
+
+// El antetítulo es el único sitio donde se nota de quién viene el enlace: dice
+// quién invita en vez de la etiqueta genérica, sin añadir una línea más.
+const eyebrow = host ? INVITE.hostEyebrow(host.name) : INVITE.eyebrow
+
+const description = host
+  ? `${INVITE.hostEyebrow(host.name)} a la lista de The Door PR. ${INVITE.title}.`
+  : INVITE.title
 ---
 
 <Layout
   title={`${INVITE.cta} — ${SITE.name}`}
-  description={INVITE.title}
+  description={description}
   chrome={false}
   noindex
 >
@@ -39,14 +58,14 @@ const eventLine = [INVITE_EVENT.name, INVITE_EVENT.date, INVITE_EVENT.place]
       {/* La petición desaparece en cuanto está hecha: al confirmarse el alta,
           este bloque se oculta y el titular pasa a ser el del formulario. */}
       <div class="invite__prompt" id="invite-prompt">
-        <p class="invite__eyebrow">— {INVITE.eyebrow}</p>
+        <p class="invite__eyebrow">— {eyebrow}</p>
 
         <h1 class="invite__title">{INVITE.title}</h1>
 
         {hasEventDetails && <p class="invite__event">{eventLine}</p>}
       </div>
 
-      <InviteForm />
+      <InviteForm host={host?.name} />
 
       <p class="invite__legal">{INVITE.legal}</p>
     </div>

@@ -13,12 +13,24 @@
  */
 import { INVITE } from '../data/invite'
 
+interface Props {
+  /**
+   * Nombre de la anfitriona que reparte este enlace. Viaja en `reference`,
+   * que para un `guest` ya significa «quién te refiere», así que el registro
+   * queda atribuido sin tocar el API.
+   */
+  host?: string
+}
+
+const { host } = Astro.props
+
 const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 ---
 
 <div class="invite-form">
   <form class="invite-form__form" id="invite-form" data-api={apiUrl} novalidate>
     <input type="hidden" name="kind" value="guest" />
+    {host && <input type="hidden" name="reference" value={host} />}
 
     <div class="invite-form__field">
       <label class="invite-form__label" for="invite-name">Nombre</label>
