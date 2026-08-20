@@ -15,9 +15,9 @@
  * MOVIMIENTO — cada hoja es un sándwich de tres grupos que se multiplican,
  * para que las tres capas de animación no se peleen por `transform`:
  *
- *   .door-leaf           apertura base   scaleX(--leaf) = 0.5 (entreabierta)
- *   └ .door-leaf__swing  entrada         2 → 1  (de cerrada a su sitio)
- *     └ .door-leaf__sway vaivén eterno   1 ↔ 0.84
+ *   .door-leaf           apertura base   scaleX(--leaf) = 0.94 (rendija)
+ *   └ .door-leaf__swing  entrada         --leaf-shut → 1 (de cerrada a su sitio)
+ *     └ .door-leaf__sway vaivén eterno   1 ↔ 0.972
  *
  * El mismo truco con los envoltorios `*-in`: el bucle ambiental vive en el
  * elemento interior y la entrada en el envoltorio, así ninguna de las dos
@@ -517,6 +517,17 @@ const motes = [
        una puerta cerrada con luz detrás y pasaba a ser un portal abierto. */
     --leaf: 0.94;
 
+    /* Cuánto hay que escalar una hoja para que quede CERRADA del todo.
+       Es el inverso de la apertura de reposo, y va calculado y no a mano por
+       una razón que ya costó un fallo: cuando la apertura era 0.5 el valor
+       cerrado era exactamente 2, así que el 2 se escribió como literal en el
+       keyframe de entrada. Al cerrar la puerta hasta la rendija (0.94) ese 2
+       pasó a significar hojas al 188 % de su ancho: nacían montadas la una
+       sobre la otra durante los tres primeros segundos. Derivarlo de --leaf
+       hace que «cerrada» siga queriendo decir cerrada se abra lo que se
+       abra. */
+    --leaf-shut: calc(1 / var(--leaf));
+
     /* -----------------------------------------------------------------------
        GROSORES — el carácter de la marca vive aquí.
 
@@ -670,12 +681,13 @@ const motes = [
     animation: dm-flicker 9s linear infinite;
   }
 
-  /* En reposo el quicio ya no es una rendija sino la columna de luz que
-     ocupa el hueco entreabierto; la entrada la abre desde la cuchilla. */
+  /* La columna de luz llena el hueco que dejan las hojas, ni más ni menos.
+     El ×6 venía de cuando el hueco era un vano entreabierto: sobre la rendija
+     actual se derramaba por encima de los cantos de las dos hojas. */
   .dm-blade {
     transform-box: fill-box;
     transform-origin: center;
-    transform: scaleX(var(--seam, 6));
+    transform: scaleX(var(--seam, 3.1));
   }
 
   /* Zumbido de neón: la carpintería duda un instante de vez en cuando. */
@@ -1086,10 +1098,10 @@ const motes = [
 
   @keyframes dm-blade-wide {
     from {
-      transform: scaleX(6);
+      transform: scaleX(3.1);
     }
     to {
-      transform: scaleX(16);
+      transform: scaleX(18);
     }
   }
 
@@ -1245,11 +1257,11 @@ const motes = [
     }
   }
 
-  /* La hoja gira desde cerrada (×2 sobre la apertura base), pasa un punto de
-     la marca y vuelve, mientras su cara interior recibe la luz. */
+  /* La hoja gira desde cerrada, pasa un punto de la marca y vuelve a su
+     rendija, mientras su cara interior recibe la luz. */
   @keyframes dm-swing-open {
     0% {
-      transform: scaleX(2);
+      transform: scaleX(var(--leaf-shut));
       filter: brightness(0.32) saturate(0.65);
     }
     35% {
@@ -1267,7 +1279,7 @@ const motes = [
 
   @keyframes dm-swing-settle {
     0% {
-      transform: scaleX(0.84);
+      transform: scaleX(0.9);
       filter: brightness(1.3);
     }
     100% {

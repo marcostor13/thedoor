@@ -79,7 +79,7 @@ const description = host
     display: grid;
     place-items: center;
     min-height: 100svh;
-    padding: var(--sp-lg) var(--gutter);
+    padding: var(--sp-md) var(--gutter);
   }
 
   .invite__card {
@@ -87,16 +87,24 @@ const description = host
     justify-items: center;
     width: 100%;
     max-width: 26rem;
-    gap: var(--sp-2xs);
+    /* Apretado a propósito: cada milímetro que no gasta el texto se lo queda
+       la puerta, y lo que hay debajo del titular es el botón. */
+    gap: var(--sp-3xs);
     text-align: center;
   }
 
   /* La puerta se mide por altura y el aspect-ratio deduce el ancho, para que
-     nunca desborde la pantalla. Misma regla que en la portada. */
+     nunca desborde la pantalla. Misma regla que en la portada.
+
+     Manda ella: es la marca y es lo único que se mueve en la página, así que
+     se lleva más de un tercio de la altura de pantalla. Antes cabía todo sin
+     scroll y la puerta salía del tamaño de un icono; ahora la página puede
+     pedir un dedo de scroll en móvil y lo vale — el formulario son tres
+     campos y se ve entero en cuanto se toca el primero. */
   :global(.invite__mark) {
     aspect-ratio: 24 / 34;
     width: auto;
-    height: min(22vh, 10rem);
+    height: min(38vh, 21rem);
     max-width: 100%;
   }
 
@@ -127,8 +135,8 @@ const description = host
     /* Más pequeño que un h1 del sitio: aquí el titular es una instrucción,
        no un cartel. Sin `max-width` propio manda el ancho de la tarjeta, que
        es lo que lo deja en tres líneas en vez de en cuatro. */
-    margin-block: var(--sp-3xs) var(--sp-sm);
-    font-size: var(--fs-2xl);
+    margin-block: var(--sp-2xs) var(--sp-sm);
+    font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
     line-height: var(--lh-snug);
   }
 
@@ -144,7 +152,7 @@ const description = host
 
   .invite__legal {
     max-width: var(--measure-sm);
-    margin-block-start: var(--sp-md);
+    margin-block-start: var(--sp-sm);
     font-family: var(--font-mono);
     font-size: 0.625rem;
     line-height: 1.7;
@@ -154,10 +162,10 @@ const description = host
   }
 
   /* Pantallas bajas —móvil apaisado, portátiles pequeños—: la puerta cede
-     altura antes que el formulario, que es lo único que hay que ver. */
+     altura antes que el formulario, que es lo único que hay que rellenar. */
   @media (max-height: 760px) {
     :global(.invite__mark) {
-      height: min(16vh, 7rem);
+      height: min(30vh, 13rem);
     }
 
     .invite__title {
