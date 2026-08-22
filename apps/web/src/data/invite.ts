@@ -52,12 +52,16 @@ export const INVITE_HOSTS: InviteHost[] = [
 
 export const INVITE = {
   /**
-   * El antetítulo es siempre el mismo, con anfitriona o sin ella: la landing
-   * no dice quién reparte el enlace. El nombre sigue viajando en el alta
-   * (campo `reference`), pero no se enseña — a quien abre el enlace se le
-   * hace una pregunta, no una presentación.
+   * La pregunta de la portada, en dos líneas y con la misma letra: la segunda
+   * en cursiva y en rojo. Es lo único que encabeza la landing —con anfitriona
+   * o sin ella— porque aquí no se dice quién reparte el enlace: el nombre
+   * viaja con el alta (campo `reference`), pero no se enseña.
+   *
+   * Va partida en dos claves y no en una frase porque las dos líneas no se
+   * pintan igual; el salto es del diseño, no del texto.
    */
-  eyebrow: 'Are you in?, or are you out?',
+  question: 'Are you in?',
+  questionAlt: 'Or are you out?',
   title: 'Regístrate aquí para recibir una invitación',
   /** Una sola línea de apoyo. Si necesita dos, sobra. */
   note: 'Lista cerrada — Lima',

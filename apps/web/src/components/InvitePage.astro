@@ -55,9 +55,12 @@ const description = INVITE.title
       {/* La petición desaparece en cuanto está hecha: al confirmarse el alta,
           este bloque se oculta y el titular pasa a ser el del formulario. */}
       <div class="invite__prompt" id="invite-prompt">
-        <p class="invite__eyebrow">{INVITE.eyebrow}</p>
+        <h1 class="invite__question">
+          <span>{INVITE.question}</span>
+          <em>{INVITE.questionAlt}</em>
+        </h1>
 
-        <h1 class="invite__title">{INVITE.title}</h1>
+        <p class="invite__title">{INVITE.title}</p>
 
         {hasEventDetails && <p class="invite__event">{eventLine}</p>}
       </div>
@@ -119,23 +122,33 @@ const description = INVITE.title
     display: none;
   }
 
-  /* Frase, no etiqueta: con signos de interrogación las versales y el
-     espaciado de rótulo la vuelven ilegible, así que se lee tal cual. */
-  .invite__eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    letter-spacing: var(--ls-wide);
+  /* La misma pregunta que la portada y con la misma letra: dos líneas
+     apiladas, la segunda en cursiva y en rojo encendido. Lo único que cambia
+     es el tamaño —allí manda el ancho de la sección, aquí el de una tarjeta
+     de 26rem—, así que cada línea sigue cabiendo entera. */
+  .invite__question {
+    display: grid;
+    line-height: 0.95;
+    font-size: clamp(2rem, 1.6rem + 2vw, 2.75rem);
+  }
+
+  .invite__question em {
+    font-style: italic;
     color: var(--c-accent);
-    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
+    text-shadow:
+      0 0 40px rgb(255 26 37 / 0.4),
+      0 0 80px rgb(255 26 37 / 0.2);
   }
 
   .invite__title {
-    /* Más pequeño que un h1 del sitio: aquí el titular es una instrucción,
-       no un cartel. Sin `max-width` propio manda el ancho de la tarjeta, que
-       es lo que lo deja en tres líneas en vez de en cuatro. */
-    margin-block: var(--sp-2xs) var(--sp-sm);
-    font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
+    /* Debajo de la pregunta esto ya no es un titular, es la instrucción: en
+       serif y en gris, del tamaño del texto corrido, para que no compita. */
+    margin-block: var(--sp-xs) var(--sp-sm);
+    font-family: var(--font-serif-body);
+    font-style: italic;
+    font-size: var(--fs-md);
     line-height: var(--lh-snug);
+    color: var(--c-fg-muted);
   }
 
   .invite__event {
@@ -166,8 +179,8 @@ const description = INVITE.title
       height: min(30vh, 13rem);
     }
 
-    .invite__title {
-      font-size: var(--fs-xl);
+    .invite__question {
+      font-size: var(--fs-2xl);
     }
 
     .invite__legal {
