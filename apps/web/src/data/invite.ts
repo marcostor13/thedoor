@@ -51,13 +51,17 @@ export const INVITE_HOSTS: InviteHost[] = [
 ]
 
 export const INVITE = {
-  eyebrow: 'Invitación',
-  /** Con anfitriona el antetítulo dice quién invita, en vez de «Invitación». */
-  hostEyebrow: (name: string): string => `Te invita ${name}`,
+  /**
+   * El antetítulo es siempre el mismo, con anfitriona o sin ella: la landing
+   * no dice quién reparte el enlace. El nombre sigue viajando en el alta
+   * (campo `reference`), pero no se enseña — a quien abre el enlace se le
+   * hace una pregunta, no una presentación.
+   */
+  eyebrow: 'Are you in?, or are you out?',
   title: 'Regístrate aquí para recibir una invitación',
   /** Una sola línea de apoyo. Si necesita dos, sobra. */
   note: 'Lista cerrada — Lima',
-  cta: 'Inscríbete',
+  cta: 'Regístrate',
   legal: 'Te escribimos solo para invitarte. La lista no se vende ni se comparte.',
 } as const
 

@@ -34,13 +34,10 @@ const eventLine = [INVITE_EVENT.name, INVITE_EVENT.date, INVITE_EVENT.place]
   .filter(Boolean)
   .join(' · ')
 
-// El antetítulo es el único sitio donde se nota de quién viene el enlace: dice
-// quién invita en vez de la etiqueta genérica, sin añadir una línea más.
-const eyebrow = host ? INVITE.hostEyebrow(host.name) : INVITE.eyebrow
-
-const description = host
-  ? `${INVITE.hostEyebrow(host.name)} a la lista de The Door PR. ${INVITE.title}.`
-  : INVITE.title
+// El nombre de la anfitriona no se enseña en ningún sitio: sigue viajando con
+// el alta (`InviteForm`) para saber quién invitó a quién, pero la página se
+// pinta idéntica venga de donde venga el enlace.
+const description = INVITE.title
 ---
 
 <Layout
@@ -58,7 +55,7 @@ const description = host
       {/* La petición desaparece en cuanto está hecha: al confirmarse el alta,
           este bloque se oculta y el titular pasa a ser el del formulario. */}
       <div class="invite__prompt" id="invite-prompt">
-        <p class="invite__eyebrow">— {eyebrow}</p>
+        <p class="invite__eyebrow">{INVITE.eyebrow}</p>
 
         <h1 class="invite__title">{INVITE.title}</h1>
 
@@ -122,11 +119,12 @@ const description = host
     display: none;
   }
 
+  /* Frase, no etiqueta: con signos de interrogación las versales y el
+     espaciado de rótulo la vuelven ilegible, así que se lee tal cual. */
   .invite__eyebrow {
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-widest);
-    text-transform: uppercase;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wide);
     color: var(--c-accent);
     text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
   }
