@@ -44,6 +44,30 @@ scripts/  Aprovisionamiento de DNS y despliegue en Coolify
 docs/     Documentación de operaciones
 ```
 
+## Modo «próximamente»
+
+La portada (`/`) está detrás de una verja: el visitante solo ve la puerta, el
+logo y el rótulo «Coming Soon». Las landings operativas —`/registro/` y
+`/invitacion/*`— se sirven enteras y no pasan por ella.
+
+| Para | URL |
+|---|---|
+| Ver la web completa | `https://…/?develop=true` |
+| Volver a la verja | `https://…/?develop=false` |
+
+El permiso se guarda en `sessionStorage`, así que basta escribirlo una vez: el
+resto de la sesión —enlaces internos, recargas— sigue viendo el sitio.
+
+Piezas: `components/ComingSoon.astro` (la verja y su CSS), `scripts/gate.ts` (el
+permiso en las navegaciones del ClientRouter) y el script en línea de
+`layouts/Layout.astro`, que es el que resuelve el acceso antes de pintar.
+
+**Para levantarla cuando el sitio salga**: quitar la prop `soon` del `<Layout>`
+de `pages/index.astro`. No hace falta tocar nada más.
+
+> La verja es de cliente: el HTML de la portada viaja completo aunque no se
+> pinte. Sirve para no enseñar la web todavía, no para guardar un secreto.
+
 ## Requisitos
 
 - Bun 1.3 o superior

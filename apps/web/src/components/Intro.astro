@@ -365,6 +365,15 @@ import Logo from './Logo.astro'
     const intro = document.getElementById('intro')
     if (!intro) return
 
+    // Con la portada detrás de la verja de «próximamente» la secuencia sobra:
+    // la verja ya cuenta su propia apertura, y este overlay solo pelearía por
+    // el scroll de una página que nadie va a ver.
+    if (document.documentElement.matches('[data-soon]:not([data-develop])')) {
+      intro.remove()
+      announceIntro('skipped')
+      return
+    }
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // Ya vista en esta sesión, o el usuario pidió menos movimiento:

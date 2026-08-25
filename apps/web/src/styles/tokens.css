@@ -121,6 +121,8 @@
   --z-header: 200;
   --z-overlay: 300;
   --z-intro: 400;
+  /* La verja de «próximamente» tapa incluso a la secuencia de entrada. */
+  --z-gate: 500;
 }
 
 /* Breakpoints de referencia (los media queries los usan como documentación;
