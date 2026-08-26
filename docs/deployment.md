@@ -158,23 +158,24 @@ MONGO_URI=<cadena de conexión de Atlas>
 CORS_ORIGINS=https://thedoorpr.com
 JWT_SECRET=<openssl rand -base64 48>
 
-# Correo de confirmación de alta. Opcional: sin MAIL_HOST ni MAIL_FROM la API
-# arranca igual y sigue registrando, solo que sin confirmar nada por correo.
-MAIL_HOST=<smtp del proveedor>
-MAIL_PORT=587
-MAIL_USER=<usuario smtp>
-MAIL_PASSWORD=<contraseña o app password>
+# Correo de confirmación de alta, por Resend. Opcional: sin RESEND_API_KEY ni
+# MAIL_FROM la API arranca igual y sigue registrando, solo que sin confirmar
+# nada por correo.
+RESEND_API_KEY=<clave de resend.com/api-keys>
 MAIL_FROM=The Door PR <hola@thedoorpr.com>
 SITE_URL=https://thedoorpr.com
 ```
 
-El dominio de `MAIL_FROM` necesita **SPF y DKIM** publicados en Cloudflare, y
-conviene añadir DMARC. Sin eso el correo sale, pero Gmail y Outlook lo mandan a
-spam: para un correo que la gente está esperando, eso es lo mismo que no
-enviarlo. Los registros exactos los da el proveedor de SMTP.
+El dominio de `MAIL_FROM` tiene que estar **verificado en Resend**
+(resend.com/domains): Resend da los registros SPF y DKIM y hay que publicarlos
+en Cloudflare. Conviene añadir DMARC además. Sin la verificación cada envío se
+rechaza con un `403 domain is not verified`; con ella pero sin DMARC el correo
+sale, aunque Gmail y Outlook lo tratan peor. Para un correo que la gente está
+esperando, acabar en spam es lo mismo que no enviarlo.
 
-La imagen del correo se sirve desde el frontend (`/email/door.png`), así que
-`SITE_URL` tiene que apuntar al sitio publicado, no a la API.
+Las imágenes del correo se sirven desde el frontend (`/email/door.png` y el
+flyer de la noche en cartel), así que `SITE_URL` tiene que apuntar al sitio
+publicado, no a la API.
 
 Ojo con las variables de build: en esta versión de la API el campo se llama
 `is_buildtime` (sin guion bajo entre *build* y *time*). `is_build_time` da un

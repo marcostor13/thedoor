@@ -129,9 +129,9 @@ describe('SignupService', () => {
   })
 
   it('registra el alta aunque el correo falle', async () => {
-    // El servicio de correo no lanza, pero si algún día lo hiciera, un SMTP
+    // El servicio de correo no lanza, pero si algún día lo hiciera, un Resend
     // caído no puede convertir un alta correcta en un error.
-    sendSignupConfirmation.mockImplementation(() => Promise.reject(new Error('SMTP caído')))
+    sendSignupConfirmation.mockImplementation(() => Promise.reject(new Error('Resend caído')))
 
     await expect(service.create(guest)).resolves.toEqual({
       registered: true,

@@ -57,7 +57,7 @@ export class SignupService {
     }
 
     // Sin `await`: quien acaba de registrarse no tiene por qué esperar a que
-    // un SMTP conteste para ver su confirmación en pantalla.
+    // Resend conteste para ver su confirmación en pantalla.
     //
     // El `.catch` no es decorativo aunque MailService prometa no lanzar: una
     // promesa suelta que se rechaza es un unhandled rejection, y eso tumba el
