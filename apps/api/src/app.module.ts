@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
+import { ClientIpThrottlerGuard } from './common/client-ip-throttler.guard'
 import { MailModule } from './mail/mail.module'
 import { HealthModule } from './health/health.module'
 import { ContactModule } from './contact/contact.module'
@@ -33,6 +34,8 @@ import { SignupModule } from './signup/signup.module'
     ContactModule,
     SignupModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  // El guard mira las cabeceras del borde en lugar de la IP del socket: sin
+  // eso, detrás de Cloudflare todos los visitantes comparten el mismo cubo.
+  providers: [{ provide: APP_GUARD, useClass: ClientIpThrottlerGuard }],
 })
 export class AppModule {}
