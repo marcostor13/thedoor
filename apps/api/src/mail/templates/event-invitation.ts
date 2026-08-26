@@ -170,7 +170,7 @@ export function renderEventInvitation(data: EventInvitationData): RenderedEmail 
              sitio da de hecho, 38.5px en escritorio y ~30px en móvil, este
              último en la media query. El espaciado va en px por lo mismo,
              calculado sobre cada tamaño. -->
-        <div class="hero" style="font-family:${FONT.display};font-size:38px;font-weight:400;line-height:1.02;letter-spacing:0.38px;text-transform:uppercase;color:${BRAND.accent};">You are in!</div>
+        <div class="hero" style="font-family:${FONT.display};font-size:38px;font-weight:400;line-height:1.02;letter-spacing:0.38px;text-transform:uppercase;color:${BRAND.fg};">You are in!</div>
         <div class="guest" style="font-family:${FONT.mono};font-size:16px;line-height:1.4;letter-spacing:5px;text-transform:uppercase;color:${BRAND.fg};padding-top:22px;">${escapeHtml(name)}</div>
       </td>
     </tr>
