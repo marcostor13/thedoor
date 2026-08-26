@@ -118,7 +118,7 @@ export function renderEventInvitation(data: EventInvitationData): RenderedEmail 
   @media only screen and (max-width:620px) {
     .card { width:100% !important; }
     .pad { padding-left:24px !important; padding-right:24px !important; }
-    .hero { font-size:40px !important; letter-spacing:2px !important; }
+    .hero { font-size:30px !important; letter-spacing:0.3px !important; }
     .guest { font-size:15px !important; letter-spacing:3px !important; }
     .mark { width:190px !important; height:auto !important; }
     .flyer { width:100% !important; height:auto !important; }
@@ -161,7 +161,16 @@ export function renderEventInvitation(data: EventInvitationData): RenderedEmail 
     <!-- El titular y a quién va dirigido -->
     <tr>
       <td class="pad" align="center" style="padding:46px 44px 0 44px;">
-        <div class="hero" style="font-family:${FONT.display};font-size:52px;line-height:1;letter-spacing:3px;text-transform:uppercase;color:${BRAND.accent};">You are in!</div>
+        <!-- Misma tipografía que el titular de la pantalla de confirmación de
+             la landing («Ya estabas en la lista.»), que es un <h1> con
+             --fs-2xl: Italiana en 400, interlineado 1.02 y el espaciado normal
+             de la marca —0.01em, no el tracking ancho de las etiquetas—.
+             El tamaño del sitio es un clamp que depende del ancho de ventana y
+             en correo no hay clamp ni vw: se copian los dos valores que el
+             sitio da de hecho, 38.5px en escritorio y ~30px en móvil, este
+             último en la media query. El espaciado va en px por lo mismo,
+             calculado sobre cada tamaño. -->
+        <div class="hero" style="font-family:${FONT.display};font-size:38px;font-weight:400;line-height:1.02;letter-spacing:0.38px;text-transform:uppercase;color:${BRAND.accent};">You are in!</div>
         <div class="guest" style="font-family:${FONT.mono};font-size:16px;line-height:1.4;letter-spacing:5px;text-transform:uppercase;color:${BRAND.fg};padding-top:22px;">${escapeHtml(name)}</div>
       </td>
     </tr>
