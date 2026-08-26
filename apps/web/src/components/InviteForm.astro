@@ -73,6 +73,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
           id="invite-phone"
           name="phone"
           type="tel"
+          required
+          minlength="6"
           maxlength="40"
           autocomplete="tel"
           inputmode="tel"
@@ -317,9 +319,12 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
       // Los opcionales vacíos no se mandan: el DTO los valida solo si vienen,
       // y una cadena vacía haría fallar la validación de longitud.
-      const payload = Object.fromEntries(
-        Object.entries(entries).filter(([, value]) => value.trim() !== ''),
-      )
+      const payload = {
+        ...Object.fromEntries(Object.entries(entries).filter(([, value]) => value.trim() !== '')),
+        // De qué enlace de anfitriona salió el alta. La plataforma lo guarda
+        // junto al contacto y es lo que permite atribuirlo después.
+        pageUrl: window.location.href,
+      }
 
       try {
         const response = await fetch(`${form.dataset.api}/signup`, {

@@ -1,0 +1,111 @@
+import { Injectable, Logger } from '@nestjs/common'
+
+/**
+ * Cliente del formulario público donde viven ahora las altas.
+ *
+ * Desde que la lista dejó de guardarse en Mongo, este `POST` **es** la
+ * persistencia: si falla, el alta no existe en ninguna parte. Por eso este
+ * cliente no se parece a `MailService` —que se traga sus errores porque el
+ * registro ya estaba a salvo— sino al revés: aquí todo fallo se propaga, para
+ * que el controlador devuelva error y la persona vuelva a intentarlo en lugar
+ * de irse creyendo que está apuntada.
+ *
+ * Los nombres de los campos (`campo`, `campo-2`, `campo-3`) los fija la
+ * plataforma y no se pueden elegir; el mapeo a algo legible está en
+ * `SignupService`, que es quien sabe qué significa cada uno.
+ */
+export interface SignupFormFields {
+  nombre: string
+  email: string
+  /** WhatsApp. Obligatorio en la definición del formulario. */
+  campo: string
+  /** Instagram, ya normalizado. */
+  'campo-2'?: string
+  /** «Invitado por»: la anfitriona, o el nombre del local. */
+  'campo-3'?: string
+}
+
+export interface SignupFormResult {
+  /** `false` cuando ese correo ya estaba dado de alta. */
+  created: boolean
+  customerId?: string
+}
+
+interface SubmitResponse {
+  ok?: boolean
+  message?: string
+  customerId?: string
+  created?: boolean
+}
+
+/**
+ * Una petición sin límite se queda colgada mientras el socket siga abierto, y
+ * con ella la del visitante esperando frente al formulario.
+ */
+const TIMEOUT_MS = 10_000
+
+export class SignupFormError extends Error {}
+
+@Injectable()
+export class SignupFormClient {
+  private readonly logger = new Logger(SignupFormClient.name)
+  private readonly endpoint = process.env.SIGNUP_FORM_URL
+
+  /**
+   * Sin endpoint no hay dónde guardar. Se comprueba al usarlo y no al arrancar
+   * porque el resto de la API —contacto, salud— sigue siendo válido sin esto;
+   * lo que no puede pasar es que un alta se dé por buena sin haberse escrito.
+   */
+  async submit(fields: SignupFormFields, pageUrl?: string): Promise<SignupFormResult> {
+    if (!this.endpoint) {
+      throw new SignupFormError(
+        'Falta SIGNUP_FORM_URL: no hay formulario donde guardar el alta.',
+      )
+    }
+
+    let response: Response
+
+    try {
+      response = await fetch(this.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: fields, pageUrl }),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
+    } catch (error) {
+      throw new SignupFormError(`El formulario no responde: ${describe(error)}`)
+    }
+
+    if (!response.ok) {
+      // El cuerpo dice qué se ha rechazado —un campo obligatorio vacío, una
+      // clave que ya no existe—, y sin él un 400 es indistinguible de un 500.
+      const detalle = await readBody(response)
+      throw new SignupFormError(`El formulario ha devuelto ${response.status}: ${detalle}`)
+    }
+
+    const body = (await response.json().catch(() => ({}))) as SubmitResponse
+
+    // `ok: false` con 200 es la forma que tiene esta plataforma de rechazar
+    // sin cambiar el código HTTP: si no se comprueba, un rechazo se leería
+    // como un alta correcta.
+    if (body.ok === false) {
+      throw new SignupFormError(`El formulario ha rechazado el alta: ${body.message ?? 'sin motivo'}`)
+    }
+
+    // Si la plataforma dejara de mandar `created`, tratarlo como alta nueva es
+    // el fallo menos malo: se manda la bienvenida una vez de más, no de menos.
+    return { created: body.created ?? true, customerId: body.customerId }
+  }
+}
+
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+async function readBody(response: Response): Promise<string> {
+  try {
+    return (await response.text()).slice(0, 300)
+  } catch {
+    return '(sin cuerpo)'
+  }
+}

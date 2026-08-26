@@ -1,8 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
 import { CreateSignupDto } from './dto/create-signup.dto'
-import { Signup, SignupDocument } from './signup.schema'
+import { SignupFormClient } from './signup-form.client'
 import { MailService } from '../mail/mail.service'
 
 export interface SignupResult {
@@ -11,22 +9,18 @@ export interface SignupResult {
   duplicate: boolean
 }
 
-/** Código de error de MongoDB para violación de índice único. */
-const DUPLICATE_KEY = 11000
-
 @Injectable()
 export class SignupService {
   private readonly logger = new Logger(SignupService.name)
 
   constructor(
-    @InjectModel(Signup.name)
-    private readonly signupModel: Model<SignupDocument>,
+    private readonly form: SignupFormClient,
     private readonly mailService: MailService,
   ) {}
 
   async create(dto: CreateSignupDto): Promise<SignupResult> {
     // Trampa para bots activada: se responde como en el caso correcto, para no
-    // darle al bot ninguna señal de que ha sido detectado.
+    // darle al bot ninguna señal de que ha sido detectado. Nada sale de aquí.
     if (dto.company) {
       this.logger.warn('Registro descartado: honeypot relleno')
       return { registered: true, duplicate: false }
@@ -37,24 +31,22 @@ export class SignupService {
       throw new BadRequestException('Indica el nombre del local.')
     }
 
-    let duplicate = false
-
-    try {
-      await this.signupModel.create({
-        kind: dto.kind,
-        name: dto.name,
+    // Este `await` sí se espera, al contrario que el del correo: es la única
+    // escritura que hay. Si lanza, el controlador devuelve error y la persona
+    // lo reintenta — que es mucho mejor que decirle que está apuntada cuando
+    // su nombre no ha llegado a ninguna parte.
+    const { created } = await this.form.submit(
+      {
+        nombre: dto.name,
         email: dto.email,
-        phone: dto.phone,
-        instagram: normalizeInstagram(dto.instagram),
-        reference: dto.reference,
-        city: dto.city,
-      })
-    } catch (error) {
-      // Segundo envío del mismo correo: para quien lo manda no es un error,
-      // es la confirmación de que ya estaba dentro.
-      if (!isDuplicateKeyError(error)) throw error
-      duplicate = true
-    }
+        campo: dto.phone,
+        'campo-2': normalizeInstagram(dto.instagram),
+        'campo-3': dto.reference,
+      },
+      dto.pageUrl,
+    )
+
+    const duplicate = !created
 
     // Sin `await`: quien acaba de registrarse no tiene por qué esperar a que
     // Resend conteste para ver su confirmación en pantalla.
@@ -75,15 +67,6 @@ export class SignupService {
       })
 
     return { registered: true, duplicate }
-  }
-
-  async findAll(limit = 50): Promise<Signup[]> {
-    return this.signupModel
-      .find()
-      .sort({ createdAt: -1 })
-      .limit(Math.min(limit, 200))
-      .lean()
-      .exec()
   }
 }
 
@@ -118,8 +101,4 @@ export function normalizeInstagram(value?: string): string | undefined {
 
   // Handle válido de Instagram: letras, números, punto y guion bajo, ≤ 30.
   return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? `@${handle.toLowerCase()}` : raw
-}
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === DUPLICATE_KEY
 }

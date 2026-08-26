@@ -164,6 +164,10 @@ JWT_SECRET=<openssl rand -base64 48>
 RESEND_API_KEY=<clave de resend.com/api-keys>
 MAIL_FROM=The Door PR <hola@thedoorpr.com>
 SITE_URL=https://thedoorpr.com
+
+# Dónde se guardan las altas de la landing. No hay copia en Mongo: si falta
+# esta variable, POST /signup devuelve error en vez de perder inscripciones.
+SIGNUP_FORM_URL=https://<host>/public/forms/<clave-pública>/submit
 ```
 
 El dominio de `MAIL_FROM` tiene que estar **verificado en Resend**

@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { Test } from '@nestjs/testing'
-import { getModelToken } from '@nestjs/mongoose'
 import { BadRequestException } from '@nestjs/common'
 import { SignupService, normalizeInstagram } from './signup.service'
-import { Signup } from './signup.schema'
+import { SignupFormClient, SignupFormError } from './signup-form.client'
 import { MailService } from '../mail/mail.service'
 
 describe('SignupService', () => {
-  const create = mock()
+  const submit = mock(() => Promise.resolve({ created: true }))
   const sendSignupConfirmation = mock(() => Promise.resolve(true))
   let service: SignupService
 
@@ -15,19 +14,21 @@ describe('SignupService', () => {
     kind: 'guest' as const,
     name: 'Ana',
     email: 'ana@example.com',
-    reference: '@ana',
+    phone: '+51 999 999 999',
+    reference: 'Daniela',
     city: 'Lima',
   }
 
   beforeEach(async () => {
-    create.mockReset()
+    submit.mockReset()
+    submit.mockImplementation(() => Promise.resolve({ created: true }))
     sendSignupConfirmation.mockReset()
     sendSignupConfirmation.mockImplementation(() => Promise.resolve(true))
 
     const moduleRef = await Test.createTestingModule({
       providers: [
         SignupService,
-        { provide: getModelToken(Signup.name), useValue: { create } },
+        { provide: SignupFormClient, useValue: { submit } },
         { provide: MailService, useValue: { sendSignupConfirmation } },
       ],
     }).compile()
@@ -35,43 +36,45 @@ describe('SignupService', () => {
     service = moduleRef.get(SignupService)
   })
 
-  it('registra una solicitud de invitado', async () => {
-    await expect(service.create(guest)).resolves.toEqual({
-      registered: true,
-      duplicate: false,
-    })
+  it('manda el alta al formulario con los nombres de campo de la plataforma', async () => {
+    await expect(
+      service.create({ ...guest, pageUrl: 'https://thedoorpr.com/invitacion/daniela/' }),
+    ).resolves.toEqual({ registered: true, duplicate: false })
 
-    expect(create).toHaveBeenCalledWith({
-      kind: 'guest',
-      name: 'Ana',
-      email: 'ana@example.com',
-      phone: undefined,
-      instagram: undefined,
-      reference: '@ana',
-      city: 'Lima',
-    })
+    expect(submit).toHaveBeenCalledWith(
+      {
+        nombre: 'Ana',
+        email: 'ana@example.com',
+        campo: '+51 999 999 999',
+        'campo-2': undefined,
+        'campo-3': 'Daniela',
+      },
+      'https://thedoorpr.com/invitacion/daniela/',
+    )
   })
 
   it('exige el nombre del local cuando la solicitud es de un venue', async () => {
     const venue = { ...guest, kind: 'venue' as const, reference: '   ' }
 
     await expect(service.create(venue)).rejects.toBeInstanceOf(BadRequestException)
-    expect(create).not.toHaveBeenCalled()
+    expect(submit).not.toHaveBeenCalled()
   })
 
-  it('acepta un venue con nombre de local', async () => {
+  it('acepta un venue con nombre de local, que viaja como referencia', async () => {
     const venue = { ...guest, kind: 'venue' as const, reference: 'Maison Noir' }
 
     await expect(service.create(venue)).resolves.toEqual({
       registered: true,
       duplicate: false,
     })
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({ 'campo-3': 'Maison Noir' }),
+      undefined,
+    )
   })
 
   it('trata un correo repetido como confirmación, no como error', async () => {
-    create.mockImplementation(() => {
-      throw Object.assign(new Error('E11000 duplicate key'), { code: 11000 })
-    })
+    submit.mockImplementation(() => Promise.resolve({ created: false }))
 
     await expect(service.create(guest)).resolves.toEqual({
       registered: true,
@@ -79,19 +82,27 @@ describe('SignupService', () => {
     })
   })
 
-  it('deja subir cualquier otro fallo de escritura', async () => {
-    create.mockImplementation(() => {
-      throw new Error('conexión perdida')
-    })
+  it('deja subir un fallo del formulario: sin él, el alta no existe', async () => {
+    submit.mockImplementation(() => Promise.reject(new SignupFormError('El formulario no responde')))
 
-    await expect(service.create(guest)).rejects.toThrow('conexión perdida')
+    await expect(service.create(guest)).rejects.toThrow('El formulario no responde')
   })
 
-  it('guarda el Instagram ya normalizado', async () => {
+  it('manda el Instagram ya normalizado', async () => {
     await service.create({ ...guest, instagram: 'https://www.instagram.com/Ana.Torres/?igsh=abc' })
 
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({ instagram: '@ana.torres' }),
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({ 'campo-2': '@ana.torres' }),
+      undefined,
+    )
+  })
+
+  it('manda el WhatsApp en `campo`, que la plataforma exige', async () => {
+    await service.create(guest)
+
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({ campo: '+51 999 999 999' }),
+      undefined,
     )
   })
 
@@ -101,15 +112,13 @@ describe('SignupService', () => {
     expect(sendSignupConfirmation).toHaveBeenCalledWith('ana@example.com', {
       name: 'Ana',
       kind: 'guest',
-      reference: '@ana',
+      reference: 'Daniela',
       duplicate: false,
     })
   })
 
   it('marca la confirmación como duplicada cuando el correo ya estaba', async () => {
-    create.mockImplementation(() => {
-      throw Object.assign(new Error('E11000 duplicate key'), { code: 11000 })
-    })
+    submit.mockImplementation(() => Promise.resolve({ created: false }))
 
     await service.create(guest)
 
@@ -119,12 +128,10 @@ describe('SignupService', () => {
     )
   })
 
-  it('no confirma nada cuando la escritura falla de verdad', async () => {
-    create.mockImplementation(() => {
-      throw new Error('conexión perdida')
-    })
+  it('no confirma nada cuando el alta no se ha llegado a guardar', async () => {
+    submit.mockImplementation(() => Promise.reject(new SignupFormError('502')))
 
-    await expect(service.create(guest)).rejects.toThrow('conexión perdida')
+    await expect(service.create(guest)).rejects.toThrow('502')
     expect(sendSignupConfirmation).not.toHaveBeenCalled()
   })
 
@@ -149,7 +156,7 @@ describe('SignupService', () => {
     })
     // …pero no llega a escribir nada, ni a mandar correo a una dirección que
     // probablemente no es de nadie.
-    expect(create).not.toHaveBeenCalled()
+    expect(submit).not.toHaveBeenCalled()
     expect(sendSignupConfirmation).not.toHaveBeenCalled()
   })
 })

@@ -83,16 +83,18 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
       </div>
 
       <div class="signup__field">
-        <label class="signup__label" for="signup-phone">
-          Teléfono <span class="signup__optional">— opcional</span>
-        </label>
+        <label class="signup__label" for="signup-phone">WhatsApp</label>
         <input
           class="signup__input"
           id="signup-phone"
           name="phone"
           type="tel"
+          required
+          minlength="6"
           maxlength="40"
           autocomplete="tel"
+          inputmode="tel"
+          placeholder="+51 999 999 999"
         />
       </div>
     </div>
@@ -495,9 +497,12 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
       // Los opcionales vacíos no se mandan: el DTO los valida solo si vienen,
       // y una cadena vacía haría fallar la validación de longitud.
-      const payload = Object.fromEntries(
-        Object.entries(entries).filter(([, value]) => value.trim() !== ''),
-      )
+      const payload = {
+        ...Object.fromEntries(Object.entries(entries).filter(([, value]) => value.trim() !== '')),
+        // Desde qué página se apuntó. La plataforma lo guarda junto al
+        // contacto, y es lo que distingue este alta de la de una anfitriona.
+        pageUrl: window.location.href,
+      }
 
       try {
         const response = await fetch(`${form.dataset.api}/signup`, {
