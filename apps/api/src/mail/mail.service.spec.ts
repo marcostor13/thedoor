@@ -104,15 +104,18 @@ describe('MailService', () => {
     service.onModuleInit()
     ;(service as unknown as { transporter: { sendMail: unknown } }).transporter = { sendMail }
 
+    // Se prueba con un local a propósito: el correo del invitado depende de si
+    // hay noche en cartel, y eso cambia con el calendario. Aquí lo que se mira
+    // es el transporte —destinatario, reply-to, cabeceras—, que no cambia.
     await expect(
-      service.sendSignupConfirmation('ana@example.com', { name: 'Ana', kind: 'guest' }),
+      service.sendSignupConfirmation('ana@example.com', { name: 'Ana', kind: 'venue' }),
     ).resolves.toBe(true)
 
     const sent: SentMail = sendMail.mock.calls[0][0]
     expect(sent.to).toBe('ana@example.com')
-    expect(sent.subject).toBe('Estás en la lista — The Door PR')
+    expect(sent.subject).toBe('Hemos recibido tu solicitud — The Door PR')
     expect(sent.replyTo).toBe('The Door PR <hola@thedoorpr.com>')
-    expect(String(sent.html)).toContain('Estás en la lista.')
+    expect(String(sent.html)).toContain('Te hemos leído.')
     expect(String(sent.text)).toContain('THE DOOR PR')
     // La dirección de baja sale del From, sin el nombre visible.
     expect((sent.headers as Record<string, string>)['List-Unsubscribe']).toBe(

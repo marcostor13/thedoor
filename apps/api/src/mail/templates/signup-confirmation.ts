@@ -14,6 +14,10 @@
  *     oscuro de Gmail o Outlook no intente reinvertir la paleta.
  */
 import { BRAND, FONT, CARD_WIDTH } from './branding'
+import { escapeHtml, stripTags, type RenderedEmail } from './html'
+
+export { escapeHtml }
+export type { RenderedEmail }
 
 export type SignupKind = 'venue' | 'guest'
 
@@ -27,26 +31,6 @@ export interface SignupConfirmationData {
   duplicate?: boolean
   /** Base pública del sitio, sin barra final. De aquí cuelga la imagen. */
   siteUrl: string
-}
-
-export interface RenderedEmail {
-  subject: string
-  html: string
-  text: string
-}
-
-/**
- * El nombre viene de un formulario público: se escapa siempre antes de
- * interpolarlo, o un `<script>` en el campo «nombre» viajaría dentro del
- * correo hasta la bandeja de quien lo abra.
- */
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
 }
 
 /** Solo el nombre de pila: en un saludo, el apellido sobra. */
@@ -290,15 +274,4 @@ export function renderSignupConfirmation(data: SignupConfirmationData): Rendered
   ].join('\n')
 
   return { subject: copy.subject, html, text }
-}
-
-/** El cuerpo lleva un `<strong>` y entidades: la versión en texto no. */
-function stripTags(value: string): string {
-  return value
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
 }

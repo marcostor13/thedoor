@@ -1,9 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { createTransport, type Transporter } from 'nodemailer'
-import {
-  renderSignupConfirmation,
-  type SignupConfirmationData,
-} from './templates/signup-confirmation'
+import { type SignupConfirmationData } from './templates/signup-confirmation'
+import { renderSignupEmail } from './templates/signup-email'
 
 /**
  * Envío de correo por SMTP.
@@ -68,10 +66,7 @@ export class MailService implements OnModuleInit {
   ): Promise<boolean> {
     if (!this.transporter || !this.from) return false
 
-    const { subject, html, text } = renderSignupConfirmation({
-      ...data,
-      siteUrl: this.siteUrl,
-    })
+    const { subject, html, text } = renderSignupEmail({ ...data, siteUrl: this.siteUrl })
 
     try {
       await this.transporter.sendMail({
