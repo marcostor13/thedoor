@@ -10,19 +10,24 @@ import { Injectable, Logger } from '@nestjs/common'
  * que el controlador devuelva error y la persona vuelva a intentarlo en lugar
  * de irse creyendo que está apuntada.
  *
- * Los nombres de los campos (`campo`, `campo-2`, `campo-3`) los fija la
- * plataforma y no se pueden elegir; el mapeo a algo legible está en
- * `SignupService`, que es quien sabe qué significa cada uno.
+ * Los nombres de los campos los fija la plataforma en la definición del
+ * formulario y no se pueden elegir aquí. Se comprueban contra ella:
+ *
+ *   GET https://<host>/public/forms/<clave-pública>
+ *
+ * Si un día dejan de coincidir, el envío se rechaza con un 400 y el alta no se
+ * guarda —que es el fallo ruidoso que queremos—, pero conviene mirarlo ahí
+ * antes de tocar nada.
  */
 export interface SignupFormFields {
   nombre: string
   email: string
   /** WhatsApp. Obligatorio en la definición del formulario. */
-  campo: string
+  whatsapp: string
   /** Instagram, ya normalizado. */
-  'campo-2'?: string
+  instagram?: string
   /** «Invitado por»: la anfitriona, o el nombre del local. */
-  'campo-3'?: string
+  reference?: string
 }
 
 export interface SignupFormResult {

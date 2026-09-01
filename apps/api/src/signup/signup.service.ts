@@ -39,9 +39,9 @@ export class SignupService {
       {
         nombre: dto.name,
         email: dto.email,
-        campo: dto.phone,
-        'campo-2': normalizeInstagram(dto.instagram),
-        'campo-3': dto.reference,
+        whatsapp: dto.phone,
+        instagram: normalizeInstagram(dto.instagram),
+        reference: dto.reference,
       },
       dto.pageUrl,
     )

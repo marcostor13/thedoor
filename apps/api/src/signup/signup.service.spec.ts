@@ -45,9 +45,9 @@ describe('SignupService', () => {
       {
         nombre: 'Ana',
         email: 'ana@example.com',
-        campo: '+51 999 999 999',
-        'campo-2': undefined,
-        'campo-3': 'Daniela',
+        whatsapp: '+51 999 999 999',
+        instagram: undefined,
+        reference: 'Daniela',
       },
       'https://thedoorpr.com/invitacion/daniela/',
     )
@@ -68,7 +68,7 @@ describe('SignupService', () => {
       duplicate: false,
     })
     expect(submit).toHaveBeenCalledWith(
-      expect.objectContaining({ 'campo-3': 'Maison Noir' }),
+      expect.objectContaining({ reference: 'Maison Noir' }),
       undefined,
     )
   })
@@ -92,16 +92,16 @@ describe('SignupService', () => {
     await service.create({ ...guest, instagram: 'https://www.instagram.com/Ana.Torres/?igsh=abc' })
 
     expect(submit).toHaveBeenCalledWith(
-      expect.objectContaining({ 'campo-2': '@ana.torres' }),
+      expect.objectContaining({ instagram: '@ana.torres' }),
       undefined,
     )
   })
 
-  it('manda el WhatsApp en `campo`, que la plataforma exige', async () => {
+  it('manda el WhatsApp en `whatsapp`, que la plataforma exige', async () => {
     await service.create(guest)
 
     expect(submit).toHaveBeenCalledWith(
-      expect.objectContaining({ campo: '+51 999 999 999' }),
+      expect.objectContaining({ whatsapp: '+51 999 999 999' }),
       undefined,
     )
   })

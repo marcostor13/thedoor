@@ -20,6 +20,7 @@
     "lint": "bun run --filter '*' lint",
     "test": "bun run --filter '*' test",
     "deploy": "bun scripts/deploy.mjs",
-    "dns": "bun scripts/cloudflare-dns.mjs"
+    "dns": "bun scripts/cloudflare-dns.mjs",
+    "invitaciones": "bun scripts/enviar-invitaciones.ts"
   }
 }

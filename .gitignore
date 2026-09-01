@@ -34,3 +34,7 @@ coverage/
 # temporales
 tmp/
 .cache/
+
+# Volcados de altas y el registro de envíos en lote: datos personales.
+thedoorpr.signups.json
+*.enviados.jsonl

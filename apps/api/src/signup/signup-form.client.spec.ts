@@ -6,9 +6,9 @@ const ENDPOINT = 'https://apimayabar.example.com/public/forms/abc/submit'
 const campos = {
   nombre: 'Ana',
   email: 'ana@example.com',
-  campo: '+51 999 999 999',
-  'campo-2': '@ana',
-  'campo-3': 'Daniela',
+  whatsapp: '+51 999 999 999',
+  instagram: '@ana',
+  reference: 'Daniela',
 }
 
 /** Suplanta el `fetch` global y devuelve el mock para inspeccionar la llamada. */
@@ -92,14 +92,14 @@ describe('SignupFormClient', () => {
   it('un 4xx lanza y arrastra el cuerpo, que dice qué se ha rechazado', async () => {
     const restoreEnv = withEndpoint(ENDPOINT)
     const red = withFetch(
-      new Response(JSON.stringify({ message: 'campo es obligatorio' }), { status: 400 }),
+      new Response(JSON.stringify({ message: 'whatsapp es obligatorio' }), { status: 400 }),
     )
     restore = () => {
       red.restore()
       restoreEnv()
     }
 
-    await expect(new SignupFormClient().submit(campos)).rejects.toThrow('campo es obligatorio')
+    await expect(new SignupFormClient().submit(campos)).rejects.toThrow('whatsapp es obligatorio')
   })
 
   it('un 200 con ok:false también lanza: es un rechazo disfrazado', async () => {
