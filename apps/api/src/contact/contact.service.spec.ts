@@ -32,6 +32,38 @@ describe('ContactService', () => {
     expect(create).toHaveBeenCalledWith(dto)
   })
 
+  it('guarda los opcionales del formulario de la portada', async () => {
+    const dto = {
+      name: 'Ana',
+      email: 'ana@example.com',
+      message: 'Queremos programar el local a partir de marzo.',
+      phone: '+51 999 999 999',
+      instagram: '@ana.torres',
+      kind: 'venue' as const,
+    }
+
+    await expect(service.create(dto)).resolves.toEqual({ received: true })
+    expect(create).toHaveBeenCalledWith(dto)
+  })
+
+  it('no escribe los opcionales que llegan vacíos', async () => {
+    await service.create({
+      name: 'Ana',
+      email: 'ana@example.com',
+      message: 'Quiero estar en la guest list.',
+      phone: '',
+      instagram: '',
+    })
+
+    // Un campo vacío en la ficha se leería como «lo dejó en blanco», que no es
+    // lo mismo que no haberlo rellenado.
+    expect(create).toHaveBeenCalledWith({
+      name: 'Ana',
+      email: 'ana@example.com',
+      message: 'Quiero estar en la guest list.',
+    })
+  })
+
   it('descarta el envío cuando el honeypot llega relleno', async () => {
     const dto = {
       name: 'Bot',

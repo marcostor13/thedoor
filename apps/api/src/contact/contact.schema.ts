@@ -14,6 +14,17 @@ export class Contact {
   @Prop({ required: true, trim: true, maxlength: 4000 })
   message!: string
 
+  /** Opcionales del formulario de la portada. */
+  @Prop({ trim: true, maxlength: 40 })
+  phone?: string
+
+  @Prop({ trim: true, maxlength: 200 })
+  instagram?: string
+
+  /** Qué formulario lo envió: el de locales o el de la guest list. */
+  @Prop({ enum: ['venue', 'guest'] })
+  kind?: 'venue' | 'guest'
+
   @Prop({ default: false })
   handled!: boolean
 }

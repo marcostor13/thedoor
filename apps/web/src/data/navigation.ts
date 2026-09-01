@@ -9,8 +9,6 @@ export interface NavLink {
 
 export const NAV_LINKS: NavLink[] = [
   { label: 'Servicios', href: '/#services' },
-  { label: 'Cartera', href: '/#roster' },
-  { label: 'Postula', href: '/#apply' },
   { label: 'Contacto', href: '/#contact' },
 ]
 
@@ -25,4 +23,10 @@ export const SITE = {
     'An event is not just about quantity: it’s about quality, ambiance and vibes.',
   cta: 'Abre la puerta',
   city: 'Lima, Perú — desde 2019',
+  /**
+   * Número de WhatsApp del botón «Hablemos ahora mismo». Se escribe legible;
+   * el enlace de wa.me se queda solo con los dígitos. Se configura con
+   * PUBLIC_WHATSAPP_PHONE para no tener que tocar el código al cambiarlo.
+   */
+  whatsapp: import.meta.env.PUBLIC_WHATSAPP_PHONE ?? '+51 999 999 999',
 } as const
