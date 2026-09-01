@@ -25,6 +25,11 @@ export class ContactService {
       name: dto.name,
       email: dto.email,
       message: dto.message,
+      // Los opcionales solo se guardan si vienen: un campo vacío en la ficha
+      // se lee como «no lo dejó», y eso no es lo mismo que una cadena vacía.
+      ...(dto.phone ? { phone: dto.phone } : {}),
+      ...(dto.instagram ? { instagram: dto.instagram } : {}),
+      ...(dto.kind ? { kind: dto.kind } : {}),
     })
 
     return { received: true }
