@@ -28,5 +28,5 @@ export const SITE = {
    * el enlace de wa.me se queda solo con los dígitos. Se configura con
    * PUBLIC_WHATSAPP_PHONE para no tener que tocar el código al cambiarlo.
    */
-  whatsapp: import.meta.env.PUBLIC_WHATSAPP_PHONE ?? '+51 999 999 999',
+  whatsapp: import.meta.env.PUBLIC_WHATSAPP_PHONE ?? '+51 944 092 013',
 } as const
