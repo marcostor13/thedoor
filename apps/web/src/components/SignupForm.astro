@@ -101,6 +101,22 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
     <div class="signup__row">
       <div class="signup__field">
+        <label class="signup__label" for="signup-instagram">
+          Instagram <span class="signup__optional">— opcional</span>
+        </label>
+        <input
+          class="signup__input"
+          id="signup-instagram"
+          name="instagram"
+          type="text"
+          maxlength="200"
+          autocomplete="off"
+          placeholder="@instagram"
+        />
+        <p class="signup__hint">Como lo escribas: @ana, ana o la URL pegada del navegador.</p>
+      </div>
+
+      <div class="signup__field">
         <label class="signup__label" for="signup-city">
           Ciudad <span class="signup__optional">— opcional</span>
         </label>
