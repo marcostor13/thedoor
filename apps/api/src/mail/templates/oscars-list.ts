@@ -122,7 +122,7 @@ export function renderOscarsList(data: OscarsListData): RenderedEmail {
     .card { width:100% !important; }
     .pad { padding-left:24px !important; padding-right:24px !important; }
     .hero { font-size:30px !important; letter-spacing:0.3px !important; }
-    .kicker { font-size:10px !important; letter-spacing:4px !important; }
+    .kicker { font-size:22px !important; letter-spacing:0.22px !important; }
     .mark { width:190px !important; height:auto !important; }
     .flyer { width:100% !important; height:auto !important; }
     /* Etiqueta encima del dato: en 320px no caben en la misma fila. */
@@ -165,11 +165,16 @@ export function renderOscarsList(data: OscarsListData): RenderedEmail {
          interlineado 1.02 y el espaciado normal de la marca. El tamaño del
          sitio es un clamp y en correo no hay clamp ni vw, así que van los dos
          valores que el sitio da de hecho —38px y ~30px—, el segundo en la
-         media query. -->
+         media query.
+
+         Debajo, la respuesta: «You are in», con la misma tipografía y el mismo
+         rojo que el «Or are you out?» de la portada —Italiana en cursiva, caja
+         alta, acento de marca—. Ahí es una pregunta abierta; aquí ya está
+         contestada, y por eso hereda su letra y no la mono de las etiquetas. -->
     <tr>
       <td class="pad" align="center" style="padding:46px 44px 0 44px;">
         <div class="hero" style="font-family:${FONT.display};font-size:38px;font-weight:400;line-height:1.02;letter-spacing:0.38px;text-transform:uppercase;color:${BRAND.fg};">Oscar&rsquo;s List</div>
-        <div class="kicker" style="font-family:${FONT.mono};font-size:11px;line-height:1.4;letter-spacing:5px;text-transform:uppercase;color:${BRAND.fgMuted};padding-top:18px;">Are you invited?</div>
+        <div class="kicker" style="font-family:${FONT.display};font-size:28px;font-weight:400;font-style:italic;line-height:1.05;letter-spacing:0.28px;text-transform:uppercase;color:${BRAND.accent};padding-top:14px;">You are in</div>
       </td>
     </tr>
 
@@ -260,7 +265,7 @@ export function renderOscarsList(data: OscarsListData): RenderedEmail {
   const text = [
     'THE DOOR PR — Lima',
     '',
-    'OSCAR’S LIST — ARE YOU INVITED?',
+    'OSCAR’S LIST — YOU ARE IN',
     '',
     // El saludo va en mayúsculas por lo mismo que los titulares de la marca, y
     // deja el nombre completo en el texto plano: es lo que comprueba
