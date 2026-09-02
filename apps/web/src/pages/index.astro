@@ -9,77 +9,61 @@ const services = [
   {
     num: '01',
     title: 'Venue Programming',
-    desc: 'Construimos el calendario — residencias, takeovers, noches temáticas. Desde el soft opening hasta el primer aniversario, tu calendario no tiene noches muertas.',
+    desc: 'Construimos el calendario — residencias, takeovers, noches temáticas. Desde el soft opening hasta el primer aniversario, tu local no se apaga nunca.',
     tag: 'Calendars, residencies, takeovers',
     label: 'Ongoing',
   },
   {
     num: '02',
     title: 'Guest Curation',
-    desc: 'Una cartera filtrada de más de 4,000 — finanzas, moda, música, hospitalidad. Confirmamos a la gente que convierte un miércoles en sábado.',
-    tag: 'Vetted clientele, never sold',
+    desc: 'Un guest list completamente curado de más de 1.2k de potenciales invitados a tu evento. El guest list solo se abre para la gente que convierte un miércoles en un sábado — la combinación perfecta, el momentum, el mood.',
+    tag: 'VIP database, our guest list is never shared, and never sold',
     label: 'Per night',
   },
   {
     num: '03',
     title: 'Private & VIP',
-    desc: 'Cumpleaños. Lanzamientos. Reservas corporativas discretas. Nosotros manejamos el manifiesto, el lugar, el momento — tú haces el brindis.',
-    tag: 'Birthdays, launches, buyouts',
+    desc: 'Cumpleaños. Lanzamientos. Reservas corporativas. Nosotros manejamos el evento, el lugar y la coordinación — tú solo te preocupas por disfrutar el momento.',
+    tag: 'Birthdays, launches, corporate events',
     label: 'One-off',
   },
   {
     num: '04',
-    title: 'Press & Profile',
-    desc: 'Notas de fondo, listados, la mención correcta en el medio correcto en el momento correcto. Hacemos que se hable de tu sala con la gente que importa.',
-    tag: 'Editorial, listings, longform',
+    title: 'Door & Floor',
+    desc: 'Nos encargamos de la supervisión, PR y equipo de imagen. Coordinamos en tiempo real, para que tu evento genere controversia.',
+    tag: 'Live coordination, PR team, models',
+    label: 'Per night',
+  },
+  {
+    num: '05',
+    title: 'Media & Visibility',
+    desc: 'Notas de prensa y publicidad estratégica. La mención correcta en el medio correcto y en el momento correcto. Hacemos que se hable de tu evento en el círculo indicado.',
+    tag: 'Press, content, influencers',
     label: 'Retainer',
   },
 ]
 
+/**
+ * Los títulos que llevan «&» se parten en dos: lo que va hasta el signo
+ * queda en blanco y la palabra siguiente en rojo. Los que no lo llevan se
+ * quedan enteros en blanco.
+ */
+const serviceRows = services.map((service) => {
+  const [head, accent] = service.title.split('&')
+
+  return {
+    ...service,
+    titleHead: accent ? `${head.trim()} &` : service.title,
+    titleAccent: accent ? accent.trim() : '',
+  }
+})
+
 const stats = [
-  { num: '60+', desc: 'Venues represented in Lima since 2019.' },
-  { num: '4.2K', desc: 'Guests on the curated list. Vetted, never sold.' },
-  { num: '1:1', desc: 'Every venue gets a dedicated programmer. No interns.' },
-  { num: '00', desc: 'Walk-ins. Cover charges. Bottle minimums.' },
-]
-
-const rosterRowA = [
-  'Maison Noir',
-  'Carbón',
-  'Bar Once',
-  'Hotel B',
-  'Sable & Humo',
-  'La Bóveda',
-  'Lila Rooftop',
-  'Quince',
-  'Apertura',
-  'Foxglove',
-  'Le Petit Roi',
-  'Sundown',
-]
-
-const rosterRowB = [
-  'Malecón',
-  'Marlowe',
-  'Invernadero',
-  'Velvet Room',
-  'Hotel Embajada',
-  'Camille',
-  'Casa Aria',
-  'Calloway',
-  'Atelier',
-  'Margot',
-  'La Emperatriz',
-  'Onyx',
-]
-
-const contactRows = [
-  { label: 'Locales', value: 'venues@thedoor.pe', href: 'mailto:venues@thedoor.pe' },
-  { label: 'Lista', value: 'list@thedoor.pe', href: 'mailto:list@thedoor.pe' },
-  { label: 'Prensa', value: 'press@thedoor.pe', href: 'mailto:press@thedoor.pe' },
-  { label: 'Lima', value: 'Av. La Paz 1040, Miraflores' },
-  { label: 'Barranco', value: 'Bajada de Baños 393' },
-  { label: 'Citas', value: 'Solo con cita previa' },
+  {
+    num: '1.2k',
+    desc: 'De clientes VIP en nuestra base de datos completamente curada para llenar tu evento con el público indicado.',
+  },
+  { num: '24/7', desc: 'Tú lo necesitas, nosotros lo creamos.' },
 ]
 ---
 
@@ -128,7 +112,7 @@ const contactRows = [
         <em data-reveal>Or are you out?</em>
       </h2>
       <p class="manifesto" data-reveal>
-        Anyone can just fill a room — <em>we fill it with the right people, the ones who
+        Anyone can just fill a room — <em>we fill it with the right people that will
         come back.</em>
       </p>
 
@@ -151,16 +135,19 @@ const contactRows = [
     <div class="container services__head">
       <p class="eyebrow" data-reveal>— What we do</p>
       <h2 class="services__title" data-reveal>
-        Four things, on repeat — so the right people keep coming back.
+        The Door PR is for venues that take the door seriously.
       </h2>
     </div>
 
     <div class="container">
       {
-        services.map((service) => (
+        serviceRows.map((service) => (
           <div class="service-row" data-reveal>
             <span class="service-row__num">{service.num} /</span>
-            <h3 class="service-row__title">{service.title}</h3>
+            <h3 class="service-row__title">
+              {service.titleHead}
+              {service.titleAccent && <em>{service.titleAccent}</em>}
+            </h3>
             <p class="service-row__desc">{service.desc}</p>
             <span class="service-row__tag">→ {service.tag}</span>
             <span class="service-row__label">{service.label}</span>
@@ -170,111 +157,60 @@ const contactRows = [
     </div>
   </section>
 
-  <section id="roster" class="section roster">
-    <div class="container roster__head">
-      <p class="eyebrow" data-reveal>— Selección de socios / NDA en el resto</p>
-      <h2 class="roster__title" data-reveal>Rooms we keep full.</h2>
-      <span class="roster__meta">2024 — 2026</span>
+  <section id="contact" class="section knock">
+    <div class="container knock__head">
+      <p class="eyebrow" data-reveal>— Contact</p>
+      <h2 class="knock__title" data-reveal>
+        Knock once. <em>We’ll answer.</em>
+      </h2>
     </div>
 
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee__track marquee__track--a">
-        {
-          [...rosterRowA, ...rosterRowA].map((name) => (
-            <span class="marquee__item">
-              {name}
-              <span class="marquee__dot" />
-            </span>
-          ))
-        }
-      </div>
-    </div>
-
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee__track marquee__track--b">
-        {
-          [...rosterRowB, ...rosterRowB].map((name) => (
-            <span class="marquee__item">
-              {name}
-              <span class="marquee__dot" />
-            </span>
-          ))
-        }
-      </div>
-    </div>
-
-    <p class="visually-hidden">
-      {[...rosterRowA, ...rosterRowB].join(', ')}
-    </p>
-
-    <div class="container roster__foot">
-      <span>— 60+ locales, una sola ciudad</span>
-      <a class="roster__cta" href="#contact">Pide la lista completa →</a>
-    </div>
-  </section>
-
-  <section id="apply" class="section apply">
-    <div class="apply__col" data-reveal>
-      <div>
+    <div class="knock__cols">
+      <div class="knock__col" id="apply" data-reveal>
         <p class="eyebrow">— For venues</p>
-        <h3 class="apply__title">Put us on the door.</h3>
-        <p class="apply__desc">
-          Bares, hoteles, restaurantes. Tomamos una cartera reducida y la llenamos —
-          silenciosamente, consistentemente, con las caras correctas. Cuéntanos del local
-          y la noche que quieres correr.
+        <h3 class="knock__col-title">Put us on the door.</h3>
+        <p class="knock__desc">
+          Bares, hoteles, restaurantes. Nos hacemos cargo de tu evento 24/7 —
+          silenciosamente, consistentemente y con los invitados correctos. Cuéntanos
+          del local y la noche que quieres crear.
         </p>
+
+        <ul role="list" class="knock__bullets">
+          <li>Aceptamos 4 locales nuevos por trimestre</li>
+          <li>Compromiso mínimo de 6 meses</li>
+          <li>Referencias bajo pedido</li>
+        </ul>
+
+        <ContactForm
+          id="venues"
+          kind="venue"
+          messageLabel="Pitch your venue →"
+          messagePlaceholder="El local, la noche que quieres crear y cuándo."
+        />
       </div>
 
-      <ul role="list" class="apply__bullets">
-        <li>Aceptamos 4 locales nuevos por trimestre</li>
-        <li>Compromiso mínimo de 6 meses</li>
-        <li>Referencias bajo pedido</li>
-      </ul>
-
-      <a class="apply__arrow" href="/registro/?tipo=venue">Pitch your venue →</a>
-    </div>
-
-    <div class="apply__col apply__col--list" data-reveal>
-      <div>
+      <div class="knock__col knock__col--list" data-reveal>
         <p class="eyebrow">— For the list</p>
-        <h3 class="apply__title">Get on the list.</h3>
-        <p class="apply__desc">
-          Mantenemos una cartera filtrada de invitados que reciben primer aviso de
+        <h3 class="knock__col-title">Get on the guest list.</h3>
+        <p class="knock__desc">
+          Si quieres ser parte de nuestro guest list y así recibir el primer aviso de
           residencias, aperturas y salones privados en nuestros locales. Sin app. Sin
-          cobro. Solo por referencia — pero puedes presentarte.
+          cobro. Solo por referencia — puedes presentarte.
         </p>
+
+        <ul role="list" class="knock__bullets">
+          <li>Tus datos nunca se comparten</li>
+          <li>Puedes referir de tres a cinco invitaciones por mes</li>
+          <li>Te das de baja cuando quieras</li>
+        </ul>
+
+        <ContactForm
+          id="guests"
+          kind="guest"
+          messageLabel="Request an introduction →"
+          messagePlaceholder="Quién te refiere y qué noches te mueves."
+        />
       </div>
-
-      <ul role="list" class="apply__bullets">
-        <li>Por referencia, nunca vendida</li>
-        <li>De tres a cinco invitaciones por mes</li>
-        <li>Te das de baja cuando quieras</li>
-      </ul>
-
-      <a class="apply__arrow" href="/registro/?tipo=guest">Request an introduction →</a>
-    </div>
-  </section>
-
-  <section id="contact" class="section contact">
-    <div class="container contact__grid">
-      <div>
-        <p class="eyebrow" data-reveal>— Contact</p>
-        <h2 class="contact__title" data-reveal>
-          Knock once. <em>We’ll answer.</em>
-        </h2>
-        <ContactForm />
-      </div>
-
-      <dl class="contact__rows" data-reveal>
-        {
-          contactRows.map((row) => (
-            <div class="contact__row">
-              <dt>{row.label}</dt>
-              <dd>{row.href ? <a href={row.href}>{row.value}</a> : row.value}</dd>
-            </div>
-          ))
-        }
-      </dl>
     </div>
   </section>
 </Layout>
@@ -351,13 +287,15 @@ const contactRows = [
     box-shadow: var(--glow-accent);
   }
 
+  /* Misma tipografía que «Are you in?»: el titular de display de la marca,
+     no la itálica de cuerpo. La segunda mitad se queda en itálica roja. */
   .hero__tagline {
-    max-width: var(--measure-md);
+    max-width: var(--measure-lg);
     margin-inline: auto;
-    font-family: var(--font-serif-body);
-    font-style: italic;
-    font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
-    line-height: 1.3;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3.25rem);
+    line-height: 1.15;
+    letter-spacing: var(--ls-normal);
     text-align: center;
     color: var(--c-fg);
   }
@@ -381,8 +319,14 @@ const contactRows = [
     color: var(--c-fg-muted);
   }
 
+  /* El posicionamiento es la frase que explica de qué va la casa: se lee
+     antes que el resto del pie, así que pesa más que el resto del pie. */
   .hero__eyebrow {
-    max-width: 22rem;
+    max-width: 34rem;
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    letter-spacing: var(--ls-normal);
+    color: var(--c-fg);
   }
 
   .hero__scroll {
@@ -551,37 +495,40 @@ const contactRows = [
       0 0 80px rgb(255 26 37 / 0.2);
   }
 
+  /* El manifiesto lleva la tipografía del wordmark —THE DOOR PR— con un
+     punto de tracking, para que suene a la marca y no a texto corrido. */
   .manifesto {
-    max-width: var(--measure-md);
+    max-width: var(--measure-lg);
     margin-block-start: var(--sp-xl);
-    font-family: var(--font-serif-body);
-    font-style: italic;
-    font-size: var(--fs-xl);
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    line-height: 1.3;
+    letter-spacing: 0.04em;
     color: var(--c-fg-muted);
   }
 
   .manifesto em {
-    font-style: italic;
+    font-style: normal;
     color: var(--c-fg);
   }
 
   .manifesto__note {
-    max-width: var(--measure-sm);
+    max-width: var(--measure-md);
     margin-block-start: var(--sp-md);
     padding-inline-start: var(--sp-sm);
     border-inline-start: 1px solid var(--c-border-accent);
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    line-height: 1.9;
+    font-size: var(--fs-base);
+    line-height: 1.8;
     letter-spacing: var(--ls-normal);
     text-transform: uppercase;
-    color: var(--c-fg-muted);
+    color: var(--c-fg);
   }
 
   .stat-grid {
     display: grid;
-    /* A sangre caben las cuatro; en tablet se reparten solas sin romperse. */
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    /* Dos cifras: conviven en una línea y se apilan solas cuando no caben. */
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
     gap: var(--sp-lg) clamp(var(--sp-lg), 4vw, var(--sp-2xl));
     margin-block-start: var(--sp-2xl);
     padding-block-start: var(--sp-lg);
@@ -590,14 +537,15 @@ const contactRows = [
 
   .stat-grid__num {
     font-family: var(--font-display);
-    font-size: var(--fs-2xl);
+    font-size: var(--fs-3xl);
     text-transform: uppercase;
     color: var(--c-fg);
   }
 
   .stat-grid__desc {
+    max-width: var(--measure-sm);
     margin-block-start: var(--sp-2xs);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
     color: var(--c-fg-muted);
   }
 
@@ -639,12 +587,27 @@ const contactRows = [
   .service-row__title {
     grid-area: title;
     font-size: var(--fs-3xl);
+    font-style: italic;
   }
 
+  /* En los títulos con «&», la palabra que sigue al signo va en rojo. */
+  .service-row__title em {
+    padding-inline-start: 0.22em;
+    font-style: italic;
+    color: var(--c-accent);
+    text-shadow: 0 0 40px rgb(255 26 37 / 0.35);
+  }
+
+  /* La descripción también lleva la tipografía del wordmark: el bloque de
+     servicios es la voz de la marca, no una ficha de producto. */
   .service-row__desc {
     grid-area: desc;
     max-width: var(--measure-sm);
     margin-block-start: var(--sp-2xs);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    line-height: 1.45;
+    letter-spacing: 0.02em;
     color: var(--c-fg-muted);
   }
 
@@ -656,7 +619,7 @@ const contactRows = [
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-normal);
     text-transform: uppercase;
-    color: var(--c-fg-muted);
+    color: var(--c-accent);
   }
 
   .service-row__label {
@@ -716,149 +679,70 @@ const contactRows = [
     }
   }
 
-  /* --- Roster / marquee ------------------------------------------------- */
-  .roster__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--sp-md);
+  /* --- Knock (contacto) ---------------------------------------------------- */
+  .knock {
+    padding-block-end: 0;
+  }
+
+  .knock__head {
     margin-block-end: var(--sp-xl);
   }
 
-  .roster__title {
-    font-size: var(--fs-3xl);
+  .knock__title {
+    max-width: var(--measure-md);
+    margin-block-start: var(--sp-md);
+    font-size: var(--fs-4xl);
+    line-height: 0.95;
   }
 
-  .roster__meta {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--c-fg-muted);
-  }
-
-  .marquee {
-    overflow: hidden;
-    padding-block: clamp(var(--sp-2xs), 1vw, var(--sp-md));
-    border-top: 1px solid var(--c-border);
-  }
-
-  .marquee__track {
-    display: flex;
-    width: max-content;
-    animation: marquee-left 42s linear infinite;
-  }
-
-  .marquee__track--b {
-    animation-name: marquee-right;
-    animation-duration: 50s;
-  }
-
-  .marquee__item {
-    display: flex;
-    align-items: center;
-    padding-inline-end: var(--sp-lg);
-    font-family: var(--font-display);
-    font-size: var(--fs-2xl);
-    text-transform: uppercase;
-    color: var(--c-fg);
-    white-space: nowrap;
-  }
-
-  .marquee__dot {
-    width: 5px;
-    height: 5px;
-    margin-inline-start: var(--sp-lg);
-    background: var(--c-accent);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--c-accent);
-  }
-
-  @keyframes marquee-left {
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  @keyframes marquee-right {
-    from {
-      transform: translateX(-50%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  .roster__foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: var(--sp-sm);
-    margin-block-start: var(--sp-lg);
-    padding-block-start: var(--sp-md);
-    border-top: 1px solid var(--c-border);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-normal);
-    text-transform: uppercase;
-    color: var(--c-fg-muted);
-  }
-
-  .roster__cta {
-    color: var(--c-fg);
-    text-decoration: none;
-    transition: color var(--dur-fast) var(--ease-out);
-  }
-
-  .roster__cta:hover {
+  .knock__title em {
+    display: block;
+    font-style: italic;
     color: var(--c-accent);
+    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .marquee__track {
-      animation: none;
-    }
-  }
-
-  /* --- Apply -------------------------------------------------------------- */
-  .apply {
+  /* Las dos puertas —local e invitada— van en línea y con el mismo peso:
+     ninguna de las dos es la principal. */
+  .knock__cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    padding-block: 0;
   }
 
-  .apply__col {
+  .knock__col {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: var(--sp-xl);
     padding: var(--sp-2xl) var(--gutter);
     background: var(--c-bg);
     border-top: 1px solid var(--c-border);
     transition: background var(--dur-base) var(--ease-out);
   }
 
-  .apply__col:hover {
+  .knock__col:hover {
     background: var(--c-bg-elevated);
   }
 
-  .apply__col--list {
+  .knock__col--list {
     border-inline-start: 1px solid var(--c-border);
   }
 
-  .apply__title {
+  .knock__col-title {
     margin-block-start: var(--sp-md);
     font-size: clamp(2rem, 1.3rem + 3vw, 4rem);
     text-wrap: balance;
   }
 
-  .apply__desc {
+  .knock__desc {
     max-width: 30rem;
-    margin-block-start: var(--sp-md);
+    margin-block: var(--sp-md) var(--sp-lg);
     color: var(--c-fg-muted);
   }
 
-  .apply__bullets {
+  /* El empujón hacia abajo alinea los dos formularios entre sí aunque los
+     textos de encima midan distinto: las dos columnas son igual de altas. */
+  .knock__bullets {
     display: grid;
+    margin-block-start: auto;
     gap: var(--sp-2xs);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
@@ -867,112 +751,23 @@ const contactRows = [
     color: var(--c-fg-muted);
   }
 
-  .apply__bullets li {
+  .knock__bullets li {
     padding-block: var(--sp-sm);
     border-top: 1px solid var(--c-border);
   }
 
-  .apply__bullets li::before {
+  .knock__bullets li::before {
     content: '• ';
     color: var(--c-accent);
   }
 
-  .apply__arrow {
-    justify-self: start;
-    padding: var(--sp-sm) var(--sp-md);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-    text-decoration: none;
-    color: var(--c-fg);
-    border: 1px solid var(--c-border-strong);
-    transition: 0.2s;
-  }
-
-  .apply__arrow:hover {
-    color: var(--c-ink);
-    background: var(--c-accent);
-    border-color: var(--c-accent);
-    box-shadow: var(--glow-accent);
-  }
-
   @media (max-width: 860px) {
-    .apply {
+    .knock__cols {
       grid-template-columns: 1fr;
     }
 
-    .apply__col--list {
+    .knock__col--list {
       border-inline-start: 0;
-    }
-  }
-
-  /* --- Contact -------------------------------------------------------------- */
-  .contact {
-    padding-block-end: var(--sp-3xl);
-  }
-
-  .contact__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--sp-2xl) clamp(var(--sp-2xl), 8vw, 12rem);
-    align-items: start;
-  }
-
-  .contact__title {
-    max-width: var(--measure-md);
-    margin-block-start: var(--sp-md);
-    font-size: var(--fs-4xl);
-    line-height: 0.95;
-  }
-
-  .contact__title em {
-    display: block;
-    font-style: italic;
-    color: var(--c-accent);
-    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
-  }
-
-  .contact__rows {
-    display: grid;
-    align-content: start;
-    margin: 0;
-  }
-
-  .contact__row {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--sp-md);
-    padding-block: var(--sp-md);
-    border-top: 1px solid var(--c-border);
-  }
-
-  .contact__row dt {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-    color: var(--c-accent);
-  }
-
-  .contact__row dd {
-    margin: 0;
-    text-align: end;
-    color: var(--c-fg);
-  }
-
-  .contact__row a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .contact__row a:hover {
-    color: var(--c-accent);
-  }
-
-  @media (max-width: 860px) {
-    .contact__grid {
-      grid-template-columns: 1fr;
     }
   }
 </style>

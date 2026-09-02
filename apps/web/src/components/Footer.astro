@@ -1,55 +1,174 @@
 ---
-import Logo from './Logo.astro'
 import DoorGlyph from './DoorGlyph.astro'
 import { SITE } from '../data/navigation'
 
 const year = new Date().getFullYear()
+
+const contactRows = [
+  { label: 'Locales', value: 'venues@thedoor.pe' },
+  { label: 'Guest list', value: 'guestlist@thedoor.pe' },
+  { label: 'Prensa', value: 'press@thedoor.pe' },
+  { label: 'Citas', value: 'appointments@thedoorpr.com', note: '* Solo con cita previa' },
+]
 ---
 
 <footer class="footer">
   <div class="container footer__inner">
     <a class="footer__brand" href="/#top" aria-label={`${SITE.name} — inicio`}>
       <DoorGlyph class="footer__glyph" id="footer" />
-      <Logo class="footer__wordmark" />
+      {/* El wordmark del pie va en tres líneas junto a la puerta: es la firma
+          de la casa, no el logotipo compacto de la cabecera. */}
+      <span class="footer__wordmark">
+        <span>The</span>
+        <span>Door</span>
+        <span>PR</span>
+      </span>
     </a>
-    <p class="footer__legal">
-      © {year} {SITE.name.toUpperCase()} — Casa de hospitalidad en Lima
+
+    <p class="footer__slogan">
+      Are you in?
+      <em>Or are you out?</em>
     </p>
-    <p class="footer__hours">After hours — solo con cita previa</p>
+
+    <dl class="footer__rows">
+      {
+        contactRows.map((row) => (
+          <div class="footer__row">
+            <dt>{row.label}</dt>
+            <dd>
+              <a href={`mailto:${row.value}`}>{row.value}</a>
+              {row.note && <span class="footer__note">{row.note}</span>}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+
+  <div class="container footer__legal">
+    <p>© {year} {SITE.name.toUpperCase()} — Agencia de relaciones públicas Lima - Perú</p>
   </div>
 </footer>
 
 <style>
   .footer {
-    padding-block: var(--sp-lg);
+    padding-block-start: var(--sp-2xl);
     border-top: 1px solid var(--c-border);
   }
 
+  /* Marca a la izquierda, direcciones a la derecha; el eslogan cuelga del
+     lockup, que es de donde cuelga en la portada. */
   .footer__inner {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-md);
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-md) clamp(var(--sp-xl), 8vw, 10rem);
+    align-items: start;
   }
 
   .footer__brand {
     display: inline-flex;
-    gap: 0.625rem;
+    gap: clamp(var(--sp-sm), 2vw, var(--sp-md));
     align-items: center;
     text-decoration: none;
   }
 
   :global(.footer__glyph) {
     width: auto;
-    height: 1.4rem;
+    height: clamp(5.5rem, 10vw, 9rem);
   }
 
-  .footer__legal,
-  .footer__hours {
+  .footer__wordmark {
+    display: grid;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 1.2rem + 3.4vw, 4rem);
+    line-height: 1.02;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-fg);
+  }
+
+  .footer__slogan {
+    grid-column: 1;
+    margin-block-start: var(--sp-md);
+    font-family: var(--font-serif-body);
+    font-style: italic;
+    font-size: var(--fs-xl);
+    line-height: 1.2;
+    color: var(--c-fg-muted);
+  }
+
+  .footer__slogan em {
+    display: block;
+    color: var(--c-accent);
+  }
+
+  .footer__rows {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: grid;
+    align-content: start;
+    margin: 0;
+  }
+
+  .footer__row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    padding-block: var(--sp-sm);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .footer__row dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-accent);
+  }
+
+  .footer__row dd {
+    display: grid;
+    gap: var(--sp-3xs);
+    margin: 0;
+    text-align: end;
+    color: var(--c-fg);
+  }
+
+  .footer__row a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .footer__row a:hover {
+    color: var(--c-accent);
+  }
+
+  .footer__note {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-fg-muted);
+  }
+
+  .footer__legal {
+    margin-block-start: var(--sp-2xl);
+    padding-block: var(--sp-md);
+    border-top: 1px solid var(--c-border);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-normal);
     color: var(--c-fg-muted);
+  }
+
+  @media (max-width: 860px) {
+    .footer__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-lg);
+    }
+
+    .footer__slogan,
+    .footer__rows {
+      grid-column: 1;
+      grid-row: auto;
+    }
   }
 </style>
