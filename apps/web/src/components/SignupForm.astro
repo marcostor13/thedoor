@@ -426,7 +426,13 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 <script>
   interface SignupResponse {
     registered: true
-    duplicate: boolean
+    /**
+     * Solo `true` significa «ya estaba apuntada». Si el campo no llega —una
+     * versión antigua de la API, un cuerpo recortado por un proxy— el alta se
+     * da por nueva: decirle «ya estabas en la lista» a quien acaba de
+     * registrarse es peor que saludar dos veces a quien repite.
+     */
+    duplicate?: boolean
   }
 
   /** Qué significa el campo de referencia para cada público. */
@@ -537,8 +543,10 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
         const result = (await response.json()) as SignupResponse
 
-        doneTitle.textContent = result.duplicate ? 'Ya estabas dentro.' : 'Te hemos abierto.'
-        doneText.innerHTML = result.duplicate
+        const duplicate = result.duplicate === true
+
+        doneTitle.textContent = duplicate ? 'Ya estabas dentro.' : 'Te hemos abierto.'
+        doneText.innerHTML = duplicate
           ? `Ese correo ya estaba en la lista, así que no hemos duplicado nada. Si necesitas cambiar algo, escríbenos a <a href="mailto:${REPLY_TO[kind]}">${REPLY_TO[kind]}</a>.`
           : `Hemos anotado tu solicitud. Te escribimos desde <a href="mailto:${REPLY_TO[kind]}">${REPLY_TO[kind]}</a> en menos de 48 horas.`
 
@@ -548,7 +556,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
         doneTitle.focus()
 
         document.dispatchEvent(
-          new CustomEvent('thedoor:signup-done', { detail: { duplicate: result.duplicate } }),
+          new CustomEvent('thedoor:signup-done', { detail: { duplicate } }),
         )
       } catch {
         status.dataset.tone = 'error'

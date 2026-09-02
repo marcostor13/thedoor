@@ -289,7 +289,13 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 <script>
   interface SignupResponse {
     registered: true
-    duplicate: boolean
+    /**
+     * Solo `true` significa «ya estaba apuntada». Si el campo no llega —una
+     * versión antigua de la API, un cuerpo recortado por un proxy— el alta se
+     * da por nueva: decirle «ya estabas en la lista» a quien acaba de
+     * registrarse es peor que saludar dos veces a quien repite.
+     */
+    duplicate?: boolean
   }
 
   function initInviteForm(): void {
@@ -343,8 +349,10 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
         const result = (await response.json()) as SignupResponse
 
-        doneTitle.textContent = result.duplicate ? 'Ya estabas en la lista.' : 'Estás en la lista.'
-        doneText.textContent = result.duplicate
+        const duplicate = result.duplicate === true
+
+        doneTitle.textContent = duplicate ? 'Ya estabas en la lista.' : 'Estás en la lista.'
+        doneText.textContent = duplicate
           ? 'Ese correo ya estaba apuntado, así que no hemos duplicado nada.'
           : 'Te llega la invitación por correo en cuanto se abra la puerta.'
 
@@ -354,7 +362,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
         doneTitle.focus()
 
         document.dispatchEvent(
-          new CustomEvent('thedoor:signup-done', { detail: { duplicate: result.duplicate } }),
+          new CustomEvent('thedoor:signup-done', { detail: { duplicate } }),
         )
       } catch {
         status.dataset.tone = 'error'
