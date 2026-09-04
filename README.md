@@ -47,8 +47,9 @@ docs/     Documentación de operaciones
 ## Modo «próximamente»
 
 La portada (`/`) está detrás de una verja: el visitante solo ve la puerta, el
-logo y el rótulo «Coming Soon». Las landings operativas —`/registro/` y
-`/invitacion/*`— se sirven enteras y no pasan por ella.
+logo y el rótulo «Coming Soon». La landing de invitación —`/invitacion/` y los
+enlaces de referidos `/invitacion/<anfitriona>`— está **de baja temporal** y
+pasa por la misma verja. `/registro/` se sirve entera.
 
 | Para | URL |
 |---|---|
@@ -64,6 +65,11 @@ permiso en las navegaciones del ClientRouter) y el script en línea de
 
 **Para levantarla cuando el sitio salga**: quitar la prop `soon` del `<Layout>`
 de `pages/index.astro`. No hace falta tocar nada más.
+
+**Para volver a dar de alta la landing de invitación**: quitar la prop `soon`
+del `<Layout>` de `components/InvitePage.astro`. Con esa línea vuelven a la vez
+la genérica y todos los enlaces de referidos; las rutas nunca dejan de existir,
+así que los enlaces ya repartidos siguen sin romperse.
 
 > La verja es de cliente: el HTML de la portada viaja completo aunque no se
 > pinte. Sirve para no enseñar la web todavía, no para guardar un secreto.

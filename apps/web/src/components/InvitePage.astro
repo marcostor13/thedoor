@@ -13,6 +13,16 @@
  * El cuerpo vive aquí y no en la página porque hay dos rutas que lo pintan
  * igual: la genérica (/invitacion) y la de cada anfitriona
  * (/invitacion/<slug>). Lo único que cambia entre ellas es `host`.
+ *
+ * **De baja temporal.** La landing está detrás de la verja de «próximamente»
+ * (`soon`), igual que la portada: quien abra el enlace —el genérico o el de
+ * cualquier anfitriona— ve solo la puerta y el rótulo, y el formulario no se
+ * pinta. Es una baja, no un borrado: las rutas siguen existiendo y los
+ * enlaces repartidos no se rompen.
+ *
+ * Para volver a darla de alta: quitar `soon` del <Layout> de abajo. Es la
+ * única línea que hay que tocar, y vuelven a la vez la genérica y las cuatro
+ * de referidos. Para verla mientras siga de baja: `?develop=true`.
  */
 import Layout from '../layouts/Layout.astro'
 import DoorMark from './DoorMark.astro'
@@ -45,6 +55,7 @@ const description = INVITE.title
   description={description}
   chrome={false}
   noindex
+  soon
 >
   <section class="invite">
     <div class="invite__card">
