@@ -1,5 +1,6 @@
 ---
-import DoorGlyph from './DoorGlyph.astro'
+import DoorMark from './DoorMark.astro'
+import Logo from './Logo.astro'
 import { SITE } from '../data/navigation'
 
 const year = new Date().getFullYear()
@@ -14,19 +15,20 @@ const contactRows = [
 
 <footer class="footer">
   <div class="container footer__inner">
+    {/* La firma del pie es el mismo lockup que preside la portada —la puerta
+        de neón, el wordmark con sus rombos y el filete rojo—, solo que más
+        pequeño. Antes era el glifo compacto de la cabecera junto a un
+        wordmark en tres líneas que no aparecía en ningún otro sitio: dos
+        logos distintos para la misma casa. */}
     <a class="footer__brand" href="/#top" aria-label={`${SITE.name} — inicio`}>
-      <DoorGlyph class="footer__glyph" id="footer" />
-      {/* El wordmark del pie va en tres líneas junto a la puerta: es la firma
-          de la casa, no el logotipo compacto de la cabecera. */}
-      <span class="footer__wordmark">
-        <span>The</span>
-        <span>Door</span>
-        <span>PR</span>
-      </span>
+      <DoorMark class="footer__mark" id="footer" />
+      <Logo class="footer__wordmark" />
+      <span class="footer__rule" aria-hidden="true"></span>
     </a>
 
-    <p class="footer__slogan">
-      Are you in?
+    {/* La pregunta de la portada, con la misma letra que allí. */}
+    <p class="footer__slogan display">
+      <span>Are you in?</span>
       <em>Or are you out?</em>
     </p>
 
@@ -65,41 +67,56 @@ const contactRows = [
     align-items: start;
   }
 
+  /* Apilado y centrado, como en el hero: puerta, wordmark, filete. */
   .footer__brand {
-    display: inline-flex;
-    gap: clamp(var(--sp-sm), 2vw, var(--sp-md));
-    align-items: center;
+    display: inline-grid;
+    justify-items: center;
+    gap: var(--sp-sm);
+    justify-self: start;
     text-decoration: none;
   }
 
-  :global(.footer__glyph) {
+  /* Misma regla que en la portada: la puerta se mide por altura y el
+     aspect-ratio deduce el ancho. */
+  :global(.footer__mark) {
+    aspect-ratio: 24 / 34;
     width: auto;
-    height: clamp(5.5rem, 10vw, 9rem);
+    height: clamp(9rem, 14vw, 13rem);
+    transition: filter var(--dur-base) var(--ease-out);
   }
 
-  .footer__wordmark {
-    display: grid;
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 1.2rem + 3.4vw, 4rem);
-    line-height: 1.02;
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-    color: var(--c-fg);
+  .footer__brand:hover :global(.footer__mark),
+  .footer__brand:focus-visible :global(.footer__mark) {
+    filter: brightness(1.2);
+  }
+
+  :global(.footer__wordmark) {
+    font-size: var(--fs-lg);
+  }
+
+  .footer__rule {
+    width: 2.5rem;
+    height: 1px;
+    background: var(--c-accent);
+    box-shadow: var(--glow-accent);
+  }
+
+  /* Fuera de pantalla la puerta se queda quieta: sus bucles de luz no se
+     ven y no tienen por qué gastar. Sin JS no se pausa nunca. */
+  :global(html.js) .footer:not(.is-onscreen) :global(.footer__mark *) {
+    animation-play-state: paused;
   }
 
   .footer__slogan {
     grid-column: 1;
-    margin-block-start: var(--sp-md);
-    font-family: var(--font-serif-body);
-    font-style: italic;
-    font-size: var(--fs-xl);
-    line-height: 1.2;
-    color: var(--c-fg-muted);
-  }
-
-  .footer__slogan em {
-    display: block;
-    color: var(--c-accent);
+    display: grid;
+    margin-block-start: var(--sp-lg);
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    line-height: 1.05;
+    letter-spacing: var(--ls-normal);
+    text-transform: uppercase;
+    color: var(--c-fg);
   }
 
   .footer__rows {
@@ -118,12 +135,14 @@ const contactRows = [
     border-top: 1px solid var(--c-border);
   }
 
+  /* Las etiquetas acompañan al dato, como las de los formularios: en gris.
+     El rojo del pie ya lo llevan la puerta, el filete y la pregunta. */
   .footer__row dt {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
-    color: var(--c-accent);
+    color: var(--c-fg-muted);
   }
 
   .footer__row dd {
@@ -160,6 +179,14 @@ const contactRows = [
   }
 
   @media (max-width: 860px) {
+    .footer__brand {
+      justify-self: center;
+    }
+
+    .footer__slogan {
+      text-align: center;
+    }
+
     .footer__inner {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--sp-lg);
@@ -172,3 +199,30 @@ const contactRows = [
     }
   }
 </style>
+
+<script>
+  /**
+   * Marca el pie como visible mientras lo está, para que el CSS pause los
+   * bucles de luz de la puerta cuando nadie los ve. El ClientRouter cambia el
+   * pie en cada navegación, así que el observador se rehace con él.
+   */
+  let observer: IntersectionObserver | undefined
+
+  function initFooterMark(): void {
+    observer?.disconnect()
+
+    const footer = document.querySelector<HTMLElement>('.footer')
+    if (!footer || !('IntersectionObserver' in window)) {
+      footer?.classList.add('is-onscreen')
+      return
+    }
+
+    observer = new IntersectionObserver(([entry]) => {
+      footer.classList.toggle('is-onscreen', entry.isIntersecting)
+    })
+    observer.observe(footer)
+  }
+
+  initFooterMark()
+  document.addEventListener('astro:after-swap', initFooterMark)
+</script>

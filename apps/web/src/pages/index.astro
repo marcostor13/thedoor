@@ -44,16 +44,16 @@ const services = [
 ]
 
 /**
- * Los títulos que llevan «&» se parten en dos: lo que va hasta el signo
- * queda en blanco y la palabra siguiente en rojo. Los que no lo llevan se
- * quedan enteros en blanco.
+ * Los títulos que llevan «&» se parten en tres: lo que va antes del signo
+ * queda en blanco, el signo en la cursiva de acento y la palabra siguiente
+ * en rojo. Los que no lo llevan se quedan enteros en blanco.
  */
 const serviceRows = services.map((service) => {
   const [head, accent] = service.title.split('&')
 
   return {
     ...service,
-    titleHead: accent ? `${head.trim()} &` : service.title,
+    titleHead: accent ? head.trim() : service.title,
     titleAccent: accent ? accent.trim() : '',
   }
 })
@@ -89,7 +89,7 @@ const stats = [
         <span class="hero__rule" aria-hidden="true"></span>
       </div>
 
-      <p class="hero__tagline">
+      <p class="hero__tagline display">
         Doors don’t open for everyone — <em>but we can open them for you.</em>
       </p>
 
@@ -146,10 +146,17 @@ const stats = [
             <span class="service-row__num">{service.num} /</span>
             <h3 class="service-row__title">
               {service.titleHead}
-              {service.titleAccent && <em>{service.titleAccent}</em>}
+              {service.titleAccent && (
+                <>
+                  {' '}
+                  <span class="service-row__amp">&</span> <em>{service.titleAccent}</em>
+                </>
+              )}
             </h3>
             <p class="service-row__desc">{service.desc}</p>
-            <span class="service-row__tag">→ {service.tag}</span>
+            <span class="service-row__tag">
+              <span class="service-row__arrow" aria-hidden="true">→</span> {service.tag}
+            </span>
             <span class="service-row__label">{service.label}</span>
           </div>
         ))
@@ -251,6 +258,7 @@ const stats = [
   .hero__topbar-right em {
     font-style: normal;
     color: var(--c-accent);
+    text-shadow: var(--glow-label);
   }
 
   @media (max-width: 600px) {
@@ -298,12 +306,6 @@ const stats = [
     letter-spacing: var(--ls-normal);
     text-align: center;
     color: var(--c-fg);
-  }
-
-  .hero__tagline em {
-    color: var(--c-accent);
-    font-style: italic;
-    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
   }
 
   .hero__foot {
@@ -471,28 +473,11 @@ const stats = [
   }
 
   /* --- Question / stats --------------------------------------------------- */
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-widest);
-    text-transform: uppercase;
-    color: var(--c-accent);
-    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
-  }
-
   .question__title {
     display: grid;
     margin-block-start: var(--sp-md);
     font-size: var(--fs-5xl);
     line-height: 0.95;
-  }
-
-  .question__title em {
-    font-style: italic;
-    color: var(--c-accent);
-    text-shadow:
-      0 0 40px rgb(255 26 37 / 0.4),
-      0 0 80px rgb(255 26 37 / 0.2);
   }
 
   /* El manifiesto lleva la tipografía del wordmark —THE DOOR PR— con un
@@ -584,33 +569,37 @@ const stats = [
     color: var(--c-accent);
   }
 
+  /* Italiana en redonda, como todos los titulares: la cursiva inclinada a la
+     fuerza deformaba la letra. La inclinación la aporta solo el acento. */
   .service-row__title {
     grid-area: title;
     font-size: var(--fs-3xl);
-    font-style: italic;
   }
 
-  /* En los títulos con «&», la palabra que sigue al signo va en rojo. */
-  .service-row__title em {
-    padding-inline-start: 0.22em;
+  /* El «&» va en la cursiva de acento pero en crema: une las dos mitades sin
+     encenderse. El de Italiana se leía como una «e» tachada. */
+  .service-row__amp {
+    font-family: var(--font-accent);
+    font-size: var(--fs-accent-scale);
     font-style: italic;
-    color: var(--c-accent);
-    text-shadow: 0 0 40px rgb(255 26 37 / 0.35);
+    font-weight: var(--fw-regular);
+    color: var(--c-fg);
   }
 
-  /* La descripción también lleva la tipografía del wordmark: el bloque de
-     servicios es la voz de la marca, no una ficha de producto. */
+  /* La descripción es un párrafo, y los párrafos del sitio van en Archivo:
+     en Italiana, fina y en gris, cinco líneas se leían con esfuerzo. */
   .service-row__desc {
     grid-area: desc;
     max-width: var(--measure-sm);
     margin-block-start: var(--sp-2xs);
-    font-family: var(--font-display);
     font-size: var(--fs-lg);
-    line-height: 1.45;
-    letter-spacing: 0.02em;
+    font-weight: 300;
+    line-height: var(--lh-normal);
     color: var(--c-fg-muted);
   }
 
+  /* La etiqueta es un dato, no un titular: va en gris y solo la flecha
+     conserva el rojo, que así no le disputa el brillo al título. */
   .service-row__tag {
     grid-area: tag;
     display: block;
@@ -619,6 +608,10 @@ const stats = [
     font-size: var(--fs-xs);
     letter-spacing: var(--ls-normal);
     text-transform: uppercase;
+    color: var(--c-fg-muted);
+  }
+
+  .service-row__arrow {
     color: var(--c-accent);
   }
 
@@ -697,9 +690,6 @@ const stats = [
 
   .knock__title em {
     display: block;
-    font-style: italic;
-    color: var(--c-accent);
-    text-shadow: 0 0 40px rgb(255 26 37 / 0.4);
   }
 
   /* Las dos puertas —local e invitada— van en línea y con el mismo peso:

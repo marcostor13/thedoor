@@ -152,7 +152,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
   </form>
 
   <div class="signup__done" id="signup-done" hidden>
-    <p class="signup__done-eyebrow">— Estás dentro</p>
+    <p class="eyebrow">— Estás dentro</p>
     <h3 class="signup__done-title" id="signup-done-title" tabindex="-1">Te hemos abierto.</h3>
     <p class="signup__done-text" id="signup-done-text">
       Hemos anotado tu solicitud. Te escribimos desde
@@ -360,15 +360,6 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
     gap: var(--sp-sm);
     justify-items: start;
     animation: signup-done-in var(--dur-slow) var(--ease-out) both;
-  }
-
-  .signup__done-eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: var(--ls-widest);
-    text-transform: uppercase;
-    color: var(--c-accent);
-    text-shadow: 0 0 12px rgb(255 26 37 / 0.4);
   }
 
   .signup__done-title {

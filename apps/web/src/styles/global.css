@@ -1,5 +1,17 @@
 @import './tokens.css';
 
+/* Guion largo y semilargo para los titulares: ver --font-display en
+   tokens.css. El `unicode-range` hace que el navegador solo lo pida cuando
+   la página pinta un «—» en display, y que no toque ningún otro carácter. */
+@font-face {
+  font-family: 'TD Display Dashes';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/display-dashes.woff2') format('woff2');
+  unicode-range: U+2013-2014;
+}
+
 /* --- Reset ---------------------------------------------------------------- */
 
 *,
@@ -82,6 +94,35 @@ h3 {
 }
 h4 {
   font-size: var(--fs-xl);
+}
+
+/* --- Voz de la marca -----------------------------------------------------
+   Las piezas que se repiten en todas las páginas viven aquí, una sola vez,
+   para que el antetítulo de la portada y el del registro no puedan
+   divergir.
+   ------------------------------------------------------------------------- */
+
+/* El acento: la palabra encendida de un titular. Italiana no tiene cursiva,
+   así que la cursiva la pone Cormorant (ver tokens.css). Vale para cualquier
+   <em> dentro de un titular o de una línea marcada `.display`. */
+:where(h1, h2, h3, h4, .display) em,
+.accent {
+  font-family: var(--font-accent);
+  font-size: var(--fs-accent-scale);
+  font-style: italic;
+  font-weight: var(--fw-regular);
+  color: var(--c-accent);
+  text-shadow: var(--glow-text);
+}
+
+/* Antetítulo de sección: «— The question», «— Registro»… */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--c-accent);
+  text-shadow: var(--glow-label);
 }
 
 a {

@@ -9,15 +9,33 @@
 
 :root {
   /* --- Tipografía ---------------------------------------------------------
-     Italiana  → titulares grandes, wordmark (solo weight 400 disponible)
-     Cormorant Garamond → acentos itálicos, subrayados editoriales
-     Archivo   → cuerpo de texto
-     JetBrains Mono → navegación, etiquetas, meta-datos, todo en mayúsculas
+     Cuatro familias, cuatro papeles, y ninguna pisa el terreno de otra:
+
+     Italiana  → display: titulares, wordmark, cifras, frases de marca.
+                 Solo existe en redonda (un único peso, sin cursiva), así que
+                 NUNCA se le pide `font-style: italic`: el navegador la inclina
+                 a la fuerza y deforma el dibujo.
+     Cormorant Garamond itálica → acento: la palabra encendida en rojo dentro
+                 de un titular («Or are you out?», «We'll answer»). Es la
+                 cursiva de verdad que le falta a Italiana y comparte con ella
+                 el contraste alto de trazo, por eso casan.
+     Archivo   → texto corrido: todo lo que se lee en párrafo.
+     JetBrains Mono → etiquetas, navegación y metadatos, en mayúsculas.
+
+     «TD Display Dashes» va delante de Italiana y solo cubre U+2013–2014: el
+     guion largo de Italiana existe pero viene vacío, y cada «—» de un
+     titular se pintaba como un hueco. Se sirve el de Cormorant, que es el
+     que mejor casa con su trazo (public/fonts/display-dashes.woff2).
   ------------------------------------------------------------------------- */
-  --font-display: 'Italiana', 'Cormorant Garamond', 'Times New Roman', serif;
-  --font-serif-body: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-display: 'TD Display Dashes', 'Italiana', 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-accent: 'Cormorant Garamond', 'Times New Roman', serif;
   --font-body: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  /* Cormorant dibuja las mayúsculas algo más bajas que Italiana: sin esta
+     compensación, la palabra en rojo parecía de un cuerpo menor que el resto
+     del titular. */
+  --fs-accent-scale: 1.05em;
 
   --fw-regular: 400;
   --fw-medium: 500;
@@ -65,6 +83,15 @@
   --c-border-accent: rgb(255 26 37 / 0.35);
   --c-overlay: rgb(0 0 0 / 0.75);
 
+  /* Papeles del color en el texto — el rojo es escaso a propósito:
+       · crema (--c-fg)       lo que se lee: titulares, datos, enlaces
+       · gris (--c-fg-muted)  lo que acompaña: párrafos, etiquetas, notas
+       · rojo (--c-accent)    lo que marca: la palabra encendida de un
+                              titular, los antetítulos de sección, los
+                              índices y los estados activos.
+     Nada más va en rojo; si todo brilla, nada brilla. */
+  --c-accent-glow: rgb(255 26 37 / 0.4);
+
   /* --- Espaciado ---------------------------------------------------------- */
   --sp-3xs: 0.25rem;
   --sp-2xs: 0.5rem;
@@ -100,6 +127,10 @@
   --shadow-md: 0 8px 24px rgb(0 0 0 / 0.45);
   --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.55);
   --glow-accent: 0 0 32px rgb(255 26 37 / 0.45);
+  /* Resplandor del texto en rojo, en dos intensidades y ninguna más: la de
+     los titulares y la de las etiquetas pequeñas. */
+  --glow-text: 0 0 40px var(--c-accent-glow), 0 0 80px rgb(255 26 37 / 0.2);
+  --glow-label: 0 0 12px var(--c-accent-glow);
 
   /* --- Movimiento -----------------------------------------------------------
      Curvas y duraciones de la animación de apertura de puerta del sitio
