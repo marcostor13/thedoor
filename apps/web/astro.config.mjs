@@ -12,8 +12,11 @@ export default defineConfig({
   output: 'static',
   integrations: [
     // La landing de invitación se reparte a mano (WhatsApp, correo) y va
-    // marcada `noindex`: tampoco tiene por qué anunciarse en el sitemap.
-    sitemap({ filter: (page) => !page.includes('/invitacion') }),
+    // marcada `noindex`: tampoco tiene por qué anunciarse en el sitemap. Lo
+    // mismo vale para el registro de la lista (`/registro-lista`).
+    sitemap({
+      filter: (page) => !page.includes('/invitacion') && !page.includes('/registro-lista'),
+    }),
   ],
   build: {
     inlineStylesheets: 'auto',

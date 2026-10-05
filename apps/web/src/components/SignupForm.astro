@@ -10,29 +10,53 @@
  * Al aceptarse el alta se emite `thedoor:signup-done` para que la página
  * pueda celebrarlo — en la landing, abriendo la puerta de par en par.
  */
+interface Props {
+  /**
+   * Fija el público y quita el selector. Hoy solo se fija `guest`: es lo que
+   * usa `/registro-lista`, donde nadie viene a programar un local.
+   */
+  kind?: 'guest'
+  /**
+   * Nombre de la anfitriona que reparte el enlace. Viaja oculto en
+   * `reference` —que para un `guest` ya significa «quién te refiere»— y el
+   * campo visible desaparece: no se le pregunta a nadie lo que ya se sabe.
+   */
+  host?: string
+}
+
+const { kind, host } = Astro.props
+
 const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 ---
 
 <div class="signup">
   <form class="signup__form" id="signup-form" data-api={apiUrl} novalidate>
-    <fieldset class="segmented">
-      <legend class="signup__label">Quién eres</legend>
+    {
+      kind ? (
+        <input type="hidden" name="kind" value={kind} />
+      ) : (
+        <fieldset class="segmented">
+          <legend class="signup__label">Quién eres</legend>
 
-      {/* `autocomplete="off"` en los radios, no en el formulario: Chrome
-          restaura el estado de los controles al volver a una página ya
-          visitada y le ganaba a la preselección por URL (`?tipo=`). Los campos
-          de texto sí conservan su autocompletado. */}
-      <div class="segmented__options">
-        <label class="segmented__option">
-          <input type="radio" name="kind" value="venue" autocomplete="off" checked />
-          <span>Tengo un local</span>
-        </label>
-        <label class="segmented__option">
-          <input type="radio" name="kind" value="guest" autocomplete="off" />
-          <span>Quiero la lista</span>
-        </label>
-      </div>
-    </fieldset>
+          {/* `autocomplete="off"` en los radios, no en el formulario: Chrome
+              restaura el estado de los controles al volver a una página ya
+              visitada y le ganaba a la preselección por URL (`?tipo=`). Los
+              campos de texto sí conservan su autocompletado. */}
+          <div class="segmented__options">
+            <label class="segmented__option">
+              <input type="radio" name="kind" value="venue" autocomplete="off" checked />
+              <span>Tengo un local</span>
+            </label>
+            <label class="segmented__option">
+              <input type="radio" name="kind" value="guest" autocomplete="off" />
+              <span>Quiero la lista</span>
+            </label>
+          </div>
+        </fieldset>
+      )
+    }
+
+    {host && <input type="hidden" name="reference" value={host} />}
 
     <div class="signup__row">
       <div class="signup__field">
@@ -63,24 +87,35 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
       </div>
     </div>
 
+    {/* Una sola fila para los cuatro: la rejilla los reparte de dos en dos, y
+        cuando la referencia no se pinta (enlace de anfitriona) los demás se
+        recolocan solos en vez de dejar un hueco. */}
     <div class="signup__row">
-      <div class="signup__field">
-        <label class="signup__label" for="signup-reference" id="signup-reference-label">
-          Nombre del local
-        </label>
-        <input
-          class="signup__input"
-          id="signup-reference"
-          name="reference"
-          type="text"
-          required
-          maxlength="160"
-          autocomplete="organization"
-        />
-        <p class="signup__hint" id="signup-reference-hint">
-          Cómo se llama la sala que quieres que programemos.
-        </p>
-      </div>
+      {
+        !host && (
+          <div class="signup__field">
+            <label class="signup__label" for="signup-reference" id="signup-reference-label">
+              {kind === 'guest' ? 'Quién te refiere' : 'Nombre del local'}
+            </label>
+            <input
+              class="signup__input"
+              id="signup-reference"
+              name="reference"
+              type="text"
+              required={kind !== 'guest'}
+              maxlength="160"
+              autocomplete={kind === 'guest' ? 'off' : 'organization'}
+            />
+            <p class="signup__hint" id="signup-reference-hint">
+              {
+                kind === 'guest'
+                  ? 'Un nombre o un @ de Instagram. Si no tienes referencia, déjalo vacío.'
+                  : 'Cómo se llama la sala que quieres que programemos.'
+              }
+            </p>
+          </div>
+        )
+      }
 
       <div class="signup__field">
         <label class="signup__label" for="signup-phone">WhatsApp</label>
@@ -97,9 +132,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
           placeholder="+51 999 999 999"
         />
       </div>
-    </div>
 
-    <div class="signup__row">
       <div class="signup__field">
         <label class="signup__label" for="signup-instagram">
           Instagram <span class="signup__optional">— opcional</span>
@@ -454,9 +487,10 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
     if (!form || !status || !done) return
 
     const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
-    const reference = document.getElementById('signup-reference') as HTMLInputElement
-    const referenceLabel = document.getElementById('signup-reference-label')!
-    const referenceHint = document.getElementById('signup-reference-hint')!
+    // No existen en el enlace de una anfitriona: la referencia va oculta.
+    const reference = document.getElementById('signup-reference') as HTMLInputElement | null
+    const referenceLabel = document.getElementById('signup-reference-label')
+    const referenceHint = document.getElementById('signup-reference-hint')
     const doneTitle = document.getElementById('signup-done-title')!
     const doneText = document.getElementById('signup-done-text')!
 
@@ -464,6 +498,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
       (new FormData(form).get('kind') as Kind | null) ?? 'venue'
 
     const syncKind = (): void => {
+      if (!reference || !referenceLabel || !referenceHint) return
+
       const copy = REFERENCE_COPY[currentKind()]
       referenceLabel.textContent = copy.label
       referenceHint.textContent = copy.hint

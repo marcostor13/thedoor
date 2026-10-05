@@ -1,0 +1,22 @@
+---
+/**
+ * Un enlace por anfitriona: `/registro-lista/sandra`, `/registro-lista/ximena`…
+ *
+ * Mismas anfitrionas que `/invitacion/<slug>` (INVITE_HOSTS) y misma idea: el
+ * alta llega firmada con su nombre. Lo que cambia es la landing, que aquí es
+ * la del registro de la web en vez de la invitación corta.
+ */
+import RegistroPage from '../../components/RegistroPage.astro'
+import { INVITE_HOSTS } from '../../data/invite'
+
+export function getStaticPaths() {
+  return INVITE_HOSTS.map((host) => ({
+    params: { anfitriona: host.slug },
+    props: { host },
+  }))
+}
+
+const { host } = Astro.props
+---
+
+<RegistroPage listOnly host={host} />
