@@ -186,7 +186,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
   <div class="signup__done" id="signup-done" hidden>
     <p class="eyebrow">— Estás dentro</p>
-    <h3 class="signup__done-title" id="signup-done-title" tabindex="-1">Te hemos abierto.</h3>
+    <h3 class="signup__done-title" id="signup-done-title" tabindex="-1">You are in.</h3>
     <p class="signup__done-text" id="signup-done-text">
       Hemos anotado tu solicitud. Te escribimos desde
       <a href="mailto:venues@thedoor.pe">venues@thedoor.pe</a> en menos de 48 horas.
@@ -572,7 +572,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000'
 
         const duplicate = result.duplicate === true
 
-        doneTitle.textContent = duplicate ? 'Ya estabas dentro.' : 'Te hemos abierto.'
+        doneTitle.textContent = duplicate ? 'Ya estabas dentro.' : 'You are in.'
         doneText.innerHTML = duplicate
           ? `Ese correo ya estaba en la lista, así que no hemos duplicado nada. Si necesitas cambiar algo, escríbenos a <a href="mailto:${REPLY_TO[kind]}">${REPLY_TO[kind]}</a>.`
           : `Hemos anotado tu solicitud. Te escribimos desde <a href="mailto:${REPLY_TO[kind]}">${REPLY_TO[kind]}</a> en menos de 48 horas.`
