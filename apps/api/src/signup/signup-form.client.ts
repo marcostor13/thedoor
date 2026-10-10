@@ -26,20 +26,29 @@ export interface SignupFormFields {
   whatsapp: string
   /** Instagram, ya normalizado. */
   instagram?: string
-  /** «Invitado por»: la anfitriona, o el nombre del local. */
-  reference?: string
+  // Sin `reference`: el formulario en uso no define ese campo, y mandar una
+  // clave que la plataforma no conoce es jugarse un 400 en cada alta que
+  // venga del enlace de una anfitriona. Quién invitó se sigue sabiendo por
+  // `pageUrl`, que lleva su slug.
 }
 
 export interface SignupFormResult {
-  /** `false` cuando ese correo ya estaba dado de alta. */
+  /** `false` cuando esa persona ya había enviado este formulario. */
   created: boolean
   customerId?: string
 }
 
 interface SubmitResponse {
   ok?: boolean
+  /**
+   * Lo único que hay que mirar, según la plataforma: `new` es un alta en ESTE
+   * formulario —también si el contacto ya existía por otra vía—, y `registered`
+   * es alguien que ya lo había enviado antes.
+   */
+  status?: 'new' | 'registered'
   message?: string
   customerId?: string
+  /** Dice lo mismo que `status`; se mantiene por compatibilidad. */
   created?: boolean
 }
 
@@ -97,9 +106,12 @@ export class SignupFormClient {
       throw new SignupFormError(`El formulario ha rechazado el alta: ${body.message ?? 'sin motivo'}`)
     }
 
-    // Si la plataforma dejara de mandar `created`, tratarlo como alta nueva es
-    // el fallo menos malo: se manda la bienvenida una vez de más, no de menos.
-    return { created: body.created ?? true, customerId: body.customerId }
+    // Manda `status`; `created` es el respaldo para una respuesta antigua. Si
+    // faltaran los dos, tratarlo como alta nueva es el fallo menos malo: se
+    // manda la bienvenida una vez de más, no de menos.
+    const created = body.status ? body.status === 'new' : (body.created ?? true)
+
+    return { created, customerId: body.customerId }
   }
 }
 

@@ -8,7 +8,8 @@
 import { renderSignupConfirmation, type SignupConfirmationData } from './signup-confirmation'
 import { renderEventInvitation } from './event-invitation'
 import { renderOscarsList } from './oscars-list'
-import { eventOnBill, oscarsListOnBill } from './event'
+import { renderJamparaList } from './jampara-list'
+import { eventOnBill, jamparaListOnBill, oscarsListOnBill } from './event'
 import type { RenderedEmail } from './html'
 
 /**
@@ -17,8 +18,9 @@ import type { RenderedEmail } from './html'
  * vez pasada, las funciones `…OnBill()` dejan de devolver evento y vuelve sola
  * la confirmación genérica, sin que nadie tenga que acordarse de desactivarla.
  *
- * Cada noche trae su plantilla: Oscar's List se saluda por el nombre y se
- * despide con la dirección; las de The Door PR dan un pase. Las ventanas no se
+ * Cada noche trae su plantilla: Jampara List y Oscar's List saludan por el
+ * nombre —la segunda se despide con la dirección, la primera no tiene: es
+ * locación secreta—; las de The Door PR dan un pase. Las ventanas no se
  * solapan —cada evento tiene su `startsAt`/`endsAt`—, así que el orden de
  * estas comprobaciones no decide nada; se lee de la más reciente a la más
  * antigua porque es donde se mira primero al cambiar de cartel.
@@ -31,6 +33,11 @@ export function renderSignupEmail(
   now: Date = new Date(),
 ): RenderedEmail {
   if (data.kind !== 'guest') return renderSignupConfirmation(data)
+
+  const jampara = jamparaListOnBill(now)
+  if (jampara) {
+    return renderJamparaList({ name: data.name, siteUrl: data.siteUrl, event: jampara })
+  }
 
   const oscars = oscarsListOnBill(now)
   if (oscars) {

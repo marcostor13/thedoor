@@ -47,7 +47,6 @@ describe('SignupService', () => {
         email: 'ana@example.com',
         whatsapp: '+51 999 999 999',
         instagram: undefined,
-        reference: 'Daniela',
       },
       'https://thedoorpr.com/invitacion/daniela/',
     )
@@ -60,16 +59,21 @@ describe('SignupService', () => {
     expect(submit).not.toHaveBeenCalled()
   })
 
-  it('acepta un venue con nombre de local, que viaja como referencia', async () => {
+  it('acepta un venue con nombre de local, que viaja en su correo', async () => {
     const venue = { ...guest, kind: 'venue' as const, reference: 'Maison Noir' }
 
     await expect(service.create(venue)).resolves.toEqual({
       registered: true,
       duplicate: false,
     })
+    // Al formulario no llega: no define ese campo. Sí a la confirmación.
     expect(submit).toHaveBeenCalledWith(
-      expect.objectContaining({ reference: 'Maison Noir' }),
+      expect.not.objectContaining({ reference: expect.anything() }),
       undefined,
+    )
+    expect(sendSignupConfirmation).toHaveBeenCalledWith(
+      'ana@example.com',
+      expect.objectContaining({ reference: 'Maison Noir' }),
     )
   })
 

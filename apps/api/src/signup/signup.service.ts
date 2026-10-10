@@ -41,7 +41,6 @@ export class SignupService {
         email: dto.email,
         whatsapp: dto.phone,
         instagram: normalizeInstagram(dto.instagram),
-        reference: dto.reference,
       },
       dto.pageUrl,
     )

@@ -11,18 +11,19 @@
  * `undefined` y las altas vuelven a recibir la confirmación genérica sin que
  * nadie tenga que acordarse de desactivar nada.
  */
-export interface EventDetails {
+/**
+ * Lo mínimo que tiene cualquier cosa que esté en cartel: qué es, cuándo, y
+ * hasta cuándo se anuncia. Lo que no todas tienen —dirección, mapa, dress
+ * code— vive en `EventDetails`.
+ */
+export interface BillEntry {
   /** Sitio, tal y como se anuncia. */
   venue: string
   /** Día, en la forma en que se lee dentro de la invitación. */
   date: string
   time: string
-  dresscode: string
   /** Nombre del local para la línea de localización. */
   location: string
-  address: string
-  /** Adónde lleva el botón «cómo llegar». */
-  mapsUrl: string
   /** Cuerpo de la invitación: un párrafo por elemento. */
   body: string[]
   /** Flyer. Cuelga de `${siteUrl}` y se sirve desde `apps/web/public`. */
@@ -45,6 +46,14 @@ export interface EventDetails {
    * explícita: el contenedor va en UTC y la noche es en Lima.
    */
   endsAt: string
+}
+
+/** Una noche con puerta conocida: se puede decir cómo vestir y cómo llegar. */
+export interface EventDetails extends BillEntry {
+  dresscode: string
+  address: string
+  /** Adónde lleva el botón «cómo llegar». */
+  mapsUrl: string
 }
 
 export const CURRENT_EVENT: EventDetails = {
@@ -105,8 +114,35 @@ export const OSCARS_LIST: EventDetails = {
   endsAt: '2026-09-05T05:00:00-05:00',
 }
 
+/**
+ * Jampara List — Jampara Vol. 01, un almuerzo alrededor de la cocina peruana.
+ *
+ * Es un `BillEntry` y no un `EventDetails` porque la locación es secreta: no
+ * hay dirección que escribir ni mapa al que mandar a nadie. Tampoco dress code.
+ * Por eso lleva plantilla propia (`jampara-list.ts`), que es el saludo y la
+ * invitación, sin botón de «cómo llegar».
+ */
+export const JAMPARA_LIST: BillEntry = {
+  venue: 'Jampara Vol. 01',
+  date: 'Sábado 24 de octubre',
+  time: '1:00 p.m.',
+  location: 'Locación secreta',
+  body: [
+    'Gracias por registrarte en Jampara List: una tarde para descubrir sabores, compartir, conversar y disfrutar de la cocina peruana a nuestra manera.',
+  ],
+  flyer: {
+    path: '/email/jampara-24-10.jpg',
+    alt: 'Jampara Vol. 01 — Invitación especial. 24 de octubre de 2026, 1:00 p.m. Locación secreta. Encuentros alrededor de la cocina peruana.',
+    width: 1600,
+    height: 1066,
+  },
+  startsAt: '2026-10-09T00:00:00-05:00',
+  // Es una tarde, no una madrugada: se corta al acabar el día 24, hora de Lima.
+  endsAt: '2026-10-25T00:00:00-05:00',
+}
+
 /** ¿Está esta noche en cartel ahora mismo? */
-export function onBill(event: EventDetails, now: Date = new Date()): boolean {
+export function onBill(event: BillEntry, now: Date = new Date()): boolean {
   const empezado = !event.startsAt || Date.parse(event.startsAt) <= now.getTime()
   return empezado && now.getTime() < Date.parse(event.endsAt)
 }
@@ -121,8 +157,13 @@ export function oscarsListOnBill(now: Date = new Date()): EventDetails | undefin
   return onBill(OSCARS_LIST, now) ? OSCARS_LIST : undefined
 }
 
+/** Jampara List, mientras siga en cartel. */
+export function jamparaListOnBill(now: Date = new Date()): BillEntry | undefined {
+  return onBill(JAMPARA_LIST, now) ? JAMPARA_LIST : undefined
+}
+
 /** El archivo de noches, de la más reciente a la más antigua. */
-const BILL: EventDetails[] = [OSCARS_LIST, CURRENT_EVENT]
+const BILL: BillEntry[] = [JAMPARA_LIST, OSCARS_LIST, CURRENT_EVENT]
 
 /**
  * La noche que haya en cartel ahora mismo, sea cual sea.
@@ -132,6 +173,6 @@ const BILL: EventDetails[] = [OSCARS_LIST, CURRENT_EVENT]
  * ocupa `renderSignupEmail`—; lo que necesita saber es si hay alguna, porque
  * sin ella el lote saldría con la confirmación genérica.
  */
-export function nightOnBill(now: Date = new Date()): EventDetails | undefined {
+export function nightOnBill(now: Date = new Date()): BillEntry | undefined {
   return BILL.find((event) => onBill(event, now))
 }

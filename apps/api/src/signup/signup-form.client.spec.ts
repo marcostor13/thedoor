@@ -8,7 +8,6 @@ const campos = {
   email: 'ana@example.com',
   whatsapp: '+51 999 999 999',
   instagram: '@ana',
-  reference: 'Daniela',
 }
 
 /** Suplanta el `fetch` global y devuelve el mock para inspeccionar la llamada. */
@@ -66,6 +65,27 @@ describe('SignupFormClient', () => {
     const red = withFetch(new Response(JSON.stringify({ ok: true, created: false }), { status: 200 }))
     restore = () => {
       red.restore()
+      restoreEnv()
+    }
+
+    await expect(new SignupFormClient().submit(campos)).resolves.toMatchObject({ created: false })
+  })
+
+  it('`status` manda sobre `created`: `new` es alta, `registered` es reenvío', async () => {
+    const restoreEnv = withEndpoint(ENDPOINT)
+    const nueva = withFetch(
+      new Response(JSON.stringify({ ok: true, status: 'new', created: false }), { status: 200 }),
+    )
+    await expect(new SignupFormClient().submit(campos)).resolves.toMatchObject({ created: true })
+    nueva.restore()
+
+    const repetida = withFetch(
+      new Response(JSON.stringify({ ok: true, status: 'registered', created: true }), {
+        status: 200,
+      }),
+    )
+    restore = () => {
+      repetida.restore()
       restoreEnv()
     }
 
