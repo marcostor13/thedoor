@@ -153,6 +153,62 @@ describe('MailService', () => {
     )
   })
 
+  it('avisa al equipo de un mensaje de contacto, con respuesta a quien escribió', async () => {
+    const restoreEnv = withEnv({
+      ...configurado,
+      MAIL_NOTIFY_TO: 'equipo@example.com, otra@example.com',
+    })
+    const red = withFetch(new Response(JSON.stringify({ id: 'abc' }), { status: 200 }))
+    restore = () => {
+      red.restore()
+      restoreEnv()
+    }
+
+    const service = new MailService()
+
+    await expect(
+      service.sendContactNotification({
+        name: 'Ana <b>Torres</b>',
+        email: 'ana@example.com',
+        message: 'Queremos programar el local.\n<script>alert(1)</script>',
+        kind: 'venue',
+      }),
+    ).resolves.toBe(true)
+
+    const [, init] = red.fetch.mock.calls[0] as [string, RequestInit]
+    const sent = JSON.parse(String(init.body)) as Record<string, unknown>
+    expect(sent.to).toEqual(['equipo@example.com', 'otra@example.com'])
+    expect(sent.from).toBe('The Door PR <hola@thedoorpr.com>')
+    // Contestar al aviso es contestar a quien escribió.
+    expect(sent.reply_to).toBe('ana@example.com')
+    expect(sent.subject).toBe('Nuevo mensaje de Ana <b>Torres</b> (Local) — The Door PR')
+    // Lo que viene del formulario entra escapado en el HTML.
+    expect(String(sent.html)).not.toContain('<script>')
+    expect(String(sent.html)).toContain('&lt;script&gt;')
+    expect(String(sent.text)).toContain('Queremos programar el local.')
+  })
+
+  it('sin MAIL_NOTIFY_TO no hay a quién avisar: no sale nada', async () => {
+    const restoreEnv = withEnv({ ...configurado, MAIL_NOTIFY_TO: undefined })
+    const red = withFetch(new Response(JSON.stringify({ id: 'abc' }), { status: 200 }))
+    restore = () => {
+      red.restore()
+      restoreEnv()
+    }
+
+    const service = new MailService()
+    service.onModuleInit()
+
+    await expect(
+      service.sendContactNotification({
+        name: 'Ana',
+        email: 'ana@example.com',
+        message: 'Hola, ¿hay sitio?',
+      }),
+    ).resolves.toBe(false)
+    expect(red.fetch).not.toHaveBeenCalled()
+  })
+
   it('respeta MAIL_REPLY_TO cuando está definido', async () => {
     const restoreEnv = withEnv({ ...configurado, MAIL_REPLY_TO: 'lista@thedoorpr.com' })
     const red = withFetch(new Response(JSON.stringify({ id: 'abc' }), { status: 200 }))

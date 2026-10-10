@@ -3,18 +3,23 @@ import { Test } from '@nestjs/testing'
 import { getModelToken } from '@nestjs/mongoose'
 import { ContactService } from './contact.service'
 import { Contact } from './contact.schema'
+import { MailService } from '../mail/mail.service'
 
 describe('ContactService', () => {
   const create = mock()
+  const sendContactNotification = mock()
   let service: ContactService
 
   beforeEach(async () => {
     create.mockReset()
+    sendContactNotification.mockReset()
+    sendContactNotification.mockResolvedValue(true)
 
     const moduleRef = await Test.createTestingModule({
       providers: [
         ContactService,
         { provide: getModelToken(Contact.name), useValue: { create } },
+        { provide: MailService, useValue: { sendContactNotification } },
       ],
     }).compile()
 
@@ -76,5 +81,43 @@ describe('ContactService', () => {
     await expect(service.create(dto)).resolves.toEqual({ received: true })
     // …pero no llega a escribir nada.
     expect(create).not.toHaveBeenCalled()
+    expect(sendContactNotification).not.toHaveBeenCalled()
+  })
+
+  it('avisa al equipo por correo de un mensaje guardado', async () => {
+    await service.create({
+      name: 'Ana',
+      email: 'ana@example.com',
+      message: 'Queremos programar el local a partir de marzo.',
+      phone: '+51 999 999 999',
+      instagram: '',
+      kind: 'venue',
+    })
+
+    expect(sendContactNotification).toHaveBeenCalledWith({
+      name: 'Ana',
+      email: 'ana@example.com',
+      message: 'Queremos programar el local a partir de marzo.',
+      phone: '+51 999 999 999',
+      instagram: undefined,
+      kind: 'venue',
+    })
+  })
+
+  it('no avisa de un mensaje que no se ha podido guardar', async () => {
+    create.mockRejectedValue(new Error('Mongo caído'))
+
+    await expect(
+      service.create({ name: 'Ana', email: 'ana@example.com', message: 'Hola, ¿hay sitio?' }),
+    ).rejects.toThrow('Mongo caído')
+    expect(sendContactNotification).not.toHaveBeenCalled()
+  })
+
+  it('un fallo del aviso no convierte el envío en un error', async () => {
+    sendContactNotification.mockRejectedValue(new Error('Resend caído'))
+
+    await expect(
+      service.create({ name: 'Ana', email: 'ana@example.com', message: 'Hola, ¿hay sitio?' }),
+    ).resolves.toEqual({ received: true })
   })
 })

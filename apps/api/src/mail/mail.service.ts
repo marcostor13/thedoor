@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { type SignupConfirmationData } from './templates/signup-confirmation'
 import { renderSignupEmail } from './templates/signup-email'
+import {
+  renderContactNotification,
+  type ContactNotificationData,
+} from './templates/contact-notification'
 
 /**
  * Envío de correo por Resend.
@@ -39,6 +43,11 @@ export class MailService implements OnModuleInit {
   private readonly from = process.env.MAIL_FROM
   private readonly replyTo = process.env.MAIL_REPLY_TO
   private readonly siteUrl = (process.env.SITE_URL ?? 'https://thedoorpr.com').replace(/\/+$/, '')
+  /** Quién recibe los avisos internos. Varias direcciones, separadas por comas. */
+  private readonly notifyTo = (process.env.MAIL_NOTIFY_TO ?? '')
+    .split(',')
+    .map((address) => address.trim())
+    .filter(Boolean)
 
   onModuleInit(): void {
     if (!this.enabled) {
@@ -49,6 +58,12 @@ export class MailService implements OnModuleInit {
     }
 
     this.logger.log(`Correo activo por Resend, remitente ${this.from}`)
+
+    if (this.notifyTo.length === 0) {
+      this.logger.warn(
+        'Falta MAIL_NOTIFY_TO: los mensajes de contacto se guardan, pero nadie recibe aviso por correo.',
+      )
+    }
   }
 
   get enabled(): boolean {
@@ -67,6 +82,43 @@ export class MailService implements OnModuleInit {
 
     const { subject, html, text } = renderSignupEmail({ ...data, siteUrl: this.siteUrl })
 
+    return this.deliver(`la confirmación a ${to}`, {
+      to: [to],
+      reply_to: this.replyTo ?? this.from,
+      subject,
+      html,
+      text,
+      headers: {
+        // Salir de la lista sin buscar un enlace: los clientes que la leen
+        // pintan su propio botón de baja, y ayuda a la entregabilidad.
+        'List-Unsubscribe': `<mailto:${extractAddress(this.replyTo ?? this.from)}?subject=Baja>`,
+      },
+    })
+  }
+
+  /**
+   * Aviso al equipo de que alguien ha escrito por el formulario de contacto.
+   *
+   * El `reply_to` es quien escribió: contestar al aviso es contestarle a esa
+   * persona, sin copiar su dirección a mano. Igual que la confirmación, no
+   * falla nunca — el mensaje ya está guardado en Mongo cuando esto se llama.
+   */
+  async sendContactNotification(data: ContactNotificationData): Promise<boolean> {
+    if (!this.apiKey || !this.from || this.notifyTo.length === 0) return false
+
+    const { subject, html, text } = renderContactNotification(data)
+
+    return this.deliver(`el aviso del mensaje de ${data.email}`, {
+      to: this.notifyTo,
+      reply_to: data.email,
+      subject,
+      html,
+      text,
+    })
+  }
+
+  /** El `POST` a Resend. `what` solo sirve para que el log diga qué se perdió. */
+  private async deliver(what: string, message: Record<string, unknown>): Promise<boolean> {
     try {
       const response = await fetch(RESEND_ENDPOINT, {
         method: 'POST',
@@ -74,19 +126,7 @@ export class MailService implements OnModuleInit {
           Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from: this.from,
-          to: [to],
-          reply_to: this.replyTo ?? this.from,
-          subject,
-          html,
-          text,
-          headers: {
-            // Salir de la lista sin buscar un enlace: los clientes que la leen
-            // pintan su propio botón de baja, y ayuda a la entregabilidad.
-            'List-Unsubscribe': `<mailto:${extractAddress(this.replyTo ?? this.from)}?subject=Baja>`,
-          },
-        }),
+        body: JSON.stringify({ from: this.from, ...message }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       })
 
@@ -95,16 +135,17 @@ export class MailService implements OnModuleInit {
         // clave caducada, destinatario inválido—, y sin eso en el log el fallo
         // es indistinguible de una caída.
         this.logger.error(
-          `Resend ha rechazado la confirmación a ${to}: ${response.status} ${await describeResponse(response)}`,
+          `Resend ha rechazado ${what}: ${response.status} ${await describeResponse(response)}`,
         )
         return false
       }
 
       return true
     } catch (error) {
-      // Se registra y se sigue: el alta ya está guardada y eso es lo que
-      // importa. Reintentarlo es trabajo de una cola, no de esta petición.
-      this.logger.error(`No se ha podido enviar la confirmación a ${to}: ${describe(error)}`)
+      // Se registra y se sigue: lo que había que guardar ya está guardado y
+      // eso es lo que importa. Reintentarlo es trabajo de una cola, no de esta
+      // petición.
+      this.logger.error(`No se ha podido enviar ${what}: ${describe(error)}`)
       return false
     }
   }

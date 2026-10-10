@@ -164,6 +164,12 @@ JWT_SECRET=<openssl rand -base64 48>
 RESEND_API_KEY=<clave de resend.com/api-keys>
 MAIL_FROM=The Door PR <hola@thedoorpr.com>
 SITE_URL=https://thedoorpr.com
+# A dónde van las respuestas a la confirmación y las bajas. Sin ella se usa
+# MAIL_FROM, que solo sirve si ese buzón recibe correo de verdad.
+MAIL_REPLY_TO=<buzón que alguien lee>
+# Quién recibe el aviso de cada mensaje del formulario de contacto. Varias
+# direcciones separadas por comas. Sin ella los mensajes solo quedan en Mongo.
+MAIL_NOTIFY_TO=<buzón del equipo>
 
 # Dónde se guardan las altas de la landing. No hay copia en Mongo: si falta
 # esta variable, POST /signup devuelve error en vez de perder inscripciones.
@@ -176,6 +182,12 @@ en Cloudflare. Conviene añadir DMARC además. Sin la verificación cada envío 
 rechaza con un `403 domain is not verified`; con ella pero sin DMARC el correo
 sale, aunque Gmail y Outlook lo tratan peor. Para un correo que la gente está
 esperando, acabar en spam es lo mismo que no enviarlo.
+
+Verificar el dominio en Resend solo sirve para **enviar**. Para que
+`hola@thedoorpr.com` —y cualquier otra dirección del dominio que aparezca en la
+web o en los correos— **reciba**, el dominio necesita registros MX: un buzón
+contratado o Cloudflare Email Routing reenviando a uno que ya exista. Sin MX,
+quien responda a la confirmación recibe un rebote.
 
 Las imágenes del correo se sirven desde el frontend (`/email/door.png` y el
 flyer de la noche en cartel), así que `SITE_URL` tiene que apuntar al sitio
