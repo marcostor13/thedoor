@@ -30,7 +30,9 @@ export const INVITE_EVENT: InviteEvent = {}
  * quién sin preguntárselo a nadie.
  *
  * El nombre viaja en el campo `reference` del registro, que para un `guest`
- * ya significa exactamente eso: quién te refiere. No hace falta tocar el API.
+ * ya significa exactamente eso: quién te refiere. El API lo usa en el correo;
+ * a la plataforma donde se guardan las altas no llega —su formulario no define
+ * ese campo—, y ahí quién invitó se lee en la URL de origen, que lleva el slug.
  *
  * El `slug` es lo que se pega en WhatsApp: corto, sin acentos y reconocible
  * de un vistazo por quien lo reparte. Añadir una anfitriona es añadir una
@@ -46,8 +48,9 @@ export interface InviteHost {
 export const INVITE_HOSTS: InviteHost[] = [
   { slug: 'sandra', name: 'Sandra Valdez' },
   { slug: 'ximena', name: 'Ximena García Piaggio' },
-  { slug: 'daniela', name: 'Daniela Roda' },
-  { slug: 'paola', name: 'Paola Mendiola' },
+  { slug: 'daniella', name: 'Daniella Roda' },
+  { slug: 'arianne', name: 'Arianne Strobach' },
+  { slug: 'teresa', name: 'Teresa Bracamonte' },
 ]
 
 export const INVITE = {
