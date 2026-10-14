@@ -29,18 +29,28 @@ describe('renderJamparaList', () => {
   it('lleva la invitación, colgada del sitio y sin barra duplicada', () => {
     const mail = renderJamparaList({ ...base, name: 'Ana', siteUrl: 'https://thedoorpr.com/' })
 
-    expect(mail.html).toContain('src="https://thedoorpr.com/email/jampara-24-10.jpg"')
+    expect(mail.html).toContain('src="https://thedoorpr.com/email/jampara-24-10-v2.jpg"')
+    // El primer flyer, el de «Locación secreta», ya no se manda.
+    expect(mail.html).not.toContain('jampara-24-10.jpg')
     // Con las imágenes bloqueadas, el alt es lo único que queda del flyer.
-    expect(mail.html).toContain('alt="Jampara Vol. 01')
+    expect(mail.html).toContain('alt="Munay presenta Jampara Vol. 01')
   })
 
-  it('escribe la fecha y la hora en texto, no solo dentro del flyer', () => {
+  it('escribe la fecha, la hora y la dirección en texto, no solo dentro del flyer', () => {
     const mail = renderJamparaList({ ...base, name: 'Ana' })
 
-    for (const dato of ['Sábado 24 de octubre', '1:00 p.m.', 'Locación secreta']) {
+    for (const dato of ['Sábado 24 de octubre', '1:00 p.m.', 'Av. Primavera 886', 'Terraza (piso 7)']) {
       expect(mail.html).toContain(dato)
       expect(mail.text).toContain(dato)
     }
+    expect(mail.html).not.toContain('Locación secreta')
+  })
+
+  it('cuenta lo que hay esa tarde', () => {
+    const mail = renderJamparaList({ ...base, name: 'Ana' })
+
+    expect(mail.html).toContain('Comida peruana &middot; Cata de vinos &middot; Música')
+    expect(mail.text).toContain('La tarde — Comida peruana · Cata de vinos · Música')
   })
 
   it('escapa un nombre con HTML', () => {

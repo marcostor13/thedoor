@@ -6,8 +6,7 @@
  *
  *   · La invitación ES el flyer, así que va arriba, justo bajo el titular, y no
  *     al final como recordatorio.
- *   · La locación es secreta: no hay dirección, ni dress code, ni botón de
- *     «cómo llegar».
+ *   · No hay dress code ni botón de «cómo llegar»: la dirección va en texto.
  *
  * Lo demás sigue las reglas del resto de plantillas: estilos en línea, tablas
  * `role="presentation"`, fondo negro con `color-scheme: dark`, y nada esencial
@@ -102,8 +101,7 @@ export function renderJamparaList(data: JamparaListData): RenderedEmail {
     .hero { font-size:30px !important; letter-spacing:0.3px !important; }
     .kicker { font-size:22px !important; letter-spacing:0.22px !important; }
     .mark { width:190px !important; height:auto !important; }
-    .flyer { width:100% !important; height:auto !important; }
-    /* Etiqueta encima del dato: en 320px no caben en la misma fila. */
+    .flyer { width:100% !important; height:auto !important; }    /* Etiqueta encima del dato: en 320px no caben en la misma fila. */
     .stack { display:block !important; width:100% !important; padding-top:0 !important; }
   }
 </style>
@@ -174,7 +172,8 @@ export function renderJamparaList(data: JamparaListData): RenderedEmail {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
           ${detailRow('Fecha', escapeHtml(event.date))}
           ${detailRow('Hora', escapeHtml(event.time))}
-          ${detailRow('Location', escapeHtml(event.location), true)}
+          ${detailRow('Location', escapeHtml(event.location), !event.highlights?.length)}
+          ${event.highlights?.length ? detailRow('La tarde', event.highlights.map(escapeHtml).join(' &middot; '), true) : ''}
         </table>
       </td>
     </tr>
@@ -216,6 +215,7 @@ export function renderJamparaList(data: JamparaListData): RenderedEmail {
     `Fecha — ${event.date}`,
     `Hora — ${event.time}`,
     `Location — ${event.location}`,
+    ...(event.highlights?.length ? [`La tarde — ${event.highlights.join(' · ')}`] : []),
     '',
     '—',
     'The Door PR — Lima, Perú',

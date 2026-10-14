@@ -34,6 +34,8 @@ export interface BillEntry {
     width: number
     height: number
   }
+  /** Lo que hay esa tarde, en pocas palabras: se escribe bajo los datos. */
+  highlights?: string[]
   /**
    * Desde cuándo se anuncia esta noche. Es opcional porque una noche sola no
    * lo necesita —basta con `endsAt`—, pero en cuanto hay dos en el archivo sí:
@@ -117,24 +119,27 @@ export const OSCARS_LIST: EventDetails = {
 /**
  * Jampara List — Jampara Vol. 01, un almuerzo alrededor de la cocina peruana.
  *
- * Es un `BillEntry` y no un `EventDetails` porque la locación es secreta: no
- * hay dirección que escribir ni mapa al que mandar a nadie. Tampoco dress code.
- * Por eso lleva plantilla propia (`jampara-list.ts`), que es el saludo y la
- * invitación, sin botón de «cómo llegar».
+ * Es un `BillEntry` y no un `EventDetails` porque no hay dress code ni botón
+ * de «cómo llegar»: la dirección va escrita, sin más. Por eso lleva plantilla
+ * propia (`jampara-list.ts`), que es el saludo y la invitación.
+ *
+ * El flyer lleva otro nombre que el primero (`jampara-24-10.jpg`, que decía
+ * «Locación secreta») para que ningún proxy de imágenes sirva el viejo.
  */
 export const JAMPARA_LIST: BillEntry = {
   venue: 'Jampara Vol. 01',
   date: 'Sábado 24 de octubre',
   time: '1:00 p.m.',
-  location: 'Locación secreta',
+  location: 'Av. Primavera 886, Santiago de Surco – Chacarilla. Terraza (piso 7)',
   body: [
     'Gracias por registrarte en Jampara List: una tarde para descubrir sabores, compartir, conversar y disfrutar de la cocina peruana a nuestra manera.',
   ],
+  highlights: ['Comida peruana', 'Cata de vinos', 'Música'],
   flyer: {
-    path: '/email/jampara-24-10.jpg',
-    alt: 'Jampara Vol. 01 — Invitación especial. 24 de octubre de 2026, 1:00 p.m. Locación secreta. Encuentros alrededor de la cocina peruana.',
-    width: 1600,
-    height: 1066,
+    path: '/email/jampara-24-10-v2.jpg',
+    alt: 'Munay presenta Jampara Vol. 01 — Invitación especial. 24 de octubre de 2026, 1:00 p.m. Av. Primavera 886, Santiago de Surco – Chacarilla, terraza (piso 7). Comida peruana, cata de vinos y música.',
+    width: 888,
+    height: 1600,
   },
   startsAt: '2026-10-09T00:00:00-05:00',
   // Es una tarde, no una madrugada: se corta al acabar el día 24, hora de Lima.
