@@ -67,17 +67,19 @@ const steps = [
       <div class="access__panel">
         <p class="eyebrow">— Registro</p>
 
-        <h1 class="access__title">
+        <h1 class:list={['access__title', { 'access__title--solo': listOnly }]}>
           Come through. <em>The list starts here.</em>
         </h1>
 
-        <p class="access__lede">
-          {
-            listOnly
-              ? 'Si quieres estar donde pasan las cosas, esto es lo único que hay que rellenar.'
-              : 'Dos puertas, una sola cola. Si tienes una sala que llenar o quieres estar donde pasan las cosas, esto es lo único que hay que rellenar.'
-          }
-        </p>
+        {/* La de la lista va sin entradilla: del titular, directo al formulario. */}
+        {
+          !listOnly && (
+            <p class="access__lede">
+              Dos puertas, una sola cola. Si tienes una sala que llenar o quieres
+              estar donde pasan las cosas, esto es lo único que hay que rellenar.
+            </p>
+          )
+        }
 
         <SignupForm kind={listOnly ? 'guest' : undefined} host={host?.name} />
       </div>
@@ -170,6 +172,11 @@ const steps = [
 
   .access__title em {
     display: block;
+  }
+
+  /* Sin entradilla, el titular se queda el aire que ella dejaba sobre el formulario. */
+  .access__title--solo {
+    margin-block-end: var(--sp-md);
   }
 
   .access__lede {
