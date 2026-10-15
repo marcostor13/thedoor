@@ -123,8 +123,8 @@ export const OSCARS_LIST: EventDetails = {
  * de «cómo llegar»: la dirección va escrita, sin más. Por eso lleva plantilla
  * propia (`jampara-list.ts`), que es el saludo y la invitación.
  *
- * El flyer lleva otro nombre que el primero (`jampara-24-10.jpg`, que decía
- * «Locación secreta») para que ningún proxy de imágenes sirva el viejo.
+ * Cada versión del flyer lleva nombre nuevo (`-v2`, `-v3`…) para que ningún
+ * proxy de imágenes siga sirviendo la anterior.
  */
 export const JAMPARA_LIST: BillEntry = {
   venue: 'Jampara Vol. 01',
@@ -136,10 +136,10 @@ export const JAMPARA_LIST: BillEntry = {
   ],
   highlights: ['Comida peruana', 'Cata de vinos', 'Música'],
   flyer: {
-    path: '/email/jampara-24-10-v2.jpg',
+    path: '/email/jampara-24-10-v3.jpg',
     alt: 'Munay presenta Jampara Vol. 01 — Invitación especial. 24 de octubre de 2026, 1:00 p.m. Av. Primavera 886, Santiago de Surco – Chacarilla, terraza (piso 7). Comida peruana, cata de vinos y música.',
-    width: 888,
-    height: 1600,
+    width: 1536,
+    height: 1024,
   },
   startsAt: '2026-10-09T00:00:00-05:00',
   // Es una tarde, no una madrugada: se corta al acabar el día 24, hora de Lima.

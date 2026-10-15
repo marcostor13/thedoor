@@ -29,9 +29,10 @@ describe('renderJamparaList', () => {
   it('lleva la invitación, colgada del sitio y sin barra duplicada', () => {
     const mail = renderJamparaList({ ...base, name: 'Ana', siteUrl: 'https://thedoorpr.com/' })
 
-    expect(mail.html).toContain('src="https://thedoorpr.com/email/jampara-24-10-v2.jpg"')
-    // El primer flyer, el de «Locación secreta», ya no se manda.
+    expect(mail.html).toContain('src="https://thedoorpr.com/email/jampara-24-10-v3.jpg"')
+    // Los flyers anteriores ya no se mandan.
     expect(mail.html).not.toContain('jampara-24-10.jpg')
+    expect(mail.html).not.toContain('jampara-24-10-v2.jpg')
     // Con las imágenes bloqueadas, el alt es lo único que queda del flyer.
     expect(mail.html).toContain('alt="Munay presenta Jampara Vol. 01')
   })
