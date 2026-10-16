@@ -52,6 +52,8 @@ export const INVITE_HOSTS: InviteHost[] = [
   { slug: 'arianne', name: 'Arianne Strobach' },
   { slug: 'teresa', name: 'Teresa Bracamonte' },
   { slug: 'giulianna', name: 'Giulianna Mongrut' },
+  { slug: 'jenny', name: 'Jenny Vilchez' },
+  { slug: 'katia', name: 'Katia Machado' },
 ]
 
 export const INVITE = {
