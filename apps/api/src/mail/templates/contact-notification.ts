@@ -20,7 +20,14 @@ export interface ContactNotificationData {
   instagram?: string
   /** De cuál de las dos puertas de la portada viene. */
   kind?: 'venue' | 'guest'
+  /** Qué formulario lo ha enviado. Sin indicar, el de contacto. */
+  source?: 'contact' | 'signup'
 }
+
+const SOURCE_COPY = {
+  contact: { eyebrow: 'Formulario de contacto', title: 'Mensaje nuevo', lead: 'Nuevo mensaje de' },
+  signup: { eyebrow: 'Formulario de registro', title: 'Registro nuevo', lead: 'Nuevo registro de' },
+} as const
 
 const KIND_LABEL: Record<NonNullable<ContactNotificationData['kind']>, string> = {
   venue: 'Local',
@@ -34,7 +41,8 @@ function oneLine(value: string): string {
 
 export function renderContactNotification(data: ContactNotificationData): RenderedEmail {
   const kind = data.kind ? KIND_LABEL[data.kind] : undefined
-  const subject = `Nuevo mensaje de ${oneLine(data.name)}${kind ? ` (${kind})` : ''} — The Door PR`
+  const copy = SOURCE_COPY[data.source ?? 'contact']
+  const subject = `${copy.lead} ${oneLine(data.name)}${kind ? ` (${kind})` : ''} — The Door PR`
 
   const rows: [string, string][] = [
     ['Nombre', data.name],
@@ -58,8 +66,8 @@ export function renderContactNotification(data: ContactNotificationData): Render
   <table role="presentation" width="${CARD_WIDTH}" cellpadding="0" cellspacing="0" border="0" style="width:${CARD_WIDTH}px;max-width:100%;background-color:${BRAND.card};border:1px solid ${BRAND.border};">
     <tr>
       <td style="padding:32px 36px 0 36px;">
-        <div style="font-family:${FONT.mono};font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${BRAND.accent};">&mdash; Formulario de contacto</div>
-        <div style="font-family:${FONT.display};font-size:28px;line-height:1.1;letter-spacing:1px;text-transform:uppercase;color:${BRAND.fg};padding-top:12px;">Mensaje nuevo</div>
+        <div style="font-family:${FONT.mono};font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${BRAND.accent};">&mdash; ${copy.eyebrow}</div>
+        <div style="font-family:${FONT.display};font-size:28px;line-height:1.1;letter-spacing:1px;text-transform:uppercase;color:${BRAND.fg};padding-top:12px;">${copy.title}</div>
       </td>
     </tr>
     <tr>
@@ -93,7 +101,7 @@ export function renderContactNotification(data: ContactNotificationData): Render
 </html>`
 
   const text = [
-    'THE DOOR PR — Mensaje nuevo del formulario de contacto',
+    `THE DOOR PR — ${copy.title} (${copy.eyebrow})`,
     '',
     ...rows.map(([label, value]) => `${label}: ${value}`),
     '',

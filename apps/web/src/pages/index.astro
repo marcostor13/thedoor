@@ -15,29 +15,36 @@ const services = [
   },
   {
     num: '02',
+    title: 'Event Planning',
+    desc: 'Desde encontrar el venue perfecto hasta llenar tu evento con el público indicado según tus requerimientos. Social o nicho, nosotros nos encargamos.',
+    tag: 'Venue sourcing, social & niche events',
+    label: 'Per event',
+  },
+  {
+    num: '03',
     title: 'Guest Curation',
     desc: 'Un guest list completamente curado de más de 1.2k de potenciales invitados a tu evento. El guest list solo se abre para la gente que convierte un miércoles en un sábado — la combinación perfecta, el momentum, el mood.',
     tag: 'VIP database, our guest list is never shared, and never sold',
     label: 'Per night',
   },
   {
-    num: '03',
+    num: '04',
     title: 'Private & VIP',
     desc: 'Cumpleaños. Lanzamientos. Reservas corporativas. Nosotros manejamos el evento, el lugar y la coordinación — tú solo te preocupas por disfrutar el momento.',
     tag: 'Birthdays, launches, corporate events',
     label: 'One-off',
   },
   {
-    num: '04',
+    num: '05',
     title: 'Door & Floor',
     desc: 'Nos encargamos de la supervisión, PR y equipo de imagen. Coordinamos en tiempo real, para que tu evento genere controversia.',
     tag: 'Live coordination, PR team, models',
     label: 'Per night',
   },
   {
-    num: '05',
-    title: 'Media & Visibility',
-    desc: 'Notas de prensa y publicidad estratégica. La mención correcta en el medio correcto y en el momento correcto. Hacemos que se hable de tu evento en el círculo indicado.',
+    num: '06',
+    title: 'Press, Media & Visibility',
+    desc: 'Contamos con un equipo potente dedicado específicamente a esta área.',
     tag: 'Press, content, influencers',
     label: 'Retainer',
   },
@@ -60,10 +67,16 @@ const serviceRows = services.map((service) => {
 
 const stats = [
   {
-    num: '1.2k',
+    num: '1.2K+',
+    label: 'Curated guest list',
     desc: 'De clientes VIP en nuestra base de datos completamente curada para llenar tu evento con el público indicado.',
   },
-  { num: '24/7', desc: 'Tú lo necesitas, nosotros lo creamos.' },
+  {
+    num: '220+',
+    label: 'Strategic contacts',
+    desc: 'Un equipo estratégico con las alianzas perfectas en el área de prensa para que tu marca resuene.',
+  },
+  { num: '24/7', desc: 'Tú lo necesitas, nosotros nos encargamos.' },
 ]
 ---
 
@@ -122,7 +135,10 @@ const stats = [
       {
         stats.map((stat) => (
           <div class="stat-grid__item" data-reveal>
-            <p class="stat-grid__num">{stat.num}</p>
+            <p class="stat-grid__head">
+              <span class="stat-grid__num">{stat.num}</span>
+              {stat.label && <span class="stat-grid__label">{stat.label}</span>}
+            </p>
             <p class="stat-grid__desc">{stat.desc}</p>
           </div>
         ))
@@ -511,17 +527,39 @@ const stats = [
 
   .stat-grid {
     display: grid;
-    /* Dos cifras: conviven en una línea y se apilan solas cuando no caben. */
-    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+    /* Tres cifras en línea o todas apiladas: con auto-fit la tercera se
+       quedaba sola en una fila intermedia. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--sp-lg) clamp(var(--sp-lg), 4vw, var(--sp-2xl));
     margin-block-start: var(--sp-2xl);
     padding-block-start: var(--sp-lg);
     border-top: 1px solid var(--c-border);
   }
 
+  @media (max-width: 860px) {
+    .stat-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .stat-grid__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2xs) var(--sp-sm);
+    align-items: baseline;
+  }
+
   .stat-grid__num {
     font-family: var(--font-display);
     font-size: var(--fs-3xl);
+    text-transform: uppercase;
+    color: var(--c-fg);
+  }
+
+  .stat-grid__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--c-fg);
   }

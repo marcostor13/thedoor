@@ -65,6 +65,21 @@ export class SignupService {
         this.logger.error(`Confirmación no enviada a ${dto.email}: ${String(error)}`)
       })
 
+    // Igual que la confirmación: suelto y con `.catch`.
+    void this.mailService
+      .sendSignupNotification({
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        instagram: normalizeInstagram(dto.instagram),
+        kind: dto.kind,
+        reference: dto.reference,
+        duplicate,
+      })
+      .catch((error: unknown) => {
+        this.logger.error(`Aviso de registro no enviado (${dto.email}): ${String(error)}`)
+      })
+
     return { registered: true, duplicate }
   }
 }

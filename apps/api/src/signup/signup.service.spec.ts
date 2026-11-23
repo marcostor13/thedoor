@@ -8,6 +8,7 @@ import { MailService } from '../mail/mail.service'
 describe('SignupService', () => {
   const submit = mock(() => Promise.resolve({ created: true }))
   const sendSignupConfirmation = mock(() => Promise.resolve(true))
+  const sendSignupNotification = mock(() => Promise.resolve(true))
   let service: SignupService
 
   const guest = {
@@ -24,12 +25,14 @@ describe('SignupService', () => {
     submit.mockImplementation(() => Promise.resolve({ created: true }))
     sendSignupConfirmation.mockReset()
     sendSignupConfirmation.mockImplementation(() => Promise.resolve(true))
+    sendSignupNotification.mockReset()
+    sendSignupNotification.mockImplementation(() => Promise.resolve(true))
 
     const moduleRef = await Test.createTestingModule({
       providers: [
         SignupService,
         { provide: SignupFormClient, useValue: { submit } },
-        { provide: MailService, useValue: { sendSignupConfirmation } },
+        { provide: MailService, useValue: { sendSignupConfirmation, sendSignupNotification } },
       ],
     }).compile()
 
@@ -115,6 +118,20 @@ describe('SignupService', () => {
 
     expect(sendSignupConfirmation).toHaveBeenCalledWith('ana@example.com', {
       name: 'Ana',
+      kind: 'guest',
+      reference: 'Daniela',
+      duplicate: false,
+    })
+  })
+
+  it('avisa al equipo de cada registro', async () => {
+    await service.create({ ...guest, instagram: '@Ana.Torres' })
+
+    expect(sendSignupNotification).toHaveBeenCalledWith({
+      name: 'Ana',
+      email: 'ana@example.com',
+      phone: '+51 999 999 999',
+      instagram: '@ana.torres',
       kind: 'guest',
       reference: 'Daniela',
       duplicate: false,

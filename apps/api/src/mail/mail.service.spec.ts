@@ -144,12 +144,12 @@ describe('MailService', () => {
     expect(sent.from).toBe('The Door PR <hola@thedoorpr.com>')
     expect(sent.subject).toBe('Hemos recibido tu solicitud — The Door PR')
     // Sin MAIL_REPLY_TO, se responde al propio remitente.
-    expect(sent.reply_to).toBe('The Door PR <hola@thedoorpr.com>')
+    expect(sent.reply_to).toBe('thedoorprlima@gmail.com')
     expect(String(sent.html)).toContain('Te hemos leído.')
     expect(String(sent.text)).toContain('THE DOOR PR')
     // La dirección de baja sale del From, sin el nombre visible.
     expect((sent.headers as Record<string, string>)['List-Unsubscribe']).toBe(
-      '<mailto:hola@thedoorpr.com?subject=Baja>',
+      '<mailto:thedoorprlima@gmail.com?subject=Baja>',
     )
   })
 
@@ -188,7 +188,37 @@ describe('MailService', () => {
     expect(String(sent.text)).toContain('Queremos programar el local.')
   })
 
-  it('sin MAIL_NOTIFY_TO no hay a quién avisar: no sale nada', async () => {
+  it('avisa al equipo de un registro, con respuesta a quien se apuntó', async () => {
+    const restoreEnv = withEnv({ ...configurado, MAIL_NOTIFY_TO: 'equipo@example.com' })
+    const red = withFetch(new Response(JSON.stringify({ id: 'abc' }), { status: 200 }))
+    restore = () => {
+      red.restore()
+      restoreEnv()
+    }
+
+    const service = new MailService()
+
+    await expect(
+      service.sendSignupNotification({
+        name: 'Ana',
+        email: 'ana@example.com',
+        phone: '+51 999 999 999',
+        kind: 'venue',
+        reference: 'Maison <b>Noir</b>',
+        duplicate: true,
+      }),
+    ).resolves.toBe(true)
+
+    const [, init] = red.fetch.mock.calls[0] as [string, RequestInit]
+    const sent = JSON.parse(String(init.body)) as Record<string, unknown>
+    expect(sent.to).toEqual(['equipo@example.com'])
+    expect(sent.reply_to).toBe('ana@example.com')
+    expect(sent.subject).toBe('Nuevo registro de Ana (Local) — The Door PR')
+    expect(String(sent.html)).toContain('Maison &lt;b&gt;Noir')
+    expect(String(sent.text)).toContain('Ya estaba en la lista')
+  })
+
+  it('sin MAIL_NOTIFY_TO el aviso va al buzón de la casa', async () => {
     const restoreEnv = withEnv({ ...configurado, MAIL_NOTIFY_TO: undefined })
     const red = withFetch(new Response(JSON.stringify({ id: 'abc' }), { status: 200 }))
     restore = () => {
@@ -205,8 +235,11 @@ describe('MailService', () => {
         email: 'ana@example.com',
         message: 'Hola, ¿hay sitio?',
       }),
-    ).resolves.toBe(false)
-    expect(red.fetch).not.toHaveBeenCalled()
+    ).resolves.toBe(true)
+
+    const [, init] = red.fetch.mock.calls[0] as [string, RequestInit]
+    const sent = JSON.parse(String(init.body)) as Record<string, unknown>
+    expect(sent.to).toEqual(['thedoorprlima@gmail.com'])
   })
 
   it('respeta MAIL_REPLY_TO cuando está definido', async () => {

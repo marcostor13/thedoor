@@ -35,16 +35,22 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails'
  */
 const TIMEOUT_MS = 10_000
 
+/**
+ * El buzón de la casa: recibe los avisos de formularios y las respuestas.
+ * `MAIL_NOTIFY_TO` y `MAIL_REPLY_TO` lo sustituyen si están definidas.
+ */
+const TEAM_INBOX = 'thedoorprlima@gmail.com'
+
 @Injectable()
 export class MailService implements OnModuleInit {
   private readonly logger = new Logger(MailService.name)
 
   private readonly apiKey = process.env.RESEND_API_KEY
   private readonly from = process.env.MAIL_FROM
-  private readonly replyTo = process.env.MAIL_REPLY_TO
+  private readonly replyTo = process.env.MAIL_REPLY_TO || TEAM_INBOX
   private readonly siteUrl = (process.env.SITE_URL ?? 'https://thedoorpr.com').replace(/\/+$/, '')
   /** Quién recibe los avisos internos. Varias direcciones, separadas por comas. */
-  private readonly notifyTo = (process.env.MAIL_NOTIFY_TO ?? '')
+  private readonly notifyTo = (process.env.MAIL_NOTIFY_TO || TEAM_INBOX)
     .split(',')
     .map((address) => address.trim())
     .filter(Boolean)
@@ -58,12 +64,6 @@ export class MailService implements OnModuleInit {
     }
 
     this.logger.log(`Correo activo por Resend, remitente ${this.from}`)
-
-    if (this.notifyTo.length === 0) {
-      this.logger.warn(
-        'Falta MAIL_NOTIFY_TO: los mensajes de contacto se guardan, pero nadie recibe aviso por correo.',
-      )
-    }
   }
 
   get enabled(): boolean {
@@ -84,14 +84,14 @@ export class MailService implements OnModuleInit {
 
     return this.deliver(`la confirmación a ${to}`, {
       to: [to],
-      reply_to: this.replyTo ?? this.from,
+      reply_to: this.replyTo,
       subject,
       html,
       text,
       headers: {
         // Salir de la lista sin buscar un enlace: los clientes que la leen
         // pintan su propio botón de baja, y ayuda a la entregabilidad.
-        'List-Unsubscribe': `<mailto:${extractAddress(this.replyTo ?? this.from)}?subject=Baja>`,
+        'List-Unsubscribe': `<mailto:${extractAddress(this.replyTo)}?subject=Baja>`,
       },
     })
   }
@@ -109,6 +109,46 @@ export class MailService implements OnModuleInit {
     const { subject, html, text } = renderContactNotification(data)
 
     return this.deliver(`el aviso del mensaje de ${data.email}`, {
+      to: this.notifyTo,
+      reply_to: data.email,
+      subject,
+      html,
+      text,
+    })
+  }
+
+  /**
+   * Aviso al equipo de un registro en la lista. Las altas viven en la
+   * plataforma externa, así que sin este correo el buzón no se entera.
+   */
+  async sendSignupNotification(data: {
+    name: string
+    email: string
+    phone?: string
+    instagram?: string
+    kind: 'venue' | 'guest'
+    reference?: string
+    duplicate: boolean
+  }): Promise<boolean> {
+    if (!this.apiKey || !this.from || this.notifyTo.length === 0) return false
+
+    const referenceLabel = data.kind === 'venue' ? 'Local' : 'Referencia'
+    const message = [
+      `${referenceLabel}: ${data.reference?.trim() || 'sin indicar'}`,
+      ...(data.duplicate ? ['Ya estaba en la lista: no se creó un alta nueva.'] : []),
+    ].join('\n')
+
+    const { subject, html, text } = renderContactNotification({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      instagram: data.instagram,
+      kind: data.kind,
+      source: 'signup',
+      message,
+    })
+
+    return this.deliver(`el aviso del registro de ${data.email}`, {
       to: this.notifyTo,
       reply_to: data.email,
       subject,
